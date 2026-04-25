@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "b977df4aebe2",
+  "strategy": "manual-commit",
+  "branch": "feat/backend",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "data/pioneer-battery-classifier.jsonl",
+    "data/pioneer-system-classifier.jsonl",
+    "data/pioneer-wallbox-classifier.jsonl",
+    "src/scripts/split-classification-datasets.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b9/77df4aebe2/0/metadata.json",
+      "transcript": "/b9/77df4aebe2/0/full.jsonl",
+      "content_hash": "/b9/77df4aebe2/0/content_hash.txt",
+      "prompt": "/b9/77df4aebe2/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 567,
+    "cache_creation_tokens": 1085287,
+    "cache_read_tokens": 95398547,
+    "output_tokens": 405248,
+    "api_call_count": 251
+  }
+}
