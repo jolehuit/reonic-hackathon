@@ -1,0 +1,52 @@
+{
+  "houseId": "custom",
+  "lat": 52.408718770055735,
+  "lng": 12.963106383979836,
+  "ts": 1777161019280,
+  "zoom": 20,
+  "metresPerPixel": 0.04553561238070731,
+  "imageSize": {
+    "w": 1280,
+    "h": 1280
+  },
+  "analysis": {
+    "bbox": {
+      "x": 400,
+      "y": 540,
+      "width": 212,
+      "height": 295
+    },
+    "footprintPx": [
+      [
+        480,
+        540
+      ],
+      [
+        550,
+        540
+      ],
+      [
+        612,
+        650
+      ],
+      [
+        538,
+        835
+      ],
+      [
+        402,
+        765
+      ],
+      [
+        400,
+        650
+      ]
+    ],
+    "roofType": "gable",
+    "ridgeAzimuthDeg": 135,
+    "estWallHeightM": 3.5,
+    "estRoofHeightM": 3,
+    "confidence": 0.8,
+    "fallback": false
+  }
+}

@@ -22,7 +22,8 @@ export interface GenerateResult {
   glb: Uint8Array;
   raw: Uint8Array;          // top-down screenshot used as primary input
   tilted?: Uint8Array;      // optional 3D tilted screenshot (Mapbox)
-  isolated: Uint8Array;     // top-down with everything except the house masked white
+  isolated: Uint8Array;     // oblique view with everything except the house masked
+  aiIsolated?: Uint8Array;  // OpenRouter (Gemini Image) isolated cutout — best-effort
   analysis: RoofAnalysis;
   imageSize: { w: number; h: number };
   metresPerPixel: number;
@@ -382,11 +383,20 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
   // ── Isolated image: mask the OBLIQUE view with the detected polygon ──
   const isolated = await maskOutsidePolygon(tiltedBuf, TW, TH, fp);
 
+  // ── AI-isolated render — pass the OBLIQUE 3D screenshot to Gemini's image
+  //    model via OpenRouter with a "single isolated building, no environment"
+  //    prompt. Returns a clean photogrammetry-style cutout suitable as input
+  //    for downstream 3D model generation. Best-effort: if the call fails or
+  //    the key is missing, this stays null.
+  const { isolateBuildingViaAI } = await import('./openrouter');
+  const aiIsolated = await isolateBuildingViaAI(tiltedBuf).catch(() => null);
+
   return {
     glb,
     raw: cropped,
     tilted: tiltedBuf,
     isolated,
+    aiIsolated: aiIsolated ?? undefined,
     analysis,
     imageSize: { w: TW, h: TH },
     metresPerPixel,
