@@ -20,6 +20,11 @@ export function ObliqueTiles() {
   const tiltDeg = parseFloat(sp.get('tilt') ?? '60');
   const range = parseFloat(sp.get('range') ?? '220');
   const height = parseFloat(sp.get('height') ?? '50');
+  // Elevation of the ground above the WGS84 ellipsoid in metres. Forwarded
+  // by /api/aerial after a Google Elevation API lookup so we can plant the
+  // marker AND recenter the camera at the right altitude. Falls back to a
+  // safe European default (~100 m).
+  const groundElev = parseFloat(sp.get('elev') ?? '100');
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -74,12 +79,11 @@ export function ObliqueTiles() {
       const offE = horizDist * Math.sin(hRad);
       const offN = horizDist * Math.cos(hRad);
 
-      // Camera anchor — the point the camera orbits around. Starts ~100 m
-      // above the ellipsoid (a safe ground-level guess for Europe so the
-      // initial camera is never buried under the terrain → tiles can load
-      // and the raycast can hit them) and is snapped onto the actual ground
-      // point once the raycast finds it.
-      const anchor = target.clone().addScaledVector(up, 100);
+      // Camera anchor — anchored at the actual ground elevation passed by
+      // /api/aerial (Google Elevation API), so the lookAt is at real ground
+      // level and the framing is consistent across locations regardless of
+      // geoid undulation.
+      const anchor = target.clone().addScaledVector(up, groundElev);
       const frameCamera = () => {
         camera.position
           .copy(anchor)
@@ -99,77 +103,36 @@ export function ObliqueTiles() {
       tiles.errorTarget = 6;
       scene.add(tiles.group);
 
-      // GPS marker — small red dot sitting just above the surface at the
-      // exact lat/lng. Position is refined by a downward raycast once the
-      // tile meshes load, then the camera is recentered on the same point.
-      const markerGroup = new THREE.Group();
+
+      // GPS marker — small red dot placed at building-roof height (~8 m
+      // above the real ground elevation). In the oblique view, this is what
+      // the camera "sees" at the lat/lng direction → the dot lands ON the
+      // visible roof rather than next to the building due to parallax.
+      const ROOF_HEIGHT_M = 8;
       const sphere = new THREE.Mesh(
         new THREE.SphereGeometry(0.8, 16, 12),
         new THREE.MeshBasicMaterial({ color: 0xef4444, depthTest: false }),
       );
       sphere.renderOrder = 999;
-      sphere.position.copy(up).multiplyScalar(0.5);
-      markerGroup.add(sphere);
-      markerGroup.position.copy(target).addScaledVector(up, 100);
-      scene.add(markerGroup);
-
-      const raycaster = new THREE.Raycaster();
-      raycaster.far = 10000;
-      const downDir = up.clone().multiplyScalar(-1).normalize();
-      let dotPlaced = false;
-      // Snap-to-building search radius (meters). We sample a grid of downward
-      // rays inside this radius around the GPS anchor and keep the HIGHEST
-      // hit — typically the roof of the nearest building, even when the raw
-      // lat/lng falls on a street or in a yard. This is what makes the dot
-      // land on the house in oblique views regardless of GPS imprecision.
-      const SNAP_RADIUS = 20;
-      const SNAP_SAMPLES = 9; // 9×9 grid → ~5 m spacing within 20 m radius
-      const placeDotOnSurface = () => {
-        if (dotPlaced) return;
-        let bestHit: THREE.Vector3 | null = null;
-        let bestHeight = -Infinity;
-        const half = Math.floor(SNAP_SAMPLES / 2);
-        for (let i = -half; i <= half; i++) {
-          for (let j = -half; j <= half; j++) {
-            const dx = (i / half) * SNAP_RADIUS;
-            const dy = (j / half) * SNAP_RADIUS;
-            const origin = target
-              .clone()
-              .addScaledVector(east, dx)
-              .addScaledVector(north, dy)
-              .addScaledVector(up, 5000);
-            raycaster.set(origin, downDir);
-            const hits = raycaster.intersectObject(tiles.group, true);
-            if (hits.length === 0) continue;
-            const h = hits[0].point.clone().sub(target).dot(up);
-            if (h > bestHeight) {
-              bestHeight = h;
-              bestHit = hits[0].point.clone();
-            }
-          }
-        }
-        if (bestHit) {
-          markerGroup.position.copy(bestHit);
-          // Camera anchor uses the GPS lat/lng at the building's elevation —
-          // not the snapped XY — so the framing stays centered on the address
-          // even when the dot is offset onto a nearby roof.
-          anchor.copy(target).addScaledVector(up, bestHeight);
-          frameCamera();
-          dotPlaced = true;
-        }
-      };
+      sphere.position.copy(target).addScaledVector(up, groundElev + ROOF_HEIGHT_M);
+      scene.add(sphere);
 
       let stableFrames = 0;
       let lastProgress = -1;
+      let everSawProgressUnder1 = false;
       let raf = 0;
       const tick = () => {
         if (cancelled) return;
         camera.updateMatrixWorld();
         tiles.update();
-        if (!dotPlaced && tiles.loadProgress >= 1) placeDotOnSurface();
-        renderer.render(scene, camera);
+        // Track whether tiles ever entered an "in-progress" state. Without this,
+        // loadProgress stays at the trivial 1.0 (nothing requested yet) and the
+        // headless wait fires before any tiles get a chance to load.
         const progress = tiles.loadProgress;
-        if (progress >= 1 && progress === lastProgress) stableFrames++;
+        if (progress < 1) everSawProgressUnder1 = true;
+        renderer.render(scene, camera);
+        if (everSawProgressUnder1 && progress >= 1 && progress === lastProgress)
+          stableFrames++;
         else stableFrames = 0;
         lastProgress = progress;
         (window as unknown as { __obliqueStable?: number }).__obliqueStable = stableFrames;
@@ -195,7 +158,7 @@ export function ObliqueTiles() {
       cancelled = true;
       cleanup();
     };
-  }, [lat, lng, headingDeg, tiltDeg, range, height]);
+  }, [lat, lng, headingDeg, tiltDeg, range, height, groundElev]);
 
   return <div ref={ref} className="fixed inset-0 bg-white" />;
 }

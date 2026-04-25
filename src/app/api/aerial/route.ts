@@ -52,8 +52,31 @@ export async function GET(req: NextRequest) {
   if (tilted) {
     // Render the Cesium oblique page in headless Chromium and screenshot it.
     const origin = req.nextUrl.origin;
+    // Look up the local ground elevation (in metres above WGS84 ellipsoid)
+    // via Google's Elevation API. This is then forwarded to /oblique so the
+    // marker can be placed AT building-roof height — without it, the dot
+    // sits at the wrong altitude and the oblique parallax shifts it off the
+    // visible roof. The API returns orthometric height (above MSL/EGM2008)
+    // so we add the typical European geoid undulation (~45 m) to convert it
+    // to ellipsoidal height, then add ~8 m for typical European roof height.
+    let elevAboveEllipsoid: number | null = null;
+    try {
+      const er = await fetch(
+        `https://maps.googleapis.com/maps/api/elevation/json?locations=${lat},${lng}&key=${MAPS_KEY}`,
+      );
+      const ej = (await er.json()) as { results?: Array<{ elevation?: number }> };
+      const orthometric = ej.results?.[0]?.elevation;
+      if (typeof orthometric === 'number') {
+        // Geoid undulation rough constant for Western/Central Europe.
+        // (Precise per-location N would need a geoid model; +45 is fine here.)
+        elevAboveEllipsoid = orthometric + 45;
+      }
+    } catch {
+      /* ignore — falls back to default in /oblique */
+    }
+    const elevParam = elevAboveEllipsoid !== null ? `&elev=${elevAboveEllipsoid}` : '';
     const obliqueUrl =
-      `${origin}/oblique?lat=${lat}&lng=${lng}&zoom=${zoom}&heading=0&tilt=40&range=100`;
+      `${origin}/oblique?lat=${lat}&lng=${lng}&zoom=${zoom}&heading=0&tilt=40&height=50${elevParam}`;
     try {
       const { chromium } = await import('playwright');
       const browser = await chromium.launch({ headless: true });

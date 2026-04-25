@@ -180,7 +180,7 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
 
   // Most capable model first for the hard step (precise polygon under the pin),
   // then fall back to lighter / older models if rate-limited.
-  const MODELS = ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'];
+  const MODELS = ['gemini-3-pro', 'gemini-3-flash-preview', 'gemini-2.5-pro', 'gemini-2.5-flash'];
 
   // ── STEP 1 — building detection on the 3D OBLIQUE image ──
   // The oblique image is a Cesium screenshot of Google Photorealistic 3D
