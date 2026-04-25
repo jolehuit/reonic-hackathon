@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "60cb37918596",
+  "strategy": "manual-commit",
+  "branch": "feat/backend",
+  "checkpoints_count": 8,
+  "files_touched": [
+    ".env.local.example",
+    "src/lib/pioneer.ts",
+    "src/scripts/test-pioneer-live.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/60/cb37918596/0/metadata.json",
+      "transcript": "/60/cb37918596/0/full.jsonl",
+      "content_hash": "/60/cb37918596/0/content_hash.txt",
+      "prompt": "/60/cb37918596/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 106,
+    "cache_creation_tokens": 150887,
+    "cache_read_tokens": 28065419,
+    "output_tokens": 77822,
+    "api_call_count": 51
+  }
+}
