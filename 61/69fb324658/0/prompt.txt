@@ -1,0 +1,499 @@
+ça met quota excedeed gemini vision pourquoi a quel endroit on utilise ça?
+
+fau
+
+---
+
+mais dans la branche deva2 on utilise plus gemini non ?
+
+---
+
+mais dans la branche deva2 on utilise plus gemini vision non ?
+
+---
+
+et c pas du code mort ?
+
+---
+
+on utilise plus osm
+ça screen depuis google map top
+et ensuite on utilise celsium
+
+---
+
+design house et tout c terminé
+le nouveau flow c aerial
+
+---
+
+The flow, logic and technique is on the route aerial, but you don't forget to use all the front of aerial. You continue to use the front that we have already but branching the logic aerial dessus. . Et le dev continuera par la suite de pusher des choses sur Aérial, mais son front est uniquement une démo technique pour lui.
+
+---
+
+on fait ce que fait aerial
+
+---
+
+On va faire que on prend le screenshot rendu par aerial
+ et à partir de ça on génère un modèle 3d avec fal.ai qu'on va affihcer par la suite (on doit voir un skeleton pendant que ça se génère no doit etre indiqué que ça génère en mode animé).
+
+On va utiliser ce modèle : fal-ai/trellis-2
+GPT Image 2 is now on fal
+Home
+Explore
+Search
+
+Search anything
+⌘
+K
+Credits:
+$8.44
+Docs
+
+
+
+J
+
+$8.44
+Resources
+
+
+J
+Home
+Explore
+
+Generate
+Serverless
+
+Workflows
+
+Settings
+Home
+Explore
+
+Generate
+Serverless
+
+Workflows
+
+Settings
+fal-ai/trellis-2
+
+Generate 3D models from your images using Trellis 2. A native 3D generative model enabling versatile and high-quality 3D asset creation.
+Inference
+Commercial use
+
+Schema
+LLMs
+
+Table of contents
+
+JavaScript / Node.js
+1. Calling the API
+Install the client
+Setup your API Key
+Submit a request
+2. Authentication
+API Key
+3. Queue
+Submit a request
+Fetch request status
+Get the result
+4. Files
+Data URI (base64)
+Hosted files (URL)
+Uploading files
+5. Schema
+Input
+Output
+Other
+About
+Generate
+
+1. Calling the API
+#
+Install the client
+#
+The client provides a convenient way to interact with the model API.
+
+npm
+yarn
+pnpm
+bun
+
+npm install --save @fal-ai/client
+Migrate to @fal-ai/client
+The @fal-ai/serverless-client package has been deprecated in favor of @fal-ai/client. Please check the migration guide for more information.
+
+Setup your API Key
+#
+Set FAL_KEY as an environment variable in your runtime.
+
+
+export FAL_KEY="YOUR_API_KEY"
+Submit a request
+#
+The client API handles the API submit protocol. It will handle the request status updates and return the result when the request is completed.
+
+
+import { fal } from "@fal-ai/client";
+
+const result = await fal.subscribe("fal-ai/trellis-2", {
+  input: {
+    image_url: "https://v3b.fal.media/files/b/0a86b60d/REDACTED.png"
+  },
+  logs: true,
+  onQueueUpdate: (update) => {
+    if (update.status === "IN_PROGRESS") {
+      update.logs.map((log) => log.message).forEach(console.log);
+    }
+  },
+});
+console.log(result.data);
+console.log(result.requestId);
+2. Authentication
+#
+The API uses an API Key for authentication. It is recommended you set the FAL_KEY environment variable in your runtime when possible.
+
+API Key
+#
+In case your app is running in an environment where you cannot set environment variables, you can set the API Key manually as a client configuration.
+
+import { fal } from "@fal-ai/client";
+
+fal.config({
+  credentials: "YOUR_FAL_KEY"
+});
+Protect your API Key
+When running code on the client-side (e.g. in a browser, mobile app or GUI applications), make sure to not expose your FAL_KEY. Instead, use a server-side proxy to make requests to the API. For more information, check out our server-side integration guide.
+
+3. Queue
+#
+Long-running requests
+For long-running requests, such as training jobs or models with slower inference times, it is recommended to check the Queue status and rely on Webhooks instead of blocking while waiting for the result.
+
+Submit a request
+#
+The client API provides a convenient way to submit requests to the model.
+
+
+import { fal } from "@fal-ai/client";
+
+const { request_id } = await fal.queue.submit("fal-ai/trellis-2", {
+  input: {
+    image_url: "https://v3b.fal.media/files/b/0a86b60d/REDACTED.png"
+  },
+  webhookUrl: "https://optional.webhook.url/for/results",
+});
+Fetch request status
+#
+You can fetch the status of a request to check if it is completed or still in progress.
+
+
+import { fal } from "@fal-ai/client";
+
+const status = await fal.queue.status("fal-ai/trellis-2", {
+  requestId: "764cabcf-b745-4b3e-ae38-1200304cf45b",
+  logs: true,
+});
+Get the result
+#
+Once the request is completed, you can fetch the result. See the Output Schema for the expected result format.
+
+
+import { fal } from "@fal-ai/client";
+
+const result = await fal.queue.result("fal-ai/trellis-2", {
+  requestId: "764cabcf-b745-4b3e-ae38-1200304cf45b"
+});
+console.log(result.data);
+console.log(result.requestId);
+4. Files
+#
+Some attributes in the API accept file URLs as input. Whenever that's the case you can pass your own URL or a Base64 data URI.
+
+Data URI (base64)
+#
+You can pass a Base64 data URI as a file input. The API will handle the file decoding for you. Keep in mind that for large files, this alternative although convenient can impact the request performance.
+
+Hosted files (URL)
+#
+You can also pass your own URLs as long as they are publicly accessible. Be aware that some hosts might block cross-site requests, rate-limit, or consider the request as a bot.
+
+Uploading files
+#
+We provide a convenient file storage that allows you to upload files and use them in your requests. You can upload files using the client API and use the returned URL in your requests.
+
+
+import { fal } from "@fal-ai/client";
+
+const file = new File(["Hello, World!"], "hello.txt", { type: "text/plain" });
+const url = await fal.storage.upload(file);
+Auto uploads
+The client will auto-upload the file for you if you pass a binary object (e.g. File, Data).
+
+Read more about file handling in our file upload guide.
+
+5. Schema
+#
+Input
+#
+seed integer
+Random seed for reproducibility
+
+resolution ResolutionEnum
+Output resolution; higher is slower but more detailed Default value: "1024"
+
+Possible enum values: 512, 1024, 1536
+
+ss_guidance_strength float
+How closely the initial 3D structure follows the input image. Higher values produce more faithful but potentially noisier results. Default value: 7.5
+
+ss_guidance_rescale float
+Dampens artifacts from high guidance in stage 1. Lower values allow stronger guidance effects, higher values stabilize the output. Default value: 0.7
+
+ss_sampling_steps integer
+Number of denoising steps for the initial structure. More steps = slower but potentially higher quality. Default value: 12
+
+ss_rescale_t float
+Controls noise schedule sharpness for structure generation. Higher values produce sharper transitions. Default value: 5
+
+shape_slat_guidance_strength float
+How closely the detailed geometry follows the input image. Higher values add more detail but may introduce noise. Default value: 7.5
+
+shape_slat_guidance_rescale float
+Dampens artifacts from high guidance in the shape stage. Increase if you see noisy geometry. Default value: 0.5
+
+shape_slat_sampling_steps integer
+Number of denoising steps for shape refinement. More steps = slower but potentially smoother geometry. Default value: 12
+
+shape_slat_rescale_t float
+Controls noise schedule sharpness for shape refinement. Higher values produce sharper geometric details. Default value: 3
+
+tex_slat_guidance_strength float
+How closely the texture follows the input image colors. Higher values produce more vivid but potentially oversaturated textures. Default value: 1
+
+tex_slat_guidance_rescale float
+Dampens artifacts from high guidance in the texture stage. Increase if textures look noisy or have color banding.
+
+tex_slat_sampling_steps integer
+Number of denoising steps for texture generation. More steps = slower but potentially cleaner textures. Default value: 12
+
+tex_slat_rescale_t float
+Controls noise schedule sharpness for texture generation. Higher values produce sharper texture details. Default value: 3
+
+decimation_target integer
+Target number of vertices in the final mesh. Lower values produce smaller files but less detail. 500k is good for most uses, reduce to 20k-50k for web/mobile. Default value: 500000
+
+texture_size TextureSizeEnum
+Resolution of the texture image baked onto the mesh. Higher values capture finer surface details but produce larger files. Default value: "2048"
+
+Possible enum values: 1024, 2048, 4096
+
+remesh boolean
+Rebuild the mesh topology for cleaner triangles. Slower but usually produces better results for downstream use (animation, 3D printing, etc). Default value: true
+
+remesh_band float
+Controls how far remeshing can move vertices from the original surface. Higher values allow more smoothing but may lose fine details. Default value: 1
+
+remesh_project float
+How much to project remeshed vertices back onto the original surface. 0 = no projection (smoother), 1 = full projection (preserves detail).
+
+image_url string
+URL of the input image to convert to 3D
+
+
+{
+  "resolution": 1024,
+  "ss_guidance_strength": 7.5,
+  "ss_guidance_rescale": 0.7,
+  "ss_sampling_steps": 12,
+  "ss_rescale_t": 5,
+  "shape_slat_guidance_strength": 7.5,
+  "shape_slat_guidance_rescale": 0.5,
+  "shape_slat_sampling_steps": 12,
+  "shape_slat_rescale_t": 3,
+  "tex_slat_guidance_strength": 1,
+  "tex_slat_sampling_steps": 12,
+  "tex_slat_rescale_t": 3,
+  "decimation_target": 500000,
+  "texture_size": 2048,
+  "remesh": true,
+  "remesh_band": 1,
+  "image_url": "https://v3b.fal.media/files/b/0a86b60d/REDACTED.png"
+}
+Output
+#
+model_glb File
+Generated 3D GLB file
+
+
+{
+  "model_glb": {
+    "url": "https://v3b.fal.media/files/b/0a86b61d/REDACTED.glb"
+  }
+}
+Other types
+#
+File
+#
+url string
+The URL where the file can be downloaded from.
+
+content_type string
+The mime type of the file.
+
+file_name string
+The name of the file. It will be auto-generated if not provided.
+
+file_size integer
+The size of the file in bytes.
+
+RetextureInputModel
+#
+image_url string
+URL of the reference image for texturing
+
+mesh_url string
+URL of the untextured 3D mesh to retexture. Supports GLB, OBJ, PLY, and STL formats.
+
+seed integer
+Random seed for reproducibility
+
+resolution ResolutionEnum
+Internal resolution for texture generation. Higher produces finer texture details but is slower. Default value: "1024"
+
+Possible enum values: 512, 1024
+
+tex_slat_guidance_strength float
+How closely the texture follows the input image colors. Higher values produce more vivid but potentially oversaturated textures. Default value: 1
+
+tex_slat_guidance_rescale float
+Dampens artifacts from high guidance in the texture stage. Increase if textures look noisy or have color banding.
+
+tex_slat_sampling_steps integer
+Number of denoising steps for texture generation. More steps = slower but potentially cleaner textures. Default value: 12
+
+tex_slat_rescale_t float
+Controls noise schedule sharpness for texture generation. Higher values produce sharper texture details. Default value: 3
+
+texture_size TextureSizeEnum
+Resolution of the texture image baked onto the mesh. Higher values capture finer surface details but produce larger files. Default value: "2048"
+
+Possible enum values: 1024, 2048, 4096
+
+MultiImageInputModel
+#
+seed integer
+Random seed for reproducibility
+
+resolution ResolutionEnum
+Output resolution; higher is slower but more detailed Default value: "1024"
+
+Possible enum values: 512, 1024, 1536
+
+ss_guidance_strength float
+How closely the initial 3D structure follows the input image. Higher values produce more faithful but potentially noisier results. Default value: 7.5
+
+ss_guidance_rescale float
+Dampens artifacts from high guidance in stage 1. Lower values allow stronger guidance effects, higher values stabilize the output. Default value: 0.7
+
+ss_sampling_steps integer
+Number of denoising steps for the initial structure. More steps = slower but potentially higher quality. Default value: 12
+
+ss_rescale_t float
+Controls noise schedule sharpness for structure generation. Higher values produce sharper transitions. Default value: 5
+
+shape_slat_guidance_strength float
+How closely the detailed geometry follows the input image. Higher values add more detail but may introduce noise. Default value: 7.5
+
+shape_slat_guidance_rescale float
+Dampens artifacts from high guidance in the shape stage. Increase if you see noisy geometry. Default value: 0.5
+
+shape_slat_sampling_steps integer
+Number of denoising steps for shape refinement. More steps = slower but potentially smoother geometry. Default value: 12
+
+shape_slat_rescale_t float
+Controls noise schedule sharpness for shape refinement. Higher values produce sharper geometric details. Default value: 3
+
+tex_slat_guidance_strength float
+How closely the texture follows the input image colors. Higher values produce more vivid but potentially oversaturated textures. Default value: 1
+
+tex_slat_guidance_rescale float
+Dampens artifacts from high guidance in the texture stage. Increase if textures look noisy or have color banding.
+
+tex_slat_sampling_steps integer
+Number of denoising steps for texture generation. More steps = slower but potentially cleaner textures. Default value: 12
+
+tex_slat_rescale_t float
+Controls noise schedule sharpness for texture generation. Higher values produce sharper texture details. Default value: 3
+
+decimation_target integer
+Target number of vertices in the final mesh. Lower values produce smaller files but less detail. 500k is good for most uses, reduce to 20k-50k for web/mobile. Default value: 500000
+
+texture_size TextureSizeEnum
+Resolution of the texture image baked onto the mesh. Higher values capture finer surface details but produce larger files. Default value: "2048"
+
+Possible enum values: 1024, 2048, 4096
+
+remesh boolean
+Rebuild the mesh topology for cleaner triangles. Slower but usually produces better results for downstream use (animation, 3D printing, etc). Default value: true
+
+remesh_band float
+Controls how far remeshing can move vertices from the original surface. Higher values allow more smoothing but may lose fine details. Default value: 1
+
+remesh_project float
+How much to project remeshed vertices back onto the original surface. 0 = no projection (smoother), 1 = full projection (preserves detail).
+
+image_urls list<string>
+Multiple views of the same object. Conditioning is averaged across views.
+
+Ready to transform your enterprise with AI?
+Contact Sales
+Learn More
+Status
+About Us
+Documentation
+Careers
+Pricing
+Blog
+Enterprise
+Get in touch
+Gen Media Report 2026
+Grants
+Events
+Learn
+Legal
+Report Content
+Models
+GPT Image 2
+Seedance 2.0
+Flux 2
+Kling 3.0
+Veo 3.1
+Nano Banana Pro
+Explore More
+Playgrounds
+Sandbox
+Workflows
+Training
+Demos
+Socials
+Discord
+GitHub
+Reddit
+Twitter
+LinkedIn
+YouTube
+Instagram
+TikTok
+features and labels, 2025. All Rights Reserved. Terms of Service and Privacy Policy
+Trellis 2 | Image to 3D | fal.ai
+utilise context7 cli si besoin
+
+---
+
+on prend tiltedUrl
+Skeleton je te laisse faire mias juste en gros faut toujours qu'il se passe un truc meme quand c'est pas encore généré 
+Et voici la key fal : eeea1156-b47b-4e12-afc1-6b050e8fce18:ac19941f48a0700f20027b3a2754bdd1

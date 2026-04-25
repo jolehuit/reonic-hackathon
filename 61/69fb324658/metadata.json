@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "6169fb324658",
+  "strategy": "manual-commit",
+  "branch": "try-claude-review",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/app/api/trellis/route.ts",
+    "src/components/Scene3D/Panels.tsx",
+    "src/components/Scene3D/Scene3D.tsx",
+    "src/components/Scene3D/TrellisModel.tsx",
+    "src/lib/trellis.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/61/69fb324658/0/metadata.json",
+      "transcript": "/61/69fb324658/0/full.jsonl",
+      "content_hash": "/61/69fb324658/0/content_hash.txt",
+      "prompt": "/61/69fb324658/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 126,
+    "cache_creation_tokens": 95944,
+    "cache_read_tokens": 10290972,
+    "output_tokens": 46067,
+    "api_call_count": 81
+  }
+}
