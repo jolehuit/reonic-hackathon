@@ -373,7 +373,7 @@ export async function recommendSystem(
   };
 }
 
-/** Returns the top-k most similar projects (for EvidencePanel display). */
+/** Returns the top-k most similar projects from the Reonic dataset. */
 export function findSimilarProjects(profile: CustomerProfile, k: number = 3): SimilarProject[] {
   const top = kNearest(profile, k);
   return top.map((p) => ({

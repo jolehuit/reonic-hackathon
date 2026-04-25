@@ -17,7 +17,6 @@ import { Orchestrator } from '@/components/Scene3D/Orchestrator';
 import { ProfileForm } from '@/components/AutoFillForm/ProfileForm';
 import { AgentTrace } from '@/components/AgentTrace/AgentTrace';
 import { KPISidebar } from '@/components/KPISidebar/KPISidebar';
-import { EvidencePanel } from '@/components/EvidencePanel/EvidencePanel';
 import { ControlPanel } from '@/components/ControlPanel/ControlPanel';
 import { ApprovalModal } from '@/components/ApprovalModal/ApprovalModal';
 
@@ -195,12 +194,10 @@ export default function DesignPage({ params }: Props) {
           </div>
         )}
 
-        {/* KPI + Evidence — right rail once design lands. Review & Approve
-            lives in the bottom ControlPanel now, not duplicated here. */}
+        {/* KPISidebar — right rail once design lands. */}
         {(phase === 'interactive' || phase === 'reviewing' || phase === 'approved') && (
-          <div className="pointer-events-auto absolute right-5 top-5 flex w-[360px] flex-col gap-4">
+          <div className="pointer-events-auto absolute right-5 top-5 w-[340px]">
             <KPISidebar />
-            <EvidencePanel />
           </div>
         )}
 
@@ -208,7 +205,7 @@ export default function DesignPage({ params }: Props) {
             the scene is rendered. Hosts the consumption slider, the four
             energy toggles and the Review & Approve CTA in one row. */}
         {phase === 'interactive' && (
-          <div className="pointer-events-auto absolute bottom-6 left-1/2 -translate-x-1/2">
+          <div className="pointer-events-auto absolute inset-x-0 bottom-6 flex justify-center px-5">
             <ControlPanel />
           </div>
         )}
