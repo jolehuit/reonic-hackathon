@@ -1,31 +1,41 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 
 const DEFAULT = '61 Bd Jean Moulin, 93190 Livry-Gargan, France';
 
+function buildAerialUrl(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  const latLng = trimmed.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+  const params = new URLSearchParams();
+  if (latLng) {
+    params.set('lat', latLng[1]);
+    params.set('lng', latLng[2]);
+  } else {
+    params.set('address', trimmed);
+  }
+  return `/api/aerial?${params.toString()}`;
+}
+
 export default function AerialPage() {
   const [address, setAddress] = useState(DEFAULT);
-  const [imgUrl, setImgUrl] = useState<string | null>(null);
+  const [imgUrl, setImgUrl] = useState<string | null>(() => buildAerialUrl(DEFAULT));
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setImgUrl(buildAerialUrl(DEFAULT));
+  }, []);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!address.trim()) {
+    const next = buildAerialUrl(address);
+    if (!next) {
       setError('Enter an address or "lat,lng".');
       return;
     }
-    const trimmed = address.trim();
-    const latLng = trimmed.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
-    const params = new URLSearchParams();
-    if (latLng) {
-      params.set('lat', latLng[1]);
-      params.set('lng', latLng[2]);
-    } else {
-      params.set('address', trimmed);
-    }
-    setImgUrl(`/api/aerial?${params.toString()}&t=${Date.now()}`);
+    setImgUrl(`${next}&t=${Date.now()}`);
   }
 
   return (
