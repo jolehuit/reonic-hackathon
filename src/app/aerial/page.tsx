@@ -140,33 +140,41 @@ export default function AerialPage() {
       </div>
 
       {genResult?.ok && genResult.glbUrl && (
-        <div className="mt-6 grid w-full max-w-6xl gap-4 md:grid-cols-2">
-          {genResult.rawUrl && (
-            <Pane title="AI input · top-down">
-              <img src={genResult.rawUrl} alt="AI input top-down" className="h-full w-full object-cover" />
-            </Pane>
-          )}
-          {genResult.tiltedUrl && (
-            <Pane title="AI input · 3D tilted (Cesium)">
-              <img src={genResult.tiltedUrl} alt="AI input tilted" className="h-full w-full object-cover" />
-            </Pane>
-          )}
+        <>
           {genResult.isolatedUrl && (
-            <Pane title="House isolated (white background)">
-              <img src={genResult.isolatedUrl} alt="Isolated building" className="h-full w-full object-contain bg-white" />
-            </Pane>
-          )}
-          <Pane title="Generated 3D model">
-            <div className="relative h-full w-full">
-              <GeneratedHouseViewer houseId="custom" />
+            <div className="mt-6 w-full max-w-3xl">
+              <Pane title="Detected house (isolated by Gemini 2.5 Pro)">
+                <img
+                  src={genResult.isolatedUrl}
+                  alt="Isolated building"
+                  className="h-full w-full object-contain bg-white"
+                />
+              </Pane>
             </div>
-          </Pane>
-          {genResult.analysis && (
-            <pre className="md:col-span-2 overflow-auto rounded-lg bg-gray-50 p-3 text-xs text-gray-700">
-              {JSON.stringify(genResult.analysis, null, 2)}
-            </pre>
           )}
-        </div>
+          <div className="mt-6 grid w-full max-w-6xl gap-4 md:grid-cols-2">
+            {genResult.rawUrl && (
+              <Pane title="AI input · top-down">
+                <img src={genResult.rawUrl} alt="AI input top-down" className="h-full w-full object-cover" />
+              </Pane>
+            )}
+            {genResult.tiltedUrl && (
+              <Pane title="AI input · 3D tilted (Cesium)">
+                <img src={genResult.tiltedUrl} alt="AI input tilted" className="h-full w-full object-cover" />
+              </Pane>
+            )}
+            <Pane title="Generated 3D model">
+              <div className="relative h-full w-full">
+                <GeneratedHouseViewer houseId="custom" />
+              </div>
+            </Pane>
+            {genResult.analysis && (
+              <pre className="md:col-span-2 overflow-auto rounded-lg bg-gray-50 p-3 text-xs text-gray-700">
+                {JSON.stringify(genResult.analysis, null, 2)}
+              </pre>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

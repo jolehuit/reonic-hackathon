@@ -76,52 +76,35 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
     .png()
     .toBuffer();
 
-  // ── Optional 3D tilted view via Cesium + Google Photorealistic 3D Tiles ──
-  // Rendered headlessly by Playwright on /oblique. Cesium's WebGL context is
-  // created with preserveDrawingBuffer:true so the screenshot captures.
+  // ── 3D oblique view via Google Aerial View API ──
+  // Google auto-generates a fly-around video of the address using the same
+  // Photorealistic 3D Tiles. We grab a still frame (IMAGE_HIGH thumbnail)
+  // which is cleanly framed on the property — no Cesium / Playwright needed.
   let tiltedBuf: Buffer | null = null;
   if (input.tilted) {
-    const origin = input.origin ?? 'http://localhost:3000';
-    const obliqueUrl =
-      `${origin}/oblique?lat=${input.lat}&lng=${input.lng}` +
-      `&zoom=${zoom}&heading=0&tilt=60`;
-    try {
-      const { chromium } = await import('playwright');
-      const browser = await chromium.launch({ headless: true });
-      const ctx = await browser.newContext({
-        viewport: { width: 1280, height: 1280 },
-        deviceScaleFactor: 1,
-      });
-      const page = await ctx.newPage();
-      await page.goto(obliqueUrl, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await page
-        .waitForFunction(
-          () => ((window as unknown as { __obliqueStable?: number }).__obliqueStable ?? 0) > 25,
-          null,
-          { timeout: 60_000, polling: 250 },
-        )
-        .catch(() => {});
-      await page.waitForTimeout(800);
-      await page
-        .evaluate(() => {
-          for (const el of document.querySelectorAll('nextjs-portal, [data-nextjs-toast]')) {
-            (el as HTMLElement).style.display = 'none';
-          }
-        })
-        .catch(() => {});
-      tiltedBuf = await page.screenshot({ fullPage: false });
-      await browser.close();
-    } catch (err) {
-      console.warn('[house-generator] oblique screenshot failed:', err);
-    }
+    tiltedBuf = await fetchAerialViewStill(input.lat, input.lng, mapsKey);
   }
 
   // ── Gemini Vision analysis (TWO steps) ──
-  // Step 1: detect the roof footprint in the top-down image only.
-  // Step 2: read roof type / slope / heights from the 3D oblique image,
-  //         given the polygon found in step 1 as ground truth.
+  // Step 1: detect the building at the centre of the 3D OBLIQUE image
+  //         (Aerial View frames the property automatically).
+  // Step 2: read roof type / slope / heights from the same 3D oblique image.
   const metresPerPixel =
     (156543.03392 * Math.cos((input.lat * Math.PI) / 180)) / Math.pow(2, zoom) / SCALE;
+
+  // Aerial View thumbnails are ~1280x720; sniff actual dims if we got one.
+  let TW = 1280;
+  let TH = 720;
+  if (tiltedBuf) {
+    const meta = await sharp(tiltedBuf).metadata();
+    if (meta.width && meta.height) {
+      TW = meta.width;
+      TH = meta.height;
+    }
+    // Overlay a red disc at image centre so the AI has the same "pin"
+    // reference it had with the Cesium view (Aerial View images are clean).
+    tiltedBuf = await overlayCenterPin(tiltedBuf, TW, TH);
+  }
 
   const callGemini = async (
     model: string,
@@ -164,22 +147,78 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
     }
   };
 
-  const MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'];
+  // Most capable model first for the hard step (precise polygon under the pin),
+  // then fall back to lighter / older models if rate-limited.
+  const MODELS = ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'];
 
-  // ── STEP 1 — roof detection (top-down only) ──
+  // ── STEP 1 — building detection on the 3D OBLIQUE image ──
+  // The oblique image is a Cesium screenshot of Google Photorealistic 3D
+  // Tiles framed tightly on the target. It looks like a true aerial photo
+  // (mesh artefacts, slanted facades, cars on the road, trees, gardens,
+  // adjacent rooftops). A SMALL solid red disc (~18 px) sits roughly at the
+  // image centre, marking the target building.
+  // Strong prompt engineering: ROLE → INPUT → REASONING STEPS → RULES →
+  // OUTPUT. The polygon must trace the visible silhouette of the WHOLE
+  // building (roof + walls as seen in the oblique view), so the resulting
+  // mask cleanly cuts that one house out of the image.
+  if (!tiltedBuf) {
+    throw new Error(
+      'Oblique 3D screenshot missing — required for building detection. Re-run with tilted:true.',
+    );
+  }
   const detectPrompt = [
-    'You are given a strict TOP-DOWN satellite image of a residential area.',
-    `Image is ${W}x${H} pixels. A red MARKER PIN sits at the centre on the target roof.`,
-    `Around the centre, one pixel ≈ ${metresPerPixel.toFixed(3)} m on the ground.`,
+    'ROLE',
+    'You are a senior expert in aerial / photogrammetric building',
+    'segmentation. Your job is to outline ONE single building in a 3D',
+    'oblique aerial photograph.',
     '',
-    'TASK: detect ONLY the roof directly under the red marker pin (ignore neighbouring roofs).',
-    'Trace its outline tightly along the eaves with 4-8 vertices, clockwise.',
+    'INPUT IMAGE',
+    `- A single ${TW}x${TH}px OBLIQUE aerial view (~60° tilt) of a dense`,
+    '  suburban / urban street. It is a photogrammetric mesh, so expect:',
+    '    * leaning facades (walls visible, not just roofs)',
+    '    * blurry / melted edges and mesh artefacts',
+    '    * drifting cars, trees, hedges, gardens, fences, power lines',
+    '    * neighbouring houses very close to the target',
+    '- ONE small SOLID RED DISC marker (~15-20 px diameter, bright red,',
+    '  white outline) is drawn on the image roughly at the centre. It marks',
+    '  the TARGET BUILDING. The disc may sit on the roof, on a wall, on the',
+    '  pavement next to the house, or even slightly into the garden — it is',
+    '  GPS-anchored so it can be a few metres off. ALWAYS resolve it to the',
+    '  single residential building it most plausibly refers to.',
     '',
-    'Return JSON only:',
+    'REASONING STEPS (think silently, do not output them)',
+    '1. Locate the red disc → its (x,y) pixel centre is `pinPx`.',
+    '2. Decide which single building the disc points to. Heuristics:',
+    '     * prefer the building whose footprint the disc overlaps or touches',
+    '     * if the disc is on a road, pick the closer house on the side the',
+    '       disc leans toward',
+    '     * NEVER select a car, tree, hedge, pool, garden, or empty plot',
+    '     * pick exactly ONE building, not a row of attached houses unless',
+    '       they truly share one continuous roof',
+    '3. Trace the FULL VISIBLE SILHOUETTE of that building in the oblique',
+    '   view — roof edges PLUS the visible portions of the walls down to',
+    '   where the building meets the ground. Follow the real outline tightly.',
+    '   Do NOT include trees in front of it, the driveway, the garden, or',
+    '   neighbouring buildings.',
+    '4. Use 6–16 clockwise vertices. Polygon must be simple (non self-',
+    '   intersecting) and tight to the building, not a loose bounding shape.',
+    '5. Compute the axis-aligned bounding box → `bbox`.',
+    '',
+    'STRICT RULES',
+    '- All coordinates are INTEGERS in oblique-image pixel space.',
+    `- Polygon area between 8 000 and ${((TW * TH * 0.5) | 0)} px² (a single`,
+    '  house typically takes 5–30% of this tightly framed view).',
+    '- Polygon must overlap or be within ~40 px of the red disc.',
+    '- If you cannot confidently find the red disc OR the target building,',
+    '  return confidence = 0 with an empty `footprintPx` array. Do NOT guess.',
+    '',
+    'OUTPUT',
+    'Return STRICT JSON only, no prose, no markdown fence:',
     '{',
-    '  "bbox": { "x": <int>, "y": <int>, "width": <int>, "height": <int> },',
+    '  "pinPx": [<int x>, <int y>],',
+    '  "bbox":  { "x": <int>, "y": <int>, "width": <int>, "height": <int> },',
     '  "footprintPx": [[x,y], [x,y], ...],',
-    '  "confidence": <0..1>',
+    '  "confidence": <number between 0 and 1>',
     '}',
   ].join('\n');
 
@@ -191,7 +230,7 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
 
   let detect: DetectResult | null = null;
   for (const model of MODELS) {
-    const { status, text } = await callGemini(model, detectPrompt, [cropped]);
+    const { status, text } = await callGemini(model, detectPrompt, [tiltedBuf]);
     if (status !== 200) continue;
     const parsed = tryParse<DetectResult>(text);
     if (parsed && Array.isArray(parsed.footprintPx) && parsed.footprintPx.length >= 3) {
@@ -201,8 +240,8 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
   }
 
   if (!detect) {
-    const cxImg = W / 2, cyImg = H / 2;
-    const halfW = 90, halfH = 60;
+    const cxImg = TW / 2, cyImg = TH / 2;
+    const halfW = 220, halfH = 200;
     detect = {
       bbox: { x: cxImg - halfW, y: cyImg - halfH, width: halfW * 2, height: halfH * 2 },
       footprintPx: [
@@ -225,20 +264,20 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
   }
 
   let shape: ShapeResult | null = null;
-  if (tiltedBuf) {
+  {
     const fpStr = detect.footprintPx.map(([x, y]) => `[${Math.round(x)},${Math.round(y)}]`).join(',');
     const shapePrompt = [
-      'You are given TWO views of the SAME building:',
-      `  Image #1 — TOP-DOWN (${W}x${H} px) with a red marker pin on the target roof.`,
-      '  Image #2 — 3D OBLIQUE view (~60° tilt) of the SAME building. PRIMARY SOURCE for shape/heights.',
+      'You are given a 3D OBLIQUE aerial view (~60° tilt) of one building.',
+      `Image is ${TW}x${TH} px. The target building has already been outlined`,
+      `with this oblique-pixel-space polygon: ${fpStr}.`,
       '',
-      `The roof footprint has already been detected in image #1: ${fpStr}.`,
-      'Use the OBLIQUE view to read roof slope, ridge orientation and heights, then map back to image #1 axes.',
+      'Read the roof slope, ridge orientation and heights from the oblique',
+      'view. Express ridge azimuth in real-world compass degrees (0=N, 90=E).',
       '',
       'Return JSON only:',
       '{',
       '  "roofType": "flat" | "gable" | "hip" | "pyramid" | "shed",',
-      '  "ridgeAzimuthDeg": <int 0-359>,    // 0=N, 90=E, in image-#1 axes',
+      '  "ridgeAzimuthDeg": <int 0-359>,',
       '  "estWallHeightM": <number>,         // eaves above ground, 2.5-9 typical',
       '  "estRoofHeightM": <number>,         // ridge height ABOVE eaves; 0 if flat',
       '  "confidence": <0..1>',
@@ -246,7 +285,7 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
     ].join('\n');
 
     for (const model of MODELS) {
-      const { status, text } = await callGemini(model, shapePrompt, [cropped, tiltedBuf]);
+      const { status, text } = await callGemini(model, shapePrompt, [tiltedBuf]);
       if (status !== 200) continue;
       const parsed = tryParse<ShapeResult>(text);
       if (parsed && typeof parsed.roofType === 'string') {
@@ -278,15 +317,23 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
   };
 
   // ── Build GLB ──
+  // Detection now runs on the OBLIQUE image, so polygon vertices are in a
+  // perspective-distorted pixel space and CANNOT be used as flat ground
+  // metres. Use the bbox extents as a rough rectangular footprint scaled to
+  // the building's apparent oblique width (≈ 1.3× the projected metres) —
+  // good enough for a placeholder GLB while the AI focus is the isolated
+  // image. The CLI script remains the source of truth for accurate GLBs.
   const fp = analysis.footprintPx ?? [];
-  if (fp.length < 3) throw new Error('Footprint too small to build geometry');
-
-  const cx = fp.reduce((s, [x]) => s + x, 0) / fp.length;
-  const cz = fp.reduce((s, [, y]) => s + y, 0) / fp.length;
-  const footprintM: Array<[number, number]> = fp.map(([x, y]) => [
-    (x - cx) * metresPerPixel,
-    -(y - cz) * metresPerPixel,
-  ]);
+  const bboxWm = (analysis.bbox.width * metresPerPixel) / 1.3;
+  const bboxHm = (analysis.bbox.height * metresPerPixel) / 1.3;
+  const halfWm = clamp(bboxWm / 2, 4, 25);
+  const halfHm = clamp(bboxHm / 2, 4, 25);
+  const footprintM: Array<[number, number]> = [
+    [-halfWm, -halfHm],
+    [ halfWm, -halfHm],
+    [ halfWm,  halfHm],
+    [-halfWm,  halfHm],
+  ];
 
   const wallH = clamp(Number(analysis.estWallHeightM) || 4.5, 2.4, 15);
   const roofH = clamp(Number(analysis.estRoofHeightM) || 2.5, 0, 10);
@@ -300,16 +347,16 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
     ridgeAzimuth: ridgeAz,
   });
 
-  // ── Isolated image: only the building polygon, everything else white ──
-  const isolated = await maskOutsidePolygon(cropped, W, H, fp);
+  // ── Isolated image: mask the OBLIQUE view with the detected polygon ──
+  const isolated = await maskOutsidePolygon(tiltedBuf, TW, TH, fp);
 
   return {
     glb,
     raw: cropped,
-    tilted: tiltedBuf ?? undefined,
+    tilted: tiltedBuf,
     isolated,
     analysis,
-    imageSize: { w: W, h: H },
+    imageSize: { w: TW, h: TH },
     metresPerPixel,
     zoom,
   };
