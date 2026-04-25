@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# CesiumJS assets — mirrored at build time by next.config.ts
+/public/cesium/
+
+# Generated baked artifacts (timestamped). Keep only *-latest.*
+/public/baked/*-generated-[0-9]*
+
