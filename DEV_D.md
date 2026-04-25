@@ -10,13 +10,13 @@
 
 ---
 
-## Le rôle, en 3 phrases
+## Le rôle, en 2 phrases
 
 1. **Pipeline data offline** : tu télécharges la photogrammétrie 3D Tiles autour de chaque adresse demo, tu fais tourner notre engine custom (DBSCAN ou estimation simple) dessus, et tu produis un `{house}-analysis.json` que Dev A consomme pour générer le modèle stylé runtime.
-2. **Pioneer fine-tune** (side challenge 700€) : tu pilotes le fine-tune classifier sur 1 620 projets Reonic. L'endpoint REST est consommé par Dev B dans `lib/pioneer.ts`.
-3. **Ship** : push GitHub final + submission form Sun ≤ 14:00.
+2. **Ship** : push GitHub final + submission form Sun ≤ 14:00.
 
 **Tu ne touches pas au rendu 3D.** Dev A possède tout le visuel.
+**Pioneer fine-tune (side challenge 700€) a été transféré à Dev B** — décision pour soulager ta charge sur le 3D Tiles (zone risquée). Dev B owne maintenant tout le pipeline Pioneer (synthetic data + fine-tune + endpoint).
 
 ---
 
@@ -61,8 +61,8 @@ pnpm dev   # vérifier que /design/brandenburg affiche le procedural placeholder
 | D2a | **Si OK** : impl `analyze-roof.ts` complet (DBSCAN normales → faces + obstructions + yield + footprint + panneaux placés via `place-panels.ts`) | 2h30 | A, B |
 | D2b | **Si KO** : fallback "estimate space" (autorisé par le brief) — ouvrir le GLB dans Blender, mesurer manuellement footprint + faces toit, hardcoder en JSON. 30min/maison × 3 = 1h30. | 1h30 | A, B |
 | D3 | **`place-panels.ts::placePanelsOnFace`** : projection face polygon en 2D, edge offset 0.5m, grid 1.7×1.0m + 0.05 gap, filter dehors polygon AND obstructions, reproject en 3D | 1h | A panels |
-| D4 | **Pioneer agent setup + lance fine-tune classif** Sat soir : synthetic data agent (~10k samples augmentés des 1620), fine-tune sur HP / module brand / inverter type | 1h + wait | side prize |
-| D5 | **Pioneer monitor + deploy** : exposer un endpoint REST que Dev B consomme dans `lib/pioneer.ts` | 1h | partner tech |
+| ~~D4~~ | ~~Pioneer agent setup + fine-tune~~ — **TRANSFÉRÉ À DEV B** (multi-task fine-tune NER + decisions sur 805 vrais profils Reonic, déjà en cours) | — | — |
+| ~~D5~~ | ~~Pioneer monitor + deploy~~ — **TRANSFÉRÉ À DEV B** | — | — |
 | D6 | **`public/baked/house-profiles.json`** (sync `ProfileForm.tsx::HOUSE_PROFILES`) | 15min | UI |
 | D7 | **Repo public** Sun 9-10h : déjà sur `jolehuit/reonic-hackathon` — vérifier que tous les pushs sont à jour | 15min | submission |
 | D8 | **Submission form + opt-in compétition** | 30min | submission |
@@ -107,7 +107,6 @@ public/baked/house-profiles.json     — autofill profiles
 - [ ] `pnpm bake:fetch` produit 3 GLB photogrammétriques valides en cache (jamais expose au front)
 - [ ] `pnpm bake:analyze` produit 3 `analysis.json` avec faces, obstructions, modulePositions, buildingFootprint, yield
 - [ ] `placePanelsOnFace(face, [], 24)` retourne 24 positions distinctes valides
-- [ ] Pioneer endpoint répond pour les 3 classifs (HP / brand / inverter)
 - [ ] Repo public sur GitHub à jour (avant Sun 12h)
 - [ ] Submission form rempli **avant Sun 14:00**
 
@@ -121,7 +120,6 @@ Le brief autorise explicitement *"If that's too hard, build something that estim
 |---|---|
 | **fetch-3d-tiles offline trop dur après 2h** | Skip 3D Tiles, ouvrir directement les GLBs Reonic d'origine (toujours dispos dans `public/models/`) dans Blender et hardcoder les analyses. On perd le pitch "any address" mais on garde la démo. |
 | **DBSCAN converge mal** | Fallback "estimate space" : Blender manuel → JSON. Brief OK. 30min/maison. |
-| **Pioneer fine-tune foire** | `PIONEER_DISABLED=true` env var → Dev B bascule k-NN. Tu perds le 700€ side challenge mais sauves la démo. |
 
 ---
 

@@ -33,8 +33,11 @@ curl -X POST http://localhost:3000/api/design -H 'content-type: application/json
 | B2 | **`lib/sizing.ts::recommendSystem` + `findSimilarProjects`** : load 4 CSVs en mémoire au boot, k-NN k=5 sur features normalisées (z-score), aggregate median pour kWp/kWh/price, return top-3 similar | 1h30 | démo |
 | B3 | **`lib/financials.ts`** (nouveau fichier) : payback, ROI 25y, CO2 saved (0.4 kg/kWh × 25y) | 30min | UI KPI |
 | B4 | **`/api/design/route.ts`** : load roof JSON `public/baked/{houseId}-roof.json` (mock Brandenburg déjà fourni), compute roofMaxKwp = sum(face.area × yieldKwhPerSqm × 0.18 / 1000), call `predictBomViaPioneer`, build `modulePositions` via `placePanelsOnFace` (D fournit), return DesignResult complet | 1h30 | démo |
-| B5 | **`lib/pioneer.ts`** : POST REST endpoint Pioneer pour classif (HP/brand/inverter), parse JSON. **Fallback k-NN heuristique** si `PIONEER_DISABLED=true` ou erreur. Latency log pour le pitch. | 1h | wow |
-| B6 | **Pioneer fine-tune launch** Sat ~17h après stack ready : agent setup + génération synthetic data (~10k samples augmentés des 1620 réels) + lance fine-tune classification (HP / module brand / inverter type) | 1h (+ wait time) | side prize |
+| B5 | **`lib/pioneer.ts`** : appelle Pioneer fine-tuned GLiNER2 multi-task (entities + decisions), parse JSON, fallback Gemini structured output si endpoint down. | 1h | side prize + wow |
+| B6a | **Pioneer seeds extract** : `extract-pioneer-seeds.ts` génère `data/pioneer-seeds-enriched.jsonl` (805 vrais profils Reonic + decision labels battery_size_class / system_size_bracket / recommend_wallbox depuis BOM). | 30min | side prize |
+| B6b | **Pioneer multi-task fine-tune** Sat soir : upload jsonl + prompt all-in-one dans Pioneer chat agent. Agent gère synthetic data + train + eval + deploy. | 10min setup + 30min wait | side prize |
+| B6c | **`/api/parse-profile`** : nouvel endpoint NL→profile via Pioneer + Gemini fallback. Wow moment "user types description, form fills". | 30min | wow |
+| B6d | **`/api/design` upgrade** : appelle Pioneer pour les decisions (battery yes/no, system bracket, wallbox), reconcilie avec k-NN sizing. | 30min | side prize |
 | B7 | **`/api/explain/route.ts`** : déjà câblé avec Gemini streaming. Tester avec une vraie clé Gemini et vérifier que `streamText` rend bien | 20min | wow |
 | B8 | **`/api/export/route.ts`** : jsPDF, header adresse, screenshot canvasDataUrl reçu du front, table BOM, total + ROI + CO2, footer "Approved by [date]" | 1h30 | démo |
 | B9 | **Tavily integration** : 1 fetch `tavily.search('current EnBW solar feed-in tariff 2026 Germany')` au boot du serveur, cache mémoire, expose dans `/api/design` response. 5 lignes de code | 20min | partner tech valid |
