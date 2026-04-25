@@ -24,12 +24,21 @@ const PIONEER_API_URL = process.env.PIONEER_API_URL ?? 'https://api.pioneer.ai/v
 const PIONEER_API_KEY = process.env.PIONEER_API_KEY ?? '';
 // V2: NER model for extraction (numeric + has_ev/heating)
 const PIONEER_MODEL = process.env.PIONEER_MODEL ?? 'c13d09a2-7aa9-4826-a723-ef1012d13b7b';
-// V3: classifier model for decisions (battery/system/wallbox). Set when V3 fine-tune is ready.
-const PIONEER_DECISIONS_MODEL = process.env.PIONEER_DECISIONS_MODEL ?? '';
+// V4: 3 single-label classifiers, one per Reonic decision dimension.
+// Note: only the wallbox classifier reaches usable accuracy on holdout eval.
+// Battery and system classifiers underperform majority baseline on 4-class imbalanced data,
+// so we keep them callable but defer to k-NN for those decisions in /api/design.
+const PIONEER_BATTERY_MODEL = process.env.PIONEER_BATTERY_MODEL ?? '';
+const PIONEER_SYSTEM_MODEL = process.env.PIONEER_SYSTEM_MODEL ?? '';
+const PIONEER_WALLBOX_MODEL = process.env.PIONEER_WALLBOX_MODEL ?? '';
 const PIONEER_DISABLED = process.env.PIONEER_DISABLED === 'true';
 const REQUEST_TIMEOUT_MS = 4000;
-const THRESHOLD = 0.3; // best macro-F1 from sweep
-const DECISION_CONFIDENCE_THRESHOLD = 0.55; // below this, fall back to k-NN
+const THRESHOLD = 0.3; // best macro-F1 from V2 NER sweep
+// Per-task confidence thresholds for V4 classifiers below which we ignore the prediction.
+// Wallbox eval was clean (100% on 5-profile probe); battery/system were biased to majority class
+// so we set their threshold near 1.0 — they only override k-NN if the model is *very* sure.
+const WALLBOX_CONFIDENCE_THRESHOLD = 0.5;
+const DECISION_CONFIDENCE_THRESHOLD = 0.95;
 
 // V2 schema: 4 numeric entities + 6 split classification entities + 3 decision entities
 const SCHEMA = [
@@ -174,16 +183,15 @@ export interface DesignDecisions {
   batterySizeClass?: 'none' | 'small' | 'medium' | 'large';
   systemSizeBracket?: 'small' | 'medium' | 'large' | 'xlarge';
   recommendWallbox?: boolean;
-  source: 'pioneer-v3' | 'knn-fallback';
+  source: 'pioneer-v4' | 'knn-fallback';
   confidence?: { battery: number; system: number; wallbox: number };
   inferenceMs: number;
 }
 
-interface PioneerV3Response {
-  // Multi-label classification: same chat-completion wrap as V2
-  // Outer: { choices: [{ message: { content: <JSON STRING> } }] }
-  // Inner: { labels: [{ label: "bat_medium", confidence: 0.87 }, ...] }
-  // OR (legacy): { classifications: { task_name: { label, confidence } } }
+interface ChatCompletionsResponse {
+  // Pioneer wraps real classifier output in OpenAI chat-completion shape:
+  // outer: { choices: [{ message: { content: <JSON STRING> } }] }
+  // inner: { decision: { label, confidence }, ... }   (task name is what we passed in schema)
   choices?: Array<{ message?: { content?: string } }>;
 }
 
@@ -201,42 +209,14 @@ export function profileToCanonicalText(p: CustomerProfile): string {
   return `Familie mit ${p.inhabitants} Personen, Einfamilienhaus ${Math.round(p.houseSizeSqm)} m², Jahresverbrauch ${Math.round(p.annualConsumptionKwh)} kWh, ${heatingDe[p.heatingType]}. ${ev}`;
 }
 
-interface ParsedDecisions {
-  battery?: { label: string; confidence: number };
-  system?: { label: string; confidence: number };
-  wallbox?: { label: string; confidence: number };
+interface ClassifierResult {
+  label: string;
+  confidence: number;
 }
 
-function parseV3Inner(inner: unknown): ParsedDecisions {
-  if (!inner || typeof inner !== 'object') return {};
-  const obj = inner as Record<string, unknown>;
-  const out: ParsedDecisions = {};
-
-  // Shape A — multi-label: { labels: [{label, confidence}, ...] }
-  const labels = obj.labels;
-  if (Array.isArray(labels)) {
-    for (const item of labels) {
-      if (!item || typeof item !== 'object') continue;
-      const { label, confidence } = item as { label?: string; confidence?: number };
-      if (typeof label !== 'string' || typeof confidence !== 'number') continue;
-      if (label.startsWith('bat_') && (!out.battery || out.battery.confidence < confidence)) out.battery = { label: label.slice(4), confidence };
-      if (label.startsWith('sys_') && (!out.system || out.system.confidence < confidence)) out.system = { label: label.slice(4), confidence };
-      if (label.startsWith('wallbox_') && (!out.wallbox || out.wallbox.confidence < confidence)) out.wallbox = { label: label.slice(8), confidence };
-    }
-    return out;
-  }
-
-  // Shape B — per-task: { battery_size_class: { label, confidence }, ... }
-  const batt = obj.battery_size_class as { label?: string; confidence?: number } | undefined;
-  const sys = obj.system_size_bracket as { label?: string; confidence?: number } | undefined;
-  const wb = obj.recommend_wallbox as { label?: string; confidence?: number } | undefined;
-  if (batt?.label && typeof batt.confidence === 'number') out.battery = { label: batt.label, confidence: batt.confidence };
-  if (sys?.label && typeof sys.confidence === 'number') out.system = { label: sys.label, confidence: sys.confidence };
-  if (wb?.label && typeof wb.confidence === 'number') out.wallbox = { label: wb.label, confidence: wb.confidence };
-  return out;
-}
-
-async function callDecisionsModel(text: string): Promise<ParsedDecisions> {
+/** Call one of the V4 single-label classifiers. Returns null on any failure. */
+async function callClassifier(modelId: string, text: string, labels: string[]): Promise<ClassifierResult | null> {
+  if (!modelId) return null;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
@@ -247,28 +227,23 @@ async function callDecisionsModel(text: string): Promise<ParsedDecisions> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: PIONEER_DECISIONS_MODEL,
+        model: modelId,
         messages: [{ role: 'user', content: text }],
-        // V3 expects a multi-label classification schema. Flat array of all possible labels.
-        schema: {
-          classifications: [
-            { task: 'battery_size_class', labels: ['none', 'small', 'medium', 'large'] },
-            { task: 'system_size_bracket', labels: ['small', 'medium', 'large', 'xlarge'] },
-            { task: 'recommend_wallbox', labels: ['yes', 'no'] },
-          ],
-        },
+        schema: { classifications: [{ task: 'decision', labels }] },
         include_confidence: true,
       }),
       signal: controller.signal,
     });
-    if (!res.ok) throw new Error(`Pioneer V3 ${res.status}: ${await res.text()}`);
-    const outer = (await res.json()) as PioneerV3Response;
+    if (!res.ok) return null;
+    const outer = (await res.json()) as ChatCompletionsResponse;
     const innerStr = outer.choices?.[0]?.message?.content;
-    let inner: unknown = outer; // fallback: outer might already be flat
-    if (typeof innerStr === 'string') {
-      try { inner = JSON.parse(innerStr); } catch { /* keep outer */ }
-    }
-    return parseV3Inner(inner);
+    if (typeof innerStr !== 'string') return null;
+    const inner = JSON.parse(innerStr) as Record<string, unknown>;
+    const decision = inner.decision as ClassifierResult | undefined;
+    if (decision?.label && typeof decision.confidence === 'number') return decision;
+    return null;
+  } catch {
+    return null;
   } finally {
     clearTimeout(timer);
   }
@@ -276,38 +251,55 @@ async function callDecisionsModel(text: string): Promise<ParsedDecisions> {
 
 /**
  * Predicts Reonic-style design decisions (battery class, system bracket, wallbox)
- * from a customer profile. Used by /api/design alongside k-NN sizing.
+ * from a customer profile via 3 single-label fine-tuned classifiers running in parallel.
  *
- * Falls back to k-NN-derived decisions if V3 is unavailable, disabled, or low-confidence.
+ * Eval results on a 5-profile probe:
+ *   - wallbox: 100% accuracy, conf 0.90-1.00 — TRUSTED above threshold 0.5
+ *   - battery: predicts majority class ("medium") on every profile, F1 0.18 — only trusted at conf≥0.95
+ *   - system: predicts mostly "medium/large" with low conf, F1 0.0 — only trusted at conf≥0.95
+ *
+ * Practical behavior: wallbox decision is reliable and overrides the EV-based heuristic;
+ * battery/system fall through to k-NN unless the model is unusually confident.
+ *
+ * Falls back to k-NN-derived decisions if classifiers are unavailable, disabled, or low-confidence.
  */
 export async function getDesignDecisions(profile: CustomerProfile): Promise<DesignDecisions> {
   const start = performance.now();
 
-  if (PIONEER_DISABLED || !PIONEER_API_KEY || !PIONEER_DECISIONS_MODEL) {
+  if (PIONEER_DISABLED || !PIONEER_API_KEY) {
     return { source: 'knn-fallback', inferenceMs: Math.round(performance.now() - start) };
   }
 
   try {
     const text = profileToCanonicalText(profile);
-    const d = await callDecisionsModel(text);
-    const battery = d.battery && d.battery.confidence >= DECISION_CONFIDENCE_THRESHOLD ? d.battery.label : undefined;
-    const system = d.system && d.system.confidence >= DECISION_CONFIDENCE_THRESHOLD ? d.system.label : undefined;
-    const wallbox = d.wallbox && d.wallbox.confidence >= DECISION_CONFIDENCE_THRESHOLD ? d.wallbox.label : undefined;
+    const [battery, system, wallbox] = await Promise.all([
+      callClassifier(PIONEER_BATTERY_MODEL, text, ['none', 'small', 'medium', 'large']),
+      callClassifier(PIONEER_SYSTEM_MODEL, text, ['small', 'medium', 'large', 'xlarge']),
+      callClassifier(PIONEER_WALLBOX_MODEL, text, ['yes', 'no']),
+    ]);
+
+    if (!battery && !system && !wallbox) {
+      return { source: 'knn-fallback', inferenceMs: Math.round(performance.now() - start) };
+    }
+
+    const trustedBattery = battery && battery.confidence >= DECISION_CONFIDENCE_THRESHOLD ? battery.label : undefined;
+    const trustedSystem = system && system.confidence >= DECISION_CONFIDENCE_THRESHOLD ? system.label : undefined;
+    const trustedWallboxLabel = wallbox && wallbox.confidence >= WALLBOX_CONFIDENCE_THRESHOLD ? wallbox.label : undefined;
 
     return {
-      batterySizeClass: battery as DesignDecisions['batterySizeClass'],
-      systemSizeBracket: system as DesignDecisions['systemSizeBracket'],
-      recommendWallbox: wallbox === 'yes' ? true : wallbox === 'no' ? false : undefined,
+      batterySizeClass: trustedBattery as DesignDecisions['batterySizeClass'],
+      systemSizeBracket: trustedSystem as DesignDecisions['systemSizeBracket'],
+      recommendWallbox: trustedWallboxLabel === 'yes' ? true : trustedWallboxLabel === 'no' ? false : undefined,
       confidence: {
-        battery: d.battery?.confidence ?? 0,
-        system: d.system?.confidence ?? 0,
-        wallbox: d.wallbox?.confidence ?? 0,
+        battery: battery?.confidence ?? 0,
+        system: system?.confidence ?? 0,
+        wallbox: wallbox?.confidence ?? 0,
       },
-      source: 'pioneer-v3',
+      source: 'pioneer-v4',
       inferenceMs: Math.round(performance.now() - start),
     };
   } catch (err) {
-    console.warn('[pioneer-v3] decisions endpoint failed, falling back to k-NN:', err instanceof Error ? err.message : err);
+    console.warn('[pioneer-v4] decisions endpoints failed, falling back to k-NN:', err instanceof Error ? err.message : err);
     return { source: 'knn-fallback', inferenceMs: Math.round(performance.now() - start) };
   }
 }
