@@ -1,17 +1,11 @@
-// fal-ai/trellis-2 wrapper. Image → 3D GLB via the raw fal REST APIs.
-//
-// We bypass @fal-ai/client because its fal.subscribe() / fal.storage.upload()
-// hit a legacy auth pipeline that returns 403 Forbidden ("User is locked")
-// even when the underlying REST endpoints accept the exact same key with 200.
-// Pipeline (all confirmed working with raw fetch):
-//   1. POST  rest.alpha.fal.ai/storage/upload/initiate → {file_url, upload_url}
-//   2. PUT   upload_url with the PNG bytes → image is now hosted at file_url
-//   3. POST  queue.fal.run/fal-ai/trellis-2 with {image_url: file_url}
-//   4. Poll  status_url until COMPLETED, then GET response_url for the GLB.
-// We also avoid base64 data URIs as image_url — fal rejects those for non-
-// premium accounts with the same misleading "User is locked" message.
+// fal-ai/trellis-2 wrapper. Image → 3D GLB via the raw fal queue API.
+// Pipeline:
+//   1. POST queue.fal.run/fal-ai/trellis-2 with {image_url: <base64 data URI>}
+//   2. Poll status_url until COMPLETED, then GET response_url for the GLB.
 
-const STORAGE_INITIATE_URL = 'https://rest.alpha.fal.ai/storage/upload/initiate';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 const QUEUE_BASE = 'https://queue.fal.run';
 const MODEL_ID = 'fal-ai/trellis-2';
 // Cap the polling so a wedged request doesn't tie up the route forever.
@@ -27,11 +21,6 @@ export interface TrellisInput {
 export interface TrellisResult {
   glbUrl: string;
   requestId: string;
-}
-
-interface StorageInitiateResponse {
-  file_url: string;
-  upload_url: string;
 }
 
 interface QueueSubmitResponse {
@@ -52,44 +41,49 @@ interface TrellisOutput {
   model_glb?: { url?: string };
 }
 
+// Reads FAL_KEY preferring .env.local over the shell-exported value, because
+// it's easy to leave a stale `export FAL_KEY=...` in ~/.zshrc that silently
+// overrides the project-local key (Next.js gives precedence to process.env
+// over .env.local by design).
+let cachedKey: string | null = null;
+function readFalKey(): string {
+  if (cachedKey) return cachedKey;
+  let source = '?';
+  try {
+    const envPath = resolve(process.cwd(), '.env.local');
+    const text = readFileSync(envPath, 'utf8');
+    const match = text.match(/^\s*FAL_KEY\s*=\s*(.+)$/m);
+    if (match) {
+      const v = match[1].trim().replace(/^['"]|['"]$/g, '');
+      if (v) {
+        cachedKey = v;
+        source = '.env.local';
+        console.log(
+          `[trellis] using FAL_KEY from ${source} (starts ${v.slice(0, 8)}…, len ${v.length})`,
+        );
+        return v;
+      }
+    }
+  } catch (err) {
+    console.log('[trellis] could not read .env.local:', err instanceof Error ? err.message : err);
+  }
+  const fallback = process.env.FAL_KEY;
+  if (!fallback) throw new Error('FAL_KEY not set (looked in .env.local and process.env)');
+  cachedKey = fallback;
+  source = 'process.env';
+  console.log(
+    `[trellis] using FAL_KEY from ${source} (starts ${fallback.slice(0, 8)}…, len ${fallback.length})`,
+  );
+  return fallback;
+}
+
 function authHeader(): string {
-  const key = process.env.FAL_KEY;
-  if (!key) throw new Error('FAL_KEY not set');
-  return `Key ${key}`;
+  return `Key ${readFalKey()}`;
 }
 
 export async function generateTrellisModel(input: TrellisInput): Promise<TrellisResult> {
-  // 1. Initiate a signed upload.
-  const initRes = await fetch(STORAGE_INITIATE_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: authHeader(),
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({ file_name: 'oblique.png', content_type: 'image/png' }),
-  });
-  if (!initRes.ok) {
-    const body = await initRes.text().catch(() => '');
-    throw new Error(`storage initiate failed: HTTP ${initRes.status} ${body}`);
-  }
-  const { file_url, upload_url } = (await initRes.json()) as StorageInitiateResponse;
-  if (!file_url || !upload_url) {
-    throw new Error('storage initiate returned malformed body');
-  }
-
-  // 2. PUT the image bytes to the signed URL. No auth header — the signature
-  // in the URL is the credential.
-  const putRes = await fetch(upload_url, {
-    method: 'PUT',
-    headers: { 'content-type': 'image/png' },
-    body: new Uint8Array(input.image),
-  });
-  if (!putRes.ok) {
-    const body = await putRes.text().catch(() => '');
-    throw new Error(`storage PUT failed: HTTP ${putRes.status} ${body}`);
-  }
-
-  // 3. Submit to the trellis-2 queue with the freshly hosted image URL.
+  // 1. Submit to the trellis-2 queue. Image goes inline as a base64 data URI.
+  const dataUri = `data:image/png;base64,${input.image.toString('base64')}`;
   const submitRes = await fetch(`${QUEUE_BASE}/${MODEL_ID}`, {
     method: 'POST',
     headers: {
@@ -97,10 +91,10 @@ export async function generateTrellisModel(input: TrellisInput): Promise<Trellis
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      image_url: file_url,
+      image_url: dataUri,
       decimation_target: 30000,
-      texture_size: '1024',
-      resolution: '1024',
+      texture_size: 1024,
+      resolution: 1024,
     }),
   });
   if (!submitRes.ok) {
@@ -113,7 +107,7 @@ export async function generateTrellisModel(input: TrellisInput): Promise<Trellis
     throw new Error(`queue submit returned malformed body: ${JSON.stringify(submit)}`);
   }
 
-  // 4. Poll status_url until terminal.
+  // 2. Poll status_url until terminal.
   const startedAt = Date.now();
   while (Date.now() - startedAt < MAX_POLL_MS) {
     await sleep(POLL_INTERVAL_MS);
@@ -134,7 +128,7 @@ export async function generateTrellisModel(input: TrellisInput): Promise<Trellis
     throw new Error(`trellis timed out after ${Math.round(MAX_POLL_MS / 1000)}s`);
   }
 
-  // 5. Fetch the result.
+  // 3. Fetch the result.
   const resultRes = await fetch(response_url, {
     headers: { Authorization: authHeader() },
   });

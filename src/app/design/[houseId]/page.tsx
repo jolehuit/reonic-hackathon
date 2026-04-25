@@ -186,30 +186,27 @@ export default function DesignPage({ params }: Props) {
           </div>
         )}
 
-        {/* Agent trace — left side during agent-running and after */}
-        {(phase === 'agent-running' || phase === 'interactive' || phase === 'reviewing' || phase === 'approved') && (
-          <div className="pointer-events-auto absolute left-5 top-20">
+        {/* Agent trace — visible ONLY while the AI agent is running. Once the
+            scene is interactive (3D model rendered), it gets replaced by the
+            ControlPanel below so the left edge stays clean. */}
+        {phase === 'agent-running' && (
+          <div className="pointer-events-auto absolute left-5 top-20 max-h-[calc(100vh-7rem)] w-[360px] overflow-hidden">
             <AgentTrace />
           </div>
         )}
 
-        {/* KPI + Evidence — right side once design lands */}
+        {/* KPI + Evidence — right rail once design lands. Review & Approve
+            lives in the bottom ControlPanel now, not duplicated here. */}
         {(phase === 'interactive' || phase === 'reviewing' || phase === 'approved') && (
-          <div className="pointer-events-auto absolute right-5 top-5 flex w-[380px] flex-col gap-4">
+          <div className="pointer-events-auto absolute right-5 top-5 flex w-[360px] flex-col gap-4">
             <KPISidebar />
             <EvidencePanel />
-            {phase === 'interactive' && (
-              <button
-                onClick={() => setPhase('reviewing')}
-                className="rounded-2xl bg-emerald-600 px-5 py-3 text-[14px] font-semibold text-white shadow-md transition hover:bg-emerald-700"
-              >
-                Review &amp; Approve →
-              </button>
-            )}
           </div>
         )}
 
-        {/* Control panel — bottom-centre during interactive */}
+        {/* ControlPanel — bottom-centre, the main interaction surface once
+            the scene is rendered. Hosts the consumption slider, the four
+            energy toggles and the Review & Approve CTA in one row. */}
         {phase === 'interactive' && (
           <div className="pointer-events-auto absolute bottom-6 left-1/2 -translate-x-1/2">
             <ControlPanel />

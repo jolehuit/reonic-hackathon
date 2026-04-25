@@ -8,8 +8,8 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
-import { Edges, Html } from '@react-three/drei';
-import { Box3, Group, Mesh, Shape, Vector3 } from 'three';
+import { Edges, Html, Billboard } from '@react-three/drei';
+import { Box3, Group, Mesh, Shape, TextureLoader, Vector3 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { useStore } from '@/lib/store';
 import { useHouseGeometry } from './HouseGeometry';
@@ -78,33 +78,159 @@ export function TrellisModel({ houseId }: { houseId: HouseId | 'custom' }) {
     };
   }, [coords?.lat, coords?.lng, houseId, setTrellisStatus]);
 
+  // Screenshot URL (the same oblique screenshot fal will analyze) — fetched
+  // in parallel by the browser as a TextureLoader so we can show it as a
+  // backdrop while waiting. Browser cache means /api/aerial only runs once
+  // even though /api/trellis also pulls it server-side.
+  const screenshotUrl = coords
+    ? `/api/aerial?lat=${coords.lat}&lng=${coords.lng}&zoom=20&tilted=1`
+    : null;
+
   return (
     <group>
       <Ground />
-      {status.kind === 'ready' ? (
-        <Suspense
-          fallback={
-            <Skeleton width={SKELETON_WIDTH} depth={SKELETON_DEPTH} height={SKELETON_WALL} />
-          }
-        >
-          <LoadedGlb url={status.glbUrl} width={width} depth={depth} height={wallHeight} />
+      {screenshotUrl && status.kind !== 'idle' && (
+        <Suspense fallback={null}>
+          <ScreenshotBillboard
+            url={screenshotUrl}
+            // Fade out once GLB is ready (we'll cross-fade through the morph).
+            isReady={status.kind === 'ready'}
+          />
         </Suspense>
-      ) : (
-        <Skeleton
-          width={SKELETON_WIDTH}
-          depth={SKELETON_DEPTH}
-          height={SKELETON_WALL}
-          message={
-            status.kind === 'generating'
-              ? 'Generating 3D model'
-              : status.kind === 'error'
-              ? `Failed: ${status.message}`
-              : 'Preparing'
-          }
-          tone={status.kind === 'error' ? 'error' : 'busy'}
-        />
       )}
+      <MorphingBuilding
+        status={status}
+        glbWidth={width}
+        glbDepth={depth}
+        glbHeight={wallHeight}
+      />
     </group>
+  );
+}
+
+// Wrap skeleton + GLB together so we can cross-fade between them over a
+// ~1.5s morph window when status transitions from generating → ready.
+function MorphingBuilding({
+  status,
+  glbWidth,
+  glbDepth,
+  glbHeight,
+}: {
+  status: Status;
+  glbWidth: number;
+  glbDepth: number;
+  glbHeight: number;
+}) {
+  const transitionStartedRef = useRef<number | null>(null);
+  const [transitionT, setTransitionT] = useState(0); // 0..1 over MORPH_MS
+  const MORPH_MS = 1500;
+
+  useEffect(() => {
+    if (status.kind === 'ready' && transitionStartedRef.current === null) {
+      transitionStartedRef.current = performance.now();
+    }
+  }, [status.kind]);
+
+  useFrame(() => {
+    if (transitionStartedRef.current === null) return;
+    const elapsed = performance.now() - transitionStartedRef.current;
+    const t = Math.min(1, elapsed / MORPH_MS);
+    if (t !== transitionT) setTransitionT(t);
+  });
+
+  // Easing: smoothstep. Skeleton fade-out is 1-ease(t); GLB fade-in is ease(t).
+  const ease = transitionT * transitionT * (3 - 2 * transitionT);
+  const skeletonOpacity = status.kind === 'ready' ? 1 - ease : 1;
+  const glbOpacity = status.kind === 'ready' ? ease : 0;
+  const skeletonScale = status.kind === 'ready' ? 1 + ease * 0.4 : 1;
+  const glbScale = status.kind === 'ready' ? 0.6 + ease * 0.4 : 0.6;
+
+  return (
+    <>
+      {/* Skeleton: visible until morph completes, then unmounted. */}
+      {skeletonOpacity > 0.02 && (
+        <group scale={skeletonScale}>
+          <Skeleton
+            width={SKELETON_WIDTH}
+            depth={SKELETON_DEPTH}
+            height={SKELETON_WALL}
+            opacityMul={skeletonOpacity}
+            message={
+              status.kind === 'generating'
+                ? 'Generating 3D model'
+                : status.kind === 'error'
+                ? `Failed: ${status.message}`
+                : status.kind === 'ready'
+                ? undefined
+                : 'Preparing'
+            }
+            tone={status.kind === 'error' ? 'error' : 'busy'}
+          />
+        </group>
+      )}
+
+      {/* GLB: fades in during the morph window, full opacity afterwards. */}
+      {status.kind === 'ready' && (
+        <Suspense fallback={null}>
+          <group scale={glbScale}>
+            <LoadedGlb
+              url={status.glbUrl}
+              width={glbWidth}
+              depth={glbDepth}
+              height={glbHeight}
+              opacity={glbOpacity}
+            />
+          </group>
+        </Suspense>
+      )}
+    </>
+  );
+}
+
+// Screenshot of the oblique aerial view (Cesium + 3D Tiles) shown as a
+// billboard always facing the camera. Fades in once the texture loads,
+// fades out when the GLB is ready so the eye is drawn back to the model.
+function ScreenshotBillboard({ url, isReady }: { url: string; isReady: boolean }) {
+  const texture = useLoader(TextureLoader, url);
+  const meshRef = useRef<Mesh>(null);
+  const fadeStartRef = useRef<number>(performance.now());
+
+  useFrame(() => {
+    const mat = meshRef.current?.material as { opacity?: number } | undefined;
+    if (!mat) return;
+    const elapsed = performance.now() - fadeStartRef.current;
+    if (isReady) {
+      // Fade out over 800ms once GLB is ready.
+      mat.opacity = Math.max(0, 0.55 * (1 - elapsed / 800));
+    } else {
+      // Fade in over 600ms after texture loaded.
+      mat.opacity = Math.min(0.55, (elapsed / 600) * 0.55);
+    }
+  });
+
+  // Reset fade timer when isReady flips.
+  useEffect(() => {
+    fadeStartRef.current = performance.now();
+  }, [isReady]);
+
+  // Aspect ratio from the texture (most Cesium screenshots are square ~1280x1280).
+  const aspect = (texture.image?.width ?? 1) / (texture.image?.height ?? 1);
+  const W = 9;
+  const H = W / aspect;
+
+  return (
+    <Billboard position={[0, 5, -7]} follow lockX={false} lockY={false} lockZ={false}>
+      <mesh ref={meshRef}>
+        <planeGeometry args={[W, H]} />
+        <meshBasicMaterial
+          map={texture}
+          transparent
+          opacity={0}
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </mesh>
+    </Billboard>
   );
 }
 
@@ -119,12 +245,15 @@ function Skeleton({
   height,
   message,
   tone = 'busy',
+  opacityMul = 1,
 }: {
   width: number;
   depth: number;
   height: number;
   message?: string;
   tone?: 'busy' | 'error';
+  /** Multiplies all rendered material opacities (used during morph fade-out). */
+  opacityMul?: number;
 }) {
   const houseRef = useRef<Group>(null);
   const wallsRef = useRef<Mesh>(null);
@@ -165,8 +294,9 @@ function Skeleton({
     if (houseRef.current) {
       houseRef.current.rotation.y = t * (Math.PI * 2) / 12;
     }
-    // Walls + roof: gentle opacity pulse on the wireframe edges.
-    const pulse = 0.55 + Math.sin(t * 2.5) * 0.25;
+    // Walls + roof: gentle opacity pulse on the wireframe edges. Scaled by
+    // opacityMul so the parent can fade us out during the morph.
+    const pulse = (0.55 + Math.sin(t * 2.5) * 0.25) * opacityMul;
     const wallsMat = wallsRef.current?.material as { opacity?: number } | undefined;
     if (wallsMat && 'opacity' in wallsMat) wallsMat.opacity = pulse;
     const roofMat = roofRef.current?.material as { opacity?: number } | undefined;
@@ -177,14 +307,15 @@ function Skeleton({
       const phase = (Math.sin(t * 1.0) + 1) * 0.5;
       scanRef.current.position.y = phase * totalH;
       const mat = scanRef.current.material as { opacity?: number } | undefined;
-      if (mat && 'opacity' in mat) mat.opacity = 0.6 - Math.abs(phase - 0.5) * 0.5;
+      if (mat && 'opacity' in mat) mat.opacity = (0.6 - Math.abs(phase - 0.5) * 0.5) * opacityMul;
     }
     // Halo at the ground — slow expand/contract.
     if (haloRef.current) {
       const breath = 1 + (Math.sin(t * 1.6) + 1) * 0.18;
       haloRef.current.scale.set(breath, breath, breath);
       const mat = haloRef.current.material as { opacity?: number } | undefined;
-      if (mat && 'opacity' in mat) mat.opacity = 0.32 - (Math.sin(t * 1.6) + 1) * 0.1;
+      if (mat && 'opacity' in mat)
+        mat.opacity = (0.32 - (Math.sin(t * 1.6) + 1) * 0.1) * opacityMul;
     }
   });
 
@@ -464,11 +595,14 @@ function LoadedGlb({
   width,
   depth,
   height,
+  opacity = 1,
 }: {
   url: string;
   width: number;
   depth: number;
   height: number;
+  /** Multiplied into every mesh material's opacity for the morph fade-in. */
+  opacity?: number;
 }) {
   const gltf = useLoader(GLTFLoader, url);
   const scene = useMemo(() => gltf.scene.clone(true), [gltf]);
@@ -487,15 +621,32 @@ function LoadedGlb({
     };
   }, [scene, width, depth]);
 
-  // Cast/receive shadows on every mesh.
+  // Cast/receive shadows on every mesh + flip materials transparent so the
+  // opacity fade-in works during the morph.
   useEffect(() => {
     scene.traverse((obj) => {
-      if ((obj as Mesh).isMesh) {
-        (obj as Mesh).castShadow = true;
-        (obj as Mesh).receiveShadow = true;
+      const mesh = obj as Mesh;
+      if (!mesh.isMesh) return;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const m of mats) {
+        if (m && 'transparent' in m) m.transparent = true;
       }
     });
   }, [scene]);
+
+  // Drive the opacity each frame (cheaper than a re-render on every step).
+  useFrame(() => {
+    scene.traverse((obj) => {
+      const mesh = obj as Mesh;
+      if (!mesh.isMesh) return;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const m of mats) {
+        if (m && 'opacity' in m) (m as { opacity: number }).opacity = opacity;
+      }
+    });
+  });
 
   // Use the height from the house geometry only as a sanity check — Trellis
   // GLBs already encode their own roof height correctly relative to their
