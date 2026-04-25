@@ -33,7 +33,7 @@ export default function DesignPage({ params }: Props) {
     selectHouse(houseId);
   }, [houseId, selectHouse]);
 
-  const showFullTrace = phase === 'agent-running';
+  const showFullTrace = phase === 'agent-running' || phase === 'interactive';
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-zinc-950">
