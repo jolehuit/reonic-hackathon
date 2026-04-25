@@ -166,6 +166,44 @@ const VARIANTS: Variant[] = [
       VARIANT_AUTO_MULTI_LEVEL_BAND: '2.5',
     },
   },
+  {
+    name: 'flux-strict',
+    suffix: '-M',
+    description: 'drop panels whose annual direct-beam flux < 800 kWh/m²/yr (proxy Solar API per-pixel flux filter)',
+    env: {
+      OUTPUT_SUFFIX: '-M',
+      VARIANT_MIN_ANNUAL_FLUX: '800',
+    },
+  },
+  {
+    name: 'concave-hull',
+    suffix: '-N',
+    description: 'concave hull (alpha-shape) for face polygons — better fit on L/U-shaped roofs',
+    env: {
+      OUTPUT_SUFFIX: '-N',
+      VARIANT_CONCAVE_HULL_CONCAVITY: '2.5',
+    },
+  },
+  {
+    name: 'ms-footprint',
+    suffix: '-O',
+    description: 'use Microsoft Building Footprints when OSM polygon is too tight (Reihenhäuser fix)',
+    env: {
+      OUTPUT_SUFFIX: '-O',
+      VARIANT_USE_MS_FOOTPRINT: '1',
+      VARIANT_MS_VS_OSM_MIN_RATIO: '1.1',
+    },
+  },
+  {
+    name: 'pavilion-split',
+    suffix: '-P',
+    description: 'spatial DBSCAN keeps only the dominant pavilion — multi-wing institutional buildings',
+    env: {
+      OUTPUT_SUFFIX: '-P',
+      VARIANT_PAVILION_DBSCAN_EPS: '1.5',
+      VARIANT_PAVILION_MIN_POINTS: '20',
+    },
+  },
 ];
 
 interface ModulePos {
@@ -407,22 +445,31 @@ async function main() {
   //
   // For row houses, OSM polygon is tight to the wall and most variants miss
   // the eaves, so consensus drops them too. If our consensus coverage versus
-  // the LARGEST variant's roof estimate is implausibly low (< 25 %) AND that
-  // larger variant gave a panel set with a reasonable own-coverage (≤ 65 %),
-  // trust it directly — its eaves rescue caught real roof material the strict
-  // variants missed.
+  // the LARGEST variant's roof estimate is implausibly low (< 25 %), prefer
+  // variant -O (MS Footprints) when available — it uses a more accurate
+  // building outline. Otherwise fall back to -F (max-eaves OSM expansion).
   const maxRoof = Math.max(...scored.map((s) => s.faceArea));
   const consensusCovOnMax = (winners.length * PANEL_AREA) / Math.max(maxRoof, 1);
   if (consensusCovOnMax < 0.25) {
-    const candidate = scored
-      .slice()
-      .sort((a, b) => b.panelCount - a.panelCount)
-      .find((s) => s.coverage <= 0.65 && s.panelCount > winners.length * 1.5);
-    if (candidate) {
+    // First-priority: variant -O (Microsoft Footprints) — more accurate polygon
+    // than OSM in tight Reihenhaus configurations.
+    const oVariant = scored.find((s) => s.variant.suffix === '-O');
+    if (oVariant && oVariant.panelCount > winners.length * 1.5 && oVariant.coverage <= 0.65) {
       console.log(
-        `  ⚠ consensus coverage on max roof (${maxRoof.toFixed(0)} m²) is only ${(consensusCovOnMax * 100).toFixed(0)}% — falling back to variant ${candidate.variant.suffix} (${candidate.variant.name}) with ${candidate.panelCount} panels at ${(candidate.coverage * 100).toFixed(0)}% own-coverage`,
+        `  ⚠ consensus coverage on max roof (${maxRoof.toFixed(0)} m²) is only ${(consensusCovOnMax * 100).toFixed(0)}% — falling back to variant -O (MS Footprints) with ${oVariant.panelCount} panels at ${(oVariant.coverage * 100).toFixed(0)}% own-coverage`,
       );
-      winners = (candidate.data.modulePositions ?? []).map((p) => ({ ...p }));
+      winners = (oVariant.data.modulePositions ?? []).map((p) => ({ ...p }));
+    } else {
+      const candidate = scored
+        .slice()
+        .sort((a, b) => b.panelCount - a.panelCount)
+        .find((s) => s.coverage <= 0.65 && s.panelCount > winners.length * 1.5);
+      if (candidate) {
+        console.log(
+          `  ⚠ consensus coverage on max roof (${maxRoof.toFixed(0)} m²) is only ${(consensusCovOnMax * 100).toFixed(0)}% — falling back to variant ${candidate.variant.suffix} (${candidate.variant.name}) with ${candidate.panelCount} panels at ${(candidate.coverage * 100).toFixed(0)}% own-coverage`,
+        );
+        winners = (candidate.data.modulePositions ?? []).map((p) => ({ ...p }));
+      }
     }
   }
 

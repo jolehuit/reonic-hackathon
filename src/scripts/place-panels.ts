@@ -29,9 +29,14 @@ interface ModulePosition {
  * Optional shade-aware filter. Given a candidate panel position in world
  * coords, returns the fraction of sample sun positions where this point is
  * blocked by the photogrammetry mesh (0 = always sunlit, 1 = always shaded).
+ *
+ * Optionally also estimates the annual direct-beam flux (kWh/m²/yr) for the
+ * given panel position + normal — used by analyze-roof to drop panels whose
+ * combined orientation + shading puts them below a yield threshold.
  */
 export interface ShadeSampler {
   shadedFraction(x: number, y: number, z: number): number;
+  annualFlux?(x: number, y: number, z: number, normal: [number, number, number]): number;
 }
 
 const MAX_SHADED_FRACTION = numEnv('VARIANT_MAX_SHADED_FRACTION', 0.30);

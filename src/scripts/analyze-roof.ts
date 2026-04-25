@@ -32,9 +32,11 @@ import path from 'node:path';
 
 import * as THREE from 'three';
 import * as SunCalc from 'suncalc';
+import concaveman from 'concaveman';
 
 import type { RoofFace, Obstruction, RoofGeometry } from '../lib/types';
 import { placePanelsOnFace, type ShadeSampler } from './place-panels';
+import { fetchMSBuildingFootprint } from '../lib/ms-building-footprints';
 
 const HOUSES = ['brandenburg', 'hamburg', 'ruhr'] as const;
 
@@ -74,6 +76,24 @@ const VARIANT_PANEL_DENSITY_CAP = numEnv('VARIANT_PANEL_DENSITY_CAP', 1.0); // 1
 // so it can vote in the consensus alongside the residential-tuned variants.
 const VARIANT_AUTO_MULTI_LEVEL_TRIGGER = numEnv('VARIANT_AUTO_MULTI_LEVEL_TRIGGER', 0);
 const VARIANT_AUTO_MULTI_LEVEL_BAND = numEnv('VARIANT_AUTO_MULTI_LEVEL_BAND', 2.5);
+// Minimum annual direct-beam flux per panel (kWh/m²/yr). 0 = disabled.
+// Solar API rejects panels below ~750-800; we use a conservative 800 by default
+// in the dedicated "flux-strict" variant.
+const VARIANT_MIN_ANNUAL_FLUX = numEnv('VARIANT_MIN_ANNUAL_FLUX', 0);
+// Use concave hull (alpha-shape) for face polygons instead of convex hull.
+// Concavity 1.5-3.0 reasonable; higher = closer to convex.
+const VARIANT_CONCAVE_HULL_CONCAVITY = numEnv('VARIANT_CONCAVE_HULL_CONCAVITY', 0); // 0 = disabled (use convex)
+// Microsoft Building Footprints fallback: when 1, fetch MS polygon and use it
+// instead of OSM if it's at least MS_VS_OSM_MIN_RATIO times larger AND contains
+// the target point. Helps Reihenhäuser where OSM is drawn tight to the wall.
+const VARIANT_USE_MS_FOOTPRINT = flagEnv('VARIANT_USE_MS_FOOTPRINT');
+const VARIANT_MS_VS_OSM_MIN_RATIO = numEnv('VARIANT_MS_VS_OSM_MIN_RATIO', 1.1);
+// Per-pavilion decomposition: spatial DBSCAN on triangle XZ centroids → keep
+// only the largest cluster (dominant pavilion). Fixes multi-wing institutional
+// buildings where the OSM polygon spans several disconnected roof sections.
+// 0 = disabled.
+const VARIANT_PAVILION_DBSCAN_EPS = numEnv('VARIANT_PAVILION_DBSCAN_EPS', 0);
+const VARIANT_PAVILION_MIN_POINTS = Math.round(numEnv('VARIANT_PAVILION_MIN_POINTS', 20));
 const OUTPUT_SUFFIX = process.env.OUTPUT_SUFFIX ?? '';
 
 const ROOF_NORMAL_Y_MIN = 0.15;
@@ -99,13 +119,13 @@ const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 // conversion at city scale (sub-metre error on ~100 m baselines).
 const EARTH_RADIUS_M = 6378137;
 
-// Obstruction detection
-const OBSTRUCTION_MIN_HEIGHT_M = 0.15;     // raised this much above the face plane → candidate
-const OBSTRUCTION_MAX_HEIGHT_M = 2.5;      // ignore anything taller (likely a neighbour, not a roof obstacle)
-const OBSTRUCTION_DBSCAN_EPS_M = 0.4;      // spatial clustering radius
-const OBSTRUCTION_DBSCAN_MIN_POINTS = 4;
-const OBSTRUCTION_SAFETY_MARGIN_M = 0.3;   // panels must keep this clear around any obstacle
-const OBSTRUCTION_MIN_RADIUS_M = 0.2;      // floor radius (very small bumps are still no-go zones)
+// Obstruction detection — env-overridable for variant tuning
+const OBSTRUCTION_MIN_HEIGHT_M = numEnv('VARIANT_OBS_MIN_HEIGHT', 0.10);  // 0.15 → 0.10 catches vélux/skylights better
+const OBSTRUCTION_MAX_HEIGHT_M = 2.5;
+const OBSTRUCTION_DBSCAN_EPS_M = numEnv('VARIANT_OBS_DBSCAN_EPS', 0.4);
+const OBSTRUCTION_DBSCAN_MIN_POINTS = Math.round(numEnv('VARIANT_OBS_DBSCAN_MIN_POINTS', 3)); // 4 → 3 keeps smaller obstacles
+const OBSTRUCTION_SAFETY_MARGIN_M = numEnv('VARIANT_OBS_SAFETY_MARGIN', 0.5);  // 0.3 → 0.5 (Solar API typically uses 0.5-1m)
+const OBSTRUCTION_MIN_RADIUS_M = 0.2;
 
 interface Triangle {
   centroid: [number, number, number];
@@ -174,6 +194,50 @@ function medianBandFilter(tris: Triangle[], band: number): Triangle[] {
   const ys = tris.map((t) => t.centroid[1]).sort((a, b) => a - b);
   const median = ys[Math.floor(ys.length / 2)];
   return tris.filter((t) => Math.abs(t.centroid[1] - median) <= band);
+}
+
+/**
+ * Per-pavilion DBSCAN on XZ centroids. Returns triangles belonging to the
+ * largest connected cluster (the dominant pavilion). For multi-pavillon
+ * buildings this isolates the main wing and drops smaller wings/annexes
+ * that physically belong to a different roof section.
+ */
+async function pavilionFilter(
+  tris: Triangle[],
+  origin: { x: number; z: number } | null,
+  epsM: number,
+  minPoints: number,
+): Promise<Triangle[]> {
+  if (tris.length < minPoints) return tris;
+  const { DBSCAN } = await import('density-clustering');
+  const points = tris.map((t) => [t.centroid[0], t.centroid[2]]);
+  const dbscan = new DBSCAN();
+  const clusters = dbscan.run(points, epsM, minPoints);
+  if (clusters.length <= 1) return tris;
+  // Sort clusters by size (largest first). If origin is provided, prefer the
+  // cluster CONTAINING the origin (the user's address) over the absolute
+  // largest — handles cases where a neighbour wing happens to be slightly
+  // bigger than the address's pavilion.
+  if (origin) {
+    for (const c of clusters) {
+      const tx = c.map((i) => tris[i]);
+      const minX = Math.min(...tx.map((t) => t.centroid[0]));
+      const maxX = Math.max(...tx.map((t) => t.centroid[0]));
+      const minZ = Math.min(...tx.map((t) => t.centroid[2]));
+      const maxZ = Math.max(...tx.map((t) => t.centroid[2]));
+      if (origin.x >= minX && origin.x <= maxX && origin.z >= minZ && origin.z <= maxZ) {
+        return tx;
+      }
+    }
+  }
+  // Fallback: take the largest cluster.
+  let bestArea = 0;
+  let bestCluster = clusters[0];
+  for (const c of clusters) {
+    const area = c.reduce((s, i) => s + tris[i].area, 0);
+    if (area > bestArea) { bestArea = area; bestCluster = c; }
+  }
+  return bestCluster.map((i) => tris[i]);
 }
 
 function buildTrianglesFromArrays(positions: ArrayLike<number>, indices: ArrayLike<number>): Triangle[] {
@@ -423,6 +487,36 @@ function convexHullXZ(points: [number, number, number][]): [number, number, numb
   return [...lower.slice(0, -1), ...upper.slice(0, -1)];
 }
 
+// Concave hull (alpha-shape via concaveman). Concavity ~1.5-3.0 reasonable —
+// lower = tighter to the point set (catches L/U-shaped concavities), higher =
+// closer to convex. Y is restored from the closest input point.
+function concaveHullXZ(
+  points: [number, number, number][],
+  concavity: number,
+): [number, number, number][] {
+  if (points.length < 4) return convexHullXZ(points);
+  const xz = points.map((p) => [p[0], p[2]]);
+  const hullXZ = concaveman(xz, concavity);
+  // Restore Y per hull vertex: nearest neighbour in original points.
+  return hullXZ.map(([x, z]) => {
+    let bestY = points[0][1];
+    let bestD = Infinity;
+    for (const p of points) {
+      const d = Math.hypot(p[0] - x, p[2] - z);
+      if (d < bestD) { bestD = d; bestY = p[1]; }
+    }
+    return [x, bestY, z] as [number, number, number];
+  });
+}
+
+/** Resolve hull selection — picks concave or convex based on env. */
+function hullXZ(points: [number, number, number][]): [number, number, number][] {
+  if (VARIANT_CONCAVE_HULL_CONCAVITY > 0) {
+    return concaveHullXZ(points, VARIANT_CONCAVE_HULL_CONCAVITY);
+  }
+  return convexHullXZ(points);
+}
+
 function computeYield(azimuth: number, tilt: number): number {
   const azDelta = Math.min(Math.abs(azimuth - OPTIMAL_AZIMUTH_DEG), 360 - Math.abs(azimuth - OPTIMAL_AZIMUTH_DEG));
   const tiltDelta = Math.abs(tilt - OPTIMAL_TILT_DEG);
@@ -475,7 +569,7 @@ function mergeTwoFaces(a: RoofFace, b: RoofFace, newId: number): RoofFace {
   const normal: [number, number, number] = [nx / len, ny / len, nz / len];
   const azimuth = Math.round(azimuthFromNormal(normal));
   const tilt = Math.round(tiltFromNormal(normal));
-  const vertices = convexHullXZ([...a.vertices, ...b.vertices]);
+  const vertices = hullXZ([...a.vertices, ...b.vertices]);
   return {
     id: newId,
     normal,
@@ -558,6 +652,25 @@ const SHADE_SAMPLE_DATES = (() => {
   return dates;
 })();
 
+// Denser sample for annual-flux integration. 12 months × 7 daylight hours
+// (6, 8, 10, 12, 14, 16, 18 UTC), each sample covers a 2-hour bin × 30 days.
+const FLUX_SAMPLE_HOURS = [6, 8, 10, 12, 14, 16, 18];
+const FLUX_SAMPLE_DATES = (() => {
+  const dates: Date[] = [];
+  for (let m = 0; m < 12; m++) {
+    for (const h of FLUX_SAMPLE_HOURS) {
+      dates.push(new Date(Date.UTC(2025, m, 21, h, 0, 0)));
+    }
+  }
+  return dates;
+})();
+const FLUX_HOURS_PER_SAMPLE = 2 * 30; // 2-hour bin × 30 days
+// Effective surface irradiance (W/m²). Solar constant at sea level ~1000 W/m²;
+// after average annual atmospheric/cloud loss for central Europe ≈ 500 W/m².
+// Calibrated so a S/30°-tilt panel in Brandenburg yields ~1000 kWh/m²/yr,
+// matching Solar API's sunshineQuantiles for that orientation.
+const FLUX_CLEAR_SKY_W = 500;
+
 interface SunDir {
   x: number;
   y: number;
@@ -619,6 +732,14 @@ async function buildShadeSampler(
   }
   if (sunDirs.length === 0) return null;
 
+  // Denser sun samples (with hour-weights) for annual-flux integration.
+  const fluxSuns: SunDir[] = [];
+  for (const date of FLUX_SAMPLE_DATES) {
+    const { altitude, azimuth } = SunCalc.getPosition(date, originLat, originLng);
+    const dir = sunDirToLocal(altitude, azimuth);
+    if (dir) fluxSuns.push(dir);
+  }
+
   const raycaster = new THREE.Raycaster();
   raycaster.far = 1000;
   const origin = new THREE.Vector3();
@@ -640,6 +761,23 @@ async function buildShadeSampler(
         if (realHit) hits++;
       }
       return hits / sunDirs.length;
+    },
+    annualFlux(x: number, y: number, z: number, normal: [number, number, number]): number {
+      // Integrate cos(θ) × clear-sky irradiance × hours-per-sample for each
+      // unblocked sun position. Returns kWh/m²/yr received at the panel.
+      origin.set(x, y + 0.05, z);
+      let kwh = 0;
+      for (const sun of fluxSuns) {
+        // cos(angle between panel normal and sun direction)
+        const cosAng = normal[0] * sun.x + normal[1] * sun.y + normal[2] * sun.z;
+        if (cosAng <= 0) continue; // sun behind panel
+        direction.set(sun.x, sun.y, sun.z);
+        raycaster.set(origin, direction);
+        const intersects = raycaster.intersectObject(mesh, false);
+        if (intersects.some((it) => it.distance > 0.1)) continue; // shaded
+        kwh += FLUX_CLEAR_SKY_W * cosAng * FLUX_HOURS_PER_SAMPLE / 1000;
+      }
+      return kwh;
     },
   };
 }
@@ -892,6 +1030,36 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
           await fs.writeFile(cachePath, JSON.stringify(polygon));
         }
       }
+
+      // Microsoft Building Footprints fallback — when OSM polygon is drawn
+      // tight to the wall and misses the eaves overhang (typical Reihenhäuser
+      // case), MS Footprints often catches the wider roof outline.
+      if (VARIANT_USE_MS_FOOTPRINT && polygon) {
+        const osmAreaXZ = (() => {
+          let s = 0;
+          for (let i = 0, j = polygon!.length - 1; i < polygon!.length; j = i++) {
+            s += polygon![j].x * polygon![i].z - polygon![i].x * polygon![j].z;
+          }
+          return Math.abs(s / 2);
+        })();
+        try {
+          const ms = await fetchMSBuildingFootprint(origin.lat, origin.lng);
+          if (ms && ms.containsTarget) {
+            const ratio = ms.approxAreaM2 / Math.max(osmAreaXZ, 1);
+            if (ratio >= VARIANT_MS_VS_OSM_MIN_RATIO) {
+              const msPoly = ms.polygon.map((p) => latLngToLocalXZ(p, origin));
+              console.log(
+                `[${houseId}] MS Footprints: ${ms.approxAreaM2.toFixed(0)} m² > OSM ${osmAreaXZ.toFixed(0)} m² × ${VARIANT_MS_VS_OSM_MIN_RATIO} → using MS polygon (${msPoly.length} vertices)`,
+              );
+              polygon = msPoly;
+            } else {
+              console.log(`[${houseId}] MS Footprints: ${ms.approxAreaM2.toFixed(0)} m² ≈ OSM ${osmAreaXZ.toFixed(0)} m² (ratio ${ratio.toFixed(2)} < ${VARIANT_MS_VS_OSM_MIN_RATIO}) — keeping OSM`);
+            }
+          }
+        } catch (err) {
+          console.warn(`[${houseId}] MS Footprints fetch failed: ${err instanceof Error ? err.message : err}`);
+        }
+      }
     }
     if (polygon) {
       // Strict pass first.
@@ -944,6 +1112,20 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
     triangles = medianBandFilter(triangles, VARIANT_MEDIAN_BAND_M);
     console.log(`[${houseId}] median-band filter (±${VARIANT_MEDIAN_BAND_M} m) kept ${triangles.length}/${before}`);
   }
+  // Per-pavilion spatial DBSCAN — keeps only the largest XZ-connected cluster.
+  // For multi-wing buildings (Address 3 university campus) the OSM polygon
+  // spans several roof sections; this isolates the one containing the address.
+  if (VARIANT_PAVILION_DBSCAN_EPS > 0 && triangles.length > 0) {
+    const before = triangles.length;
+    triangles = await pavilionFilter(
+      triangles,
+      origin ? { x: 0, z: 0 } : null, // address is the origin in local frame
+      VARIANT_PAVILION_DBSCAN_EPS,
+      VARIANT_PAVILION_MIN_POINTS,
+    );
+    console.log(`[${houseId}] pavilion filter (eps ${VARIANT_PAVILION_DBSCAN_EPS} m, min ${VARIANT_PAVILION_MIN_POINTS} pts) kept ${triangles.length}/${before}`);
+  }
+
   // Auto multi-level detection: a residential roof's middle-80% Y range
   // (P90 − P10) is roughly the eaves-to-ridge span (~3-6 m). A pavilion or
   // multi-pan building has a much larger one (12 m+) because separate roof
@@ -1021,7 +1203,7 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
     const tilt = tiltFromNormal(normal);
     const area = tris.reduce((sum, t) => sum + t.area, 0);
     const allPoints = tris.flatMap((t) => t.vertices);
-    const vertices = convexHullXZ(allPoints);
+    const vertices = hullXZ(allPoints);
     return {
       id: idx,
       normal,
@@ -1068,9 +1250,31 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
     shadeSampler = await buildShadeSampler(photogrammetryJson, origin.lat, origin.lng);
   }
 
-  const rawPanels = faces.flatMap((face) =>
+  let rawPanels = faces.flatMap((face) =>
     placePanelsOnFace(face, obstructions, undefined, shadeSampler ?? undefined),
   );
+
+  // Annual-flux filter — drops panels whose integrated kWh/m²/yr is below
+  // VARIANT_MIN_ANNUAL_FLUX. Each panel needs its face's normal to compute
+  // cos(angle to sun); we look it up from the faces array.
+  if (VARIANT_MIN_ANNUAL_FLUX > 0 && shadeSampler?.annualFlux) {
+    const before = rawPanels.length;
+    const faceNormals = new Map<number, [number, number, number]>();
+    for (const f of faces) faceNormals.set(f.id, f.normal);
+    let droppedSum = 0;
+    rawPanels = rawPanels.filter((p) => {
+      const n = faceNormals.get(p.faceId);
+      if (!n) return true; // shouldn't happen, keep to be safe
+      const flux = shadeSampler!.annualFlux!(p.x, p.y, p.z, n);
+      if (flux < VARIANT_MIN_ANNUAL_FLUX) {
+        droppedSum++;
+        return false;
+      }
+      return true;
+    });
+    console.log(`[${houseId}] flux filter (≥${VARIANT_MIN_ANNUAL_FLUX} kWh/m²/yr): ${before} → ${rawPanels.length} panels (dropped ${droppedSum})`);
+  }
+
   // Two-mode deduplication:
   //  (a) Same-level dup: panels < 0.5 m in 3D (overlapping cluster faces on
   //      the same physical pitch). Same-face neighbours are ≥ 1.07 m apart so
