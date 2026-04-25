@@ -4,10 +4,19 @@
 import * as THREE from 'three';
 import type { RoofFace, Obstruction } from '@/lib/types';
 
-const MODULE_WIDTH_M = 1.7;
-const MODULE_HEIGHT_M = 1.0;
-const EDGE_OFFSET_M = 0.5;
-const MODULE_GAP_M = 0.05;
+// Industry-standard residential panel dimensions (Hanwha Q.Peak 400W class) —
+// matches Google Solar API's reference panel for fair area comparisons.
+// Env-overridable knobs (used by analyze-multi.ts variants).
+const numEnv = (name: string, def: number): number => {
+  const v = process.env[name];
+  return v !== undefined && !Number.isNaN(parseFloat(v)) ? parseFloat(v) : def;
+};
+
+const MODULE_WIDTH_M = 1.045;
+const MODULE_HEIGHT_M = 1.879;
+// Industry typical eaves/ridge offset is ~30-40 cm.
+const EDGE_OFFSET_M = numEnv('VARIANT_EDGE_OFFSET_M', 0.3);
+const MODULE_GAP_M = 0.02;
 
 interface ModulePosition {
   x: number;
@@ -15,6 +24,17 @@ interface ModulePosition {
   z: number;
   faceId: number;
 }
+
+/**
+ * Optional shade-aware filter. Given a candidate panel position in world
+ * coords, returns the fraction of sample sun positions where this point is
+ * blocked by the photogrammetry mesh (0 = always sunlit, 1 = always shaded).
+ */
+export interface ShadeSampler {
+  shadedFraction(x: number, y: number, z: number): number;
+}
+
+const MAX_SHADED_FRACTION = numEnv('VARIANT_MAX_SHADED_FRACTION', 0.30);
 
 /**
  * Place modules on a single roof face on a regular grid.
@@ -30,6 +50,7 @@ export function placePanelsOnFace(
   face: RoofFace,
   obstructions: Obstruction[],
   maxModules?: number,
+  shadeSampler?: ShadeSampler,
 ): ModulePosition[] {
   if (!face.vertices || face.vertices.length < 3) return [];
 
@@ -86,6 +107,10 @@ export function placePanelsOnFace(
     for (let v = startV; v <= endV + 1e-6; v += stepV) {
       if (!isInsetInside(polygon2D, u, v, EDGE_OFFSET_M)) continue;
       if (obstructions2D.some((o) => Math.hypot(o.u - u, o.v - v) < o.r)) continue;
+      if (shadeSampler) {
+        const w = toWorld(u, v);
+        if (shadeSampler.shadedFraction(w.x, w.y, w.z) > MAX_SHADED_FRACTION) continue;
+      }
       // Higher v == closer to ridge → slightly higher yield (cheap heuristic).
       const yieldScore = v;
       candidates.push({ u, v, yieldScore });

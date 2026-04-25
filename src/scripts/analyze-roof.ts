@@ -30,13 +30,51 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
+import * as THREE from 'three';
+import * as SunCalc from 'suncalc';
+
 import type { RoofFace, Obstruction, RoofGeometry } from '../lib/types';
-import { placePanelsOnFace } from './place-panels';
+import { placePanelsOnFace, type ShadeSampler } from './place-panels';
 
 const HOUSES = ['brandenburg', 'hamburg', 'ruhr'] as const;
 
 const BAKED_DIR = path.join(process.cwd(), 'public/baked');
 const FALLBACK_DIR = path.join(process.cwd(), 'public/models');
+
+// Env-overridable knobs (used by analyze-multi.ts to run several variants).
+const numEnv = (name: string, def: number): number => {
+  const v = process.env[name];
+  return v !== undefined && !Number.isNaN(parseFloat(v)) ? parseFloat(v) : def;
+};
+const flagEnv = (name: string): boolean => process.env[name] === '1' || process.env[name] === 'true';
+
+const VARIANT_BUFFER_M = numEnv('VARIANT_BUFFER_M', 0.8);              // OSM polygon buffer when adaptive triggers
+const VARIANT_BUFFER_ALWAYS = flagEnv('VARIANT_BUFFER_ALWAYS');         // ignore the strict-floor adaptive trigger
+const VARIANT_STRICT_FLOOR = numEnv('VARIANT_STRICT_FLOOR', 150);       // adaptive trigger threshold
+const VARIANT_BUFFER_Y_BAND = numEnv('VARIANT_BUFFER_Y_BAND', 1.0);     // Y window for eaves rescue
+const VARIANT_DEDUP_3D_M = numEnv('VARIANT_DEDUP_3D_M', 0.3);           // 3D dedup radius
+const VARIANT_DEDUP_XZ_M = numEnv('VARIANT_DEDUP_XZ_M', 0.7);           // XZ dedup radius (with dY check)
+const VARIANT_DEDUP_DY_M = numEnv('VARIANT_DEDUP_DY_M', 0.5);           // multi-level dedup vertical gap
+const VARIANT_DROP_NORTH_TILT_MIN = numEnv('VARIANT_DROP_NORTH_TILT_MIN', 25);
+const VARIANT_DROP_TINY_AREA = numEnv('VARIANT_DROP_TINY_AREA', 2);
+const VARIANT_DROP_LOW_YIELD = numEnv('VARIANT_DROP_LOW_YIELD', 550);
+const VARIANT_GRID_RES = numEnv('VARIANT_GRID_RES', 10);
+const VARIANT_SLICE_TOP = numEnv('VARIANT_SLICE_TOP', 20);
+// Multi-level filtering — for buildings with stacked roof topology
+const VARIANT_TOP_LEVEL_FILTER = flagEnv('VARIANT_TOP_LEVEL_FILTER');     // keep only triangles within Y-band of local max
+const VARIANT_TOP_LEVEL_CELL_M = numEnv('VARIANT_TOP_LEVEL_CELL_M', 2.0); // XZ cell size for local-max
+const VARIANT_TOP_LEVEL_BAND_M = numEnv('VARIANT_TOP_LEVEL_BAND_M', 0.8); // Y tolerance below local max
+const VARIANT_DOMINANT_LEVEL = flagEnv('VARIANT_DOMINANT_LEVEL');         // keep only largest Y-band cluster
+const VARIANT_MEDIAN_BAND_M = numEnv('VARIANT_MEDIAN_BAND_M', 0);         // 0 = disabled, else keep Y in [median-X, median+X]
+const VARIANT_PANEL_DENSITY_CAP = numEnv('VARIANT_PANEL_DENSITY_CAP', 1.0); // 1.0 = disabled
+// Auto multi-level: when enabled (trigger > 0), if the P10..P90 Y range of
+// in-polygon triangles exceeds AUTO_MULTI_LEVEL_TRIGGER, apply a median-Y
+// band of AUTO_MULTI_LEVEL_BAND m to isolate the dominant roof. This is
+// off by default — only the dedicated "multi-level-auto" variant turns it on
+// so it can vote in the consensus alongside the residential-tuned variants.
+const VARIANT_AUTO_MULTI_LEVEL_TRIGGER = numEnv('VARIANT_AUTO_MULTI_LEVEL_TRIGGER', 0);
+const VARIANT_AUTO_MULTI_LEVEL_BAND = numEnv('VARIANT_AUTO_MULTI_LEVEL_BAND', 2.5);
+const OUTPUT_SUFFIX = process.env.OUTPUT_SUFFIX ?? '';
 
 const ROOF_NORMAL_Y_MIN = 0.15;
 const DBSCAN_EPS = 0.12;
@@ -74,6 +112,68 @@ interface Triangle {
   normal: [number, number, number];
   area: number;
   vertices: [number, number, number][];
+}
+
+// ─── Multi-level filters (for buildings with stacked roof topology) ───────
+//
+// Address 3 (a multi-pavilion campus building) has a Y range of 30 m. Without
+// these filters every Y level produces panels — Solar API only places on the
+// dominant top-most accessible level. These filters reduce the candidate
+// triangles BEFORE clustering so we don't even produce phantom faces.
+
+/** Keep only triangles within `band` of the local-max Y in their XZ cell. */
+function topLevelFilter(tris: Triangle[], cellSize: number, band: number): Triangle[] {
+  const cells = new Map<string, number>();
+  for (const t of tris) {
+    const cx = Math.floor(t.centroid[0] / cellSize);
+    const cz = Math.floor(t.centroid[2] / cellSize);
+    const key = `${cx}|${cz}`;
+    const cur = cells.get(key) ?? -Infinity;
+    if (t.centroid[1] > cur) cells.set(key, t.centroid[1]);
+  }
+  return tris.filter((t) => {
+    const cx = Math.floor(t.centroid[0] / cellSize);
+    const cz = Math.floor(t.centroid[2] / cellSize);
+    return t.centroid[1] >= (cells.get(`${cx}|${cz}`) ?? 0) - band;
+  });
+}
+
+/** Keep only the Y-band cluster (1 m bands) with the largest summed area. */
+function dominantLevelFilter(tris: Triangle[], bandM = 1.0): Triangle[] {
+  if (tris.length === 0) return tris;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const t of tris) {
+    if (t.centroid[1] < minY) minY = t.centroid[1];
+    if (t.centroid[1] > maxY) maxY = t.centroid[1];
+  }
+  const nBands = Math.max(1, Math.ceil((maxY - minY) / bandM));
+  const bands: { tris: Triangle[]; area: number }[] = Array.from({ length: nBands }, () => ({ tris: [], area: 0 }));
+  for (const t of tris) {
+    const idx = Math.min(nBands - 1, Math.max(0, Math.floor((t.centroid[1] - minY) / bandM)));
+    bands[idx].tris.push(t);
+    bands[idx].area += t.area;
+  }
+  // Find the band with max area, then expand to include adjacent bands within
+  // 50 % of its area (handles a roof split across two bands by ridge height).
+  let bestIdx = 0;
+  for (let i = 1; i < bands.length; i++) if (bands[i].area > bands[bestIdx].area) bestIdx = i;
+  const bestArea = bands[bestIdx].area;
+  const out: Triangle[] = [];
+  for (let i = 0; i < bands.length; i++) {
+    if (i === bestIdx || (Math.abs(i - bestIdx) <= 2 && bands[i].area > bestArea * 0.5)) {
+      out.push(...bands[i].tris);
+    }
+  }
+  return out;
+}
+
+/** Keep only triangles whose Y is within ±band of the median Y. */
+function medianBandFilter(tris: Triangle[], band: number): Triangle[] {
+  if (tris.length === 0) return tris;
+  const ys = tris.map((t) => t.centroid[1]).sort((a, b) => a - b);
+  const median = ys[Math.floor(ys.length / 2)];
+  return tris.filter((t) => Math.abs(t.centroid[1] - median) <= band);
 }
 
 function buildTrianglesFromArrays(positions: ArrayLike<number>, indices: ArrayLike<number>): Triangle[] {
@@ -255,7 +355,7 @@ async function loadTriangles(glbPath: string): Promise<Triangle[]> {
  * O(n) instead of O(n²) — required for photogrammetric meshes with 10k+ tris.
  */
 function clusterRoofFaces(triangles: Triangle[]): number[][] {
-  const GRID_RES = 10; // 10 × 10 buckets covering nx,nz ∈ [-1, 1]
+  const GRID_RES = VARIANT_GRID_RES;
   const buckets = new Map<number, number[]>();
   for (let i = 0; i < triangles.length; i++) {
     const n = triangles[i].normal;
@@ -300,9 +400,10 @@ function tiltFromNormal(n: [number, number, number]): number {
 }
 
 function convexHullXZ(points: [number, number, number][]): [number, number, number][] {
-  // Andrew's monotone chain in the XZ plane. Y is averaged.
+  // Andrew's monotone chain in the XZ plane — preserves each vertex's original
+  // Y so a tilted roof face keeps its 3D shape (place-panels.ts needs the real
+  // Y to build a non-degenerate face frame).
   if (points.length < 3) return points;
-  const avgY = points.reduce((sum, p) => sum + p[1], 0) / points.length;
   const sorted = [...points].sort((a, b) => (a[0] === b[0] ? a[2] - b[2] : a[0] - b[0]));
 
   const cross = (o: number[], a: number[], b: number[]) =>
@@ -319,7 +420,7 @@ function convexHullXZ(points: [number, number, number][]): [number, number, numb
     while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
     upper.push(p);
   }
-  return [...lower.slice(0, -1), ...upper.slice(0, -1)].map((p) => [p[0], avgY, p[2]] as [number, number, number]);
+  return [...lower.slice(0, -1), ...upper.slice(0, -1)];
 }
 
 function computeYield(azimuth: number, tilt: number): number {
@@ -329,6 +430,218 @@ function computeYield(azimuth: number, tilt: number): number {
   const tiltFactor = Math.cos((tiltDelta * Math.PI) / 180);
   const factor = Math.max(0.45, 0.6 + 0.2 * azFactor + 0.2 * tiltFactor);
   return Math.round(BASELINE_YIELD_KWH_PER_SQM * factor);
+}
+
+// ─── Face post-processing: merge adjacent + drop unproductive ──────────────
+
+const MERGE_AZIMUTH_DEG = 20;
+const MERGE_TILT_DEG = 8;
+const MERGE_HULL_DIST_M = 1.5;
+const DROP_NORTH_AZIMUTH_BAND = 30; // azimuth in [330, 30] = "true north" cone (narrower)
+const DROP_NORTH_TILT_MIN = VARIANT_DROP_NORTH_TILT_MIN;
+const DROP_WALLISH_TILT_MAX = 70;   // only drop near-vertical (was 60)
+const DROP_TINY_AREA_MIN = VARIANT_DROP_TINY_AREA;
+
+function azimuthDelta(a: number, b: number): number {
+  const d = Math.abs(a - b);
+  return Math.min(d, 360 - d);
+}
+
+function hullsClose(a: RoofFace, b: RoofFace, threshold: number): boolean {
+  // Cheap: any vertex of A within `threshold` of any vertex of B.
+  for (const va of a.vertices) {
+    for (const vb of b.vertices) {
+      const dx = va[0] - vb[0];
+      const dz = va[2] - vb[2];
+      if (Math.hypot(dx, dz) < threshold) return true;
+    }
+  }
+  return false;
+}
+
+function canMerge(a: RoofFace, b: RoofFace): boolean {
+  if (azimuthDelta(a.azimuth, b.azimuth) > MERGE_AZIMUTH_DEG) return false;
+  if (Math.abs(a.tilt - b.tilt) > MERGE_TILT_DEG) return false;
+  return hullsClose(a, b, MERGE_HULL_DIST_M);
+}
+
+function mergeTwoFaces(a: RoofFace, b: RoofFace, newId: number): RoofFace {
+  const totalArea = a.area + b.area;
+  // Area-weighted normal.
+  const nx = (a.normal[0] * a.area + b.normal[0] * b.area) / totalArea;
+  const ny = (a.normal[1] * a.area + b.normal[1] * b.area) / totalArea;
+  const nz = (a.normal[2] * a.area + b.normal[2] * b.area) / totalArea;
+  const len = Math.hypot(nx, ny, nz) || 1;
+  const normal: [number, number, number] = [nx / len, ny / len, nz / len];
+  const azimuth = Math.round(azimuthFromNormal(normal));
+  const tilt = Math.round(tiltFromNormal(normal));
+  const vertices = convexHullXZ([...a.vertices, ...b.vertices]);
+  return {
+    id: newId,
+    normal,
+    area: Math.round(totalArea * 10) / 10,
+    usableArea: Math.round(totalArea * 10) / 10,
+    azimuth,
+    tilt,
+    vertices,
+    yieldKwhPerSqm: computeYield(azimuth, tilt),
+  };
+}
+
+function mergeFaces(faces: RoofFace[]): RoofFace[] {
+  const merged = [...faces];
+  let changed = true;
+  let nextId = faces.length;
+  while (changed) {
+    changed = false;
+    outer: for (let i = 0; i < merged.length; i++) {
+      for (let j = i + 1; j < merged.length; j++) {
+        if (canMerge(merged[i], merged[j])) {
+          merged[i] = mergeTwoFaces(merged[i], merged[j], nextId++);
+          merged.splice(j, 1);
+          changed = true;
+          break outer;
+        }
+      }
+    }
+  }
+  // Re-id sequentially so face.id matches array index downstream.
+  return merged.map((f, idx) => ({ ...f, id: idx }));
+}
+
+// Yield threshold below which a face isn't worth panels.
+const DROP_LOW_YIELD = VARIANT_DROP_LOW_YIELD;
+
+function dropBadFaces(faces: RoofFace[]): { kept: RoofFace[]; dropped: { face: RoofFace; reason: string }[] } {
+  const kept: RoofFace[] = [];
+  const dropped: { face: RoofFace; reason: string }[] = [];
+  for (const f of faces) {
+    if (f.area < DROP_TINY_AREA_MIN) {
+      dropped.push({ face: f, reason: `area<${DROP_TINY_AREA_MIN}` });
+      continue;
+    }
+    if (f.tilt > DROP_WALLISH_TILT_MAX) {
+      dropped.push({ face: f, reason: `tilt>${DROP_WALLISH_TILT_MAX}` });
+      continue;
+    }
+    const isNorth = f.azimuth >= 360 - DROP_NORTH_AZIMUTH_BAND || f.azimuth <= DROP_NORTH_AZIMUTH_BAND;
+    if (isNorth && f.tilt > DROP_NORTH_TILT_MIN) {
+      dropped.push({ face: f, reason: `north-steep` });
+      continue;
+    }
+    if (f.yieldKwhPerSqm < DROP_LOW_YIELD) {
+      dropped.push({ face: f, reason: `yield<${DROP_LOW_YIELD}` });
+      continue;
+    }
+    kept.push(f);
+  }
+  return { kept, dropped };
+}
+
+// ─── Self-shading via SunCalc + THREE.Raycaster ────────────────────────────
+//
+// The photogrammetry mesh contains the building itself + neighbours that fell
+// inside the 240×240m crop. For each candidate panel position, we trace rays
+// to a sample of sun positions across the year. If too many rays hit the mesh
+// before reaching the sun, the panel is rejected (in shadow most of the time).
+
+const SHADE_SAMPLE_DATES = (() => {
+  const dates: Date[] = [];
+  // 21st of each month at three solar hours: 09:00, 12:00, 15:00 UTC.
+  // For longitudes around Germany (~12°E), local solar noon ≈ 11:15 UTC, so
+  // these three samples bracket the productive part of the day reasonably well.
+  for (let m = 0; m < 12; m++) {
+    for (const h of [9, 12, 15]) {
+      dates.push(new Date(Date.UTC(2025, m, 21, h, 0, 0)));
+    }
+  }
+  return dates;
+})();
+
+interface SunDir {
+  x: number;
+  y: number;
+  z: number;
+}
+
+/**
+ * Convert SunCalc altitude/azimuth (rad, 0=south, +west) to a unit vector in
+ * our local Y-up frame (X=East, Y=Up, Z=South). Returns null if the sun is
+ * below the horizon.
+ */
+function sunDirToLocal(altitude: number, azimuth: number): SunDir | null {
+  if (altitude < 0.05) return null; // below horizon (or grazing)
+  const cosAlt = Math.cos(altitude);
+  return {
+    x: -cosAlt * Math.sin(azimuth), // east when az=-π/2, west when az=+π/2
+    y: Math.sin(altitude),          // up
+    z: cosAlt * Math.cos(azimuth),  // south when az=0, north when az=π
+  };
+}
+
+async function buildShadeSampler(
+  photogrammetryPath: string,
+  originLat: number,
+  originLng: number,
+): Promise<ShadeSampler | null> {
+  let raw: string;
+  try {
+    raw = await fs.readFile(photogrammetryPath, 'utf-8');
+  } catch {
+    return null;
+  }
+  const data = JSON.parse(raw) as { positions: number[]; indices: number[] };
+  if (!data.positions || !data.indices) return null;
+
+  // BVH-accelerated raycasting: ~10-100× faster than brute-force iteration
+  // over 100k+ triangles. We build the bounds tree once per analyse.
+  const { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } = await import('three-mesh-bvh');
+  // Augment THREE prototypes (idempotent — safe to call again).
+  (THREE.BufferGeometry.prototype as unknown as { computeBoundsTree: typeof computeBoundsTree }).computeBoundsTree = computeBoundsTree;
+  (THREE.BufferGeometry.prototype as unknown as { disposeBoundsTree: typeof disposeBoundsTree }).disposeBoundsTree = disposeBoundsTree;
+  (THREE.Mesh.prototype as unknown as { raycast: typeof acceleratedRaycast }).raycast = acceleratedRaycast;
+
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.Float32BufferAttribute(data.positions, 3));
+  geom.setIndex(data.indices);
+  geom.computeBoundingBox();
+  geom.computeBoundingSphere();
+  (geom as unknown as { computeBoundsTree: () => void }).computeBoundsTree();
+  const mesh = new THREE.Mesh(geom);
+  mesh.updateMatrixWorld(true);
+
+  // Pre-compute sun directions in local frame, drop below-horizon ones.
+  const sunDirs: SunDir[] = [];
+  for (const date of SHADE_SAMPLE_DATES) {
+    const { altitude, azimuth } = SunCalc.getPosition(date, originLat, originLng);
+    const dir = sunDirToLocal(altitude, azimuth);
+    if (dir) sunDirs.push(dir);
+  }
+  if (sunDirs.length === 0) return null;
+
+  const raycaster = new THREE.Raycaster();
+  raycaster.far = 1000;
+  const origin = new THREE.Vector3();
+  const direction = new THREE.Vector3();
+
+  return {
+    shadedFraction(x: number, y: number, z: number): number {
+      // Lift the origin slightly above the panel plane to avoid self-hits on
+      // the supporting roof triangle.
+      origin.set(x, y + 0.05, z);
+      let hits = 0;
+      for (const dir of sunDirs) {
+        direction.set(dir.x, dir.y, dir.z);
+        raycaster.set(origin, direction);
+        const intersects = raycaster.intersectObject(mesh, false);
+        // Ignore intersections within 0.1m (numerical noise from neighbouring
+        // triangles of the supporting face).
+        const realHit = intersects.some((it) => it.distance > 0.1);
+        if (realHit) hits++;
+      }
+      return hits / sunDirs.length;
+    },
+  };
 }
 
 interface FacePlane {
@@ -365,6 +678,36 @@ function pointInPolygonXZ(polygon: { x: number; z: number }[], x: number, z: num
     if (intersect) inside = !inside;
   }
   return inside;
+}
+
+/** Min distance from point to polygon edges (segments). */
+function distToPolygonXZ(polygon: { x: number; z: number }[], x: number, z: number): number {
+  let best = Infinity;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const pi = polygon[i];
+    const pj = polygon[j];
+    const dx = pi.x - pj.x;
+    const dz = pi.z - pj.z;
+    const len2 = dx * dx + dz * dz;
+    let t = len2 < 1e-9 ? 0 : ((x - pj.x) * dx + (z - pj.z) * dz) / len2;
+    t = Math.max(0, Math.min(1, t));
+    const projX = pj.x + t * dx;
+    const projZ = pj.z + t * dz;
+    const d = Math.hypot(x - projX, z - projZ);
+    if (d < best) best = d;
+  }
+  return best;
+}
+
+/** Inside-or-within-buffer test (catches eaves overhanging the OSM outline). */
+function pointInBufferedPolygonXZ(
+  polygon: { x: number; z: number }[],
+  x: number,
+  z: number,
+  buffer: number,
+): boolean {
+  if (pointInPolygonXZ(polygon, x, z)) return true;
+  return distToPolygonXZ(polygon, x, z) <= buffer;
 }
 
 function classifyObstruction(radius: number, heightSpread: number): Obstruction['type'] {
@@ -530,16 +873,99 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
     const before = triangles.length;
     let polygon: { x: number; z: number }[] | null = null;
     if (origin) {
-      console.log(`[${houseId}] querying OSM for building footprint at ${origin.lat}, ${origin.lng}…`);
-      polygon = await fetchBuildingPolygon(origin);
+      // Cache the polygon by house — avoids hammering Overpass when multiple
+      // variants run in parallel (analyze-multi.ts). The cache is invalidated
+      // by deleting the file or re-running fetch.
+      const cachePath = path.join(BAKED_DIR, `${houseId}-osm-polygon.json`);
+      if (await fileExists(cachePath)) {
+        try {
+          polygon = JSON.parse(await fs.readFile(cachePath, 'utf-8')) as { x: number; z: number }[];
+          console.log(`[${houseId}] using cached OSM polygon (${polygon.length} vertices)`);
+        } catch {
+          polygon = null;
+        }
+      }
+      if (!polygon) {
+        console.log(`[${houseId}] querying OSM for building footprint at ${origin.lat}, ${origin.lng}…`);
+        polygon = await fetchBuildingPolygon(origin);
+        if (polygon) {
+          await fs.writeFile(cachePath, JSON.stringify(polygon));
+        }
+      }
     }
     if (polygon) {
-      triangles = triangles.filter((t) => pointInPolygonXZ(polygon!, t.centroid[0], t.centroid[2]));
-      console.log(`[${houseId}] kept ${triangles.length}/${before} triangles inside OSM building polygon (${polygon.length} vertices)`);
+      // Strict pass first.
+      const strict = triangles.filter((t) => pointInPolygonXZ(polygon!, t.centroid[0], t.centroid[2]));
+
+      // Eaves rescue: triangles within VARIANT_BUFFER_M of the polygon edge
+      // and within VARIANT_BUFFER_Y_BAND of the strict-pass median Y. By
+      // default we only enable it when strict is "starved" (< floor), but
+      // the variant runner can force it on with VARIANT_BUFFER_ALWAYS=1.
+      let eaves: Triangle[] = [];
+      const useBuffer = VARIANT_BUFFER_ALWAYS || (strict.length < VARIANT_STRICT_FLOOR && strict.length > 0);
+      if (useBuffer && strict.length > 0) {
+        const sortedY = strict.map((t) => t.centroid[1]).sort((a, b) => a - b);
+        const medianY = sortedY[Math.floor(sortedY.length / 2)];
+        eaves = triangles.filter((t) => {
+          if (pointInPolygonXZ(polygon!, t.centroid[0], t.centroid[2])) return false;
+          if (Math.abs(t.centroid[1] - medianY) > VARIANT_BUFFER_Y_BAND) return false;
+          return distToPolygonXZ(polygon!, t.centroid[0], t.centroid[2]) <= VARIANT_BUFFER_M;
+        });
+        console.log(
+          `[${houseId}] strict ${strict.length} (${VARIANT_BUFFER_ALWAYS ? 'forced' : '< ' + VARIANT_STRICT_FLOOR}) → adding ${eaves.length} eaves within ${VARIANT_BUFFER_M} m & Y±${VARIANT_BUFFER_Y_BAND} of ${medianY.toFixed(1)}`,
+        );
+      } else {
+        console.log(`[${houseId}] kept ${strict.length}/${before} triangles strictly inside OSM polygon (${polygon.length} vertices)`);
+      }
+      triangles = [...strict, ...eaves];
     } else {
       console.warn(`[${houseId}] OSM polygon unavailable → falling back to ${HOUSE_HORIZONTAL_RADIUS_M} m radius cylinder`);
       triangles = triangles.filter((t) => Math.hypot(t.centroid[0], t.centroid[2]) < HOUSE_HORIZONTAL_RADIUS_M);
       console.log(`[${houseId}] kept ${triangles.length}/${before} triangles within ${HOUSE_HORIZONTAL_RADIUS_M} m of the address`);
+    }
+  }
+
+  // Multi-level filters — applied AFTER the building isolation step. For
+  // single-level houses these are no-ops; for stacked / pavilion buildings
+  // (Address 3) they trim phantom roof levels that would otherwise produce
+  // duplicate panel slots.
+  if (VARIANT_TOP_LEVEL_FILTER) {
+    const before = triangles.length;
+    triangles = topLevelFilter(triangles, VARIANT_TOP_LEVEL_CELL_M, VARIANT_TOP_LEVEL_BAND_M);
+    console.log(`[${houseId}] top-level filter (cell ${VARIANT_TOP_LEVEL_CELL_M} m, band ${VARIANT_TOP_LEVEL_BAND_M} m) kept ${triangles.length}/${before}`);
+  }
+  if (VARIANT_DOMINANT_LEVEL) {
+    const before = triangles.length;
+    triangles = dominantLevelFilter(triangles, 1.0);
+    console.log(`[${houseId}] dominant-level filter kept ${triangles.length}/${before}`);
+  }
+  if (VARIANT_MEDIAN_BAND_M > 0) {
+    const before = triangles.length;
+    triangles = medianBandFilter(triangles, VARIANT_MEDIAN_BAND_M);
+    console.log(`[${houseId}] median-band filter (±${VARIANT_MEDIAN_BAND_M} m) kept ${triangles.length}/${before}`);
+  }
+  // Auto multi-level detection: a residential roof's middle-80% Y range
+  // (P90 − P10) is roughly the eaves-to-ridge span (~3-6 m). A pavilion or
+  // multi-pan building has a much larger one (12 m+) because separate roof
+  // levels show up as distinct Y populations. When that's the case we apply
+  // the median-band filter to isolate the dominant pan.
+  let autoMultiLevelFired = false;
+  let autoMultiLevelP80Range: number | undefined;
+  if (VARIANT_AUTO_MULTI_LEVEL_TRIGGER > 0 && triangles.length > 10) {
+    const ys = triangles.map((t) => t.centroid[1]).sort((a, b) => a - b);
+    const p10 = ys[Math.floor(ys.length * 0.10)];
+    const p90 = ys[Math.floor(ys.length * 0.90)];
+    const p80Range = p90 - p10;
+    autoMultiLevelP80Range = p80Range;
+    if (p80Range > VARIANT_AUTO_MULTI_LEVEL_TRIGGER) {
+      const before = triangles.length;
+      triangles = medianBandFilter(triangles, VARIANT_AUTO_MULTI_LEVEL_BAND);
+      autoMultiLevelFired = true;
+      console.log(
+        `[${houseId}] auto-multi-level: P10..P90 Y range ${p80Range.toFixed(1)} m > ${VARIANT_AUTO_MULTI_LEVEL_TRIGGER} m → median-band ±${VARIANT_AUTO_MULTI_LEVEL_BAND} m kept ${triangles.length}/${before}`,
+      );
+    } else {
+      console.log(`[${houseId}] auto-multi-level: P10..P90 Y range ${p80Range.toFixed(1)} m ≤ ${VARIANT_AUTO_MULTI_LEVEL_TRIGGER} m → no filter`);
     }
   }
 
@@ -580,7 +1006,7 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
       const bArea = b.reduce((s, idx) => s + roofTris[idx].area, 0);
       return bArea - aArea;
     })
-    .slice(0, 12);
+    .slice(0, VARIANT_SLICE_TOP);
 
   // Triangles assigned to a roof face (by ORIGINAL index in `triangles`).
   const assignedToFace = new Set<number>();
@@ -588,7 +1014,7 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
     for (const localIdx of cluster) assignedToFace.add(roofTrisWithIndex[localIdx].originalIdx);
   }
 
-  const faces: RoofFace[] = sortedClusters.map((cluster, idx) => {
+  const rawFaces: RoofFace[] = sortedClusters.map((cluster, idx) => {
     const tris = cluster.map((i) => roofTris[i]);
     const normal = meanNormal(tris);
     const azimuth = azimuthFromNormal(normal);
@@ -608,6 +1034,18 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
     };
   });
 
+  // Post-process: merge adjacent same-orientation pans, then drop unproductive
+  // ones (north-facing pitched, wall-like, or too small for any panel).
+  const mergedFaces = mergeFaces(rawFaces);
+  const { kept: faces, dropped } = dropBadFaces(mergedFaces);
+  console.log(`[${houseId}] faces: ${rawFaces.length} raw → ${mergedFaces.length} merged → ${faces.length} kept (drop ${dropped.length})`);
+  if (dropped.length > 0) {
+    const dropLog = dropped
+      .map((d) => `${d.face.area.toFixed(1)}m² az=${d.face.azimuth} tilt=${d.face.tilt} (${d.reason})`)
+      .join(', ');
+    console.log(`[${houseId}]   dropped: ${dropLog}`);
+  }
+
   // Detect chimneys / dormers / vents: triangles NOT in any roof cluster but
   // raised above some face's plane and inside its XZ outline.
   const facePlanes = faces.map(buildFacePlane);
@@ -622,7 +1060,50 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
 
   const buildingFootprint = computeFootprint(triangles);
 
-  const modulePositions = faces.flatMap((face) => placePanelsOnFace(face, obstructions));
+  // Self-shading sampler — uses the full photogrammetry mesh + SunCalc to
+  // reject panels that are shadowed by chimneys, dormers, or neighbour walls.
+  let shadeSampler: ShadeSampler | null = null;
+  if (origin && (await fileExists(photogrammetryJson))) {
+    console.log(`[${houseId}] building shade sampler from photogrammetry mesh…`);
+    shadeSampler = await buildShadeSampler(photogrammetryJson, origin.lat, origin.lng);
+  }
+
+  const rawPanels = faces.flatMap((face) =>
+    placePanelsOnFace(face, obstructions, undefined, shadeSampler ?? undefined),
+  );
+  // Two-mode deduplication:
+  //  (a) Same-level dup: panels < 0.5 m in 3D (overlapping cluster faces on
+  //      the same physical pitch). Same-face neighbours are ≥ 1.07 m apart so
+  //      this is safe.
+  //  (b) Cross-level dup: panels < 0.7 m in XZ but with > 0.5 m of Y diff —
+  //      that's two stacked roof levels (e.g. dormer above main pan). Keep the
+  //      higher one, the lower one is physically obscured.
+  const DEDUP_3D_M = VARIANT_DEDUP_3D_M;
+  const DEDUP_XZ_M = VARIANT_DEDUP_XZ_M;
+  const DEDUP_LEVEL_DY_M = VARIANT_DEDUP_DY_M;
+  // Sort by Y descending so stacked-level dedup keeps the top panel first.
+  const sortedPanels = [...rawPanels].sort((a, b) => b.y - a.y);
+  const modulePositions: typeof rawPanels = [];
+  for (const p of sortedPanels) {
+    let dup = false;
+    for (const k of modulePositions) {
+      const dx = p.x - k.x;
+      const dy = p.y - k.y;
+      const dz = p.z - k.z;
+      const xz = Math.hypot(dx, dz);
+      const d3 = Math.sqrt(xz * xz + dy * dy);
+      if (d3 < DEDUP_3D_M) {
+        dup = true;
+        break;
+      }
+      if (xz < DEDUP_XZ_M && Math.abs(dy) > DEDUP_LEVEL_DY_M) {
+        dup = true;
+        break;
+      }
+    }
+    if (!dup) modulePositions.push(p);
+  }
+  console.log(`[${houseId}] panels: ${rawPanels.length} raw → ${modulePositions.length} after dedup`);
 
   return {
     houseId: houseId as RoofGeometry['houseId'],
@@ -630,7 +1111,12 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
     obstructions,
     modulePositions,
     buildingFootprint,
-  };
+    _autoMultiLevel: {
+      fired: autoMultiLevelFired,
+      p80Range: autoMultiLevelP80Range,
+      trigger: VARIANT_AUTO_MULTI_LEVEL_TRIGGER,
+    },
+  } as RoofGeometry;
 }
 
 async function main() {
@@ -647,7 +1133,7 @@ async function main() {
     console.log(`\n=== Analyzing ${house} ===`);
     try {
       const analysis = await analyzeHouse(house);
-      const outPath = path.join(BAKED_DIR, `${house}-analysis.json`);
+      const outPath = path.join(BAKED_DIR, `${house}-analysis${OUTPUT_SUFFIX}.json`);
       await fs.writeFile(outPath, JSON.stringify(analysis, null, 2));
       console.log(`[${house}] wrote ${outPath} (${analysis.faces.length} faces, ${analysis.modulePositions?.length ?? 0} modules)`);
       // Human-readable summary

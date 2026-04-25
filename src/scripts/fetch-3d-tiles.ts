@@ -96,9 +96,15 @@ interface DemoHouse {
 }
 
 const HOUSES: DemoHouse[] = [
-  { id: 'brandenburg', lat: 52.4083205, lng: 12.9658936, label: 'Ritterstraße 33, Golm, Potsdam 14476, DE' },
+  { id: 'brandenburg', lat: 52.408718770055735, lng: 12.963106383979836, label: 'Test address 3 multi-level Potsdam-Golm 14476, DE' },
   { id: 'hamburg', lat: 53.55, lng: 9.99, label: 'Hamburg, DE' },
   { id: 'ruhr', lat: 51.5135, lng: 7.4653, label: 'Dortmund (Ruhr), DE' },
+  // Independent test houseIds so subagents can run in parallel without file
+  // collisions (each houseId namespaces its own photogrammetry / analysis files).
+  { id: 'test1', lat: 52.4083205, lng: 12.9658936, label: 'Ritterstraße 33, Golm, Potsdam 14476, DE' },
+  { id: 'test2', lat: 52.408257, lng: 12.964409, label: 'Test address 2 Potsdam-Golm 14476, DE' },
+  { id: 'test3', lat: 52.408718770055735, lng: 12.963106383979836, label: 'Test address 3 Potsdam-Golm (multi-level)' },
+  { id: 'test4', lat: 52.411893, lng: 12.983772, label: 'Test address 4 Potsdam (Reihenhaus)' },
 ];
 
 // ~120 m radius around target — wide enough to overlap multiple Google tiles

@@ -12,6 +12,7 @@
     "lint": "eslint",
     "bake:fetch": "tsx --env-file=.env.local src/scripts/fetch-3d-tiles.ts",
     "bake:analyze": "tsx --env-file=.env.local src/scripts/analyze-roof.ts",
+    "bake:analyze:multi": "tsx --env-file=.env.local src/scripts/analyze-multi.ts",
     "bake:all": "pnpm bake:fetch && pnpm bake:analyze",
     "test:solar": "tsx --env-file=.env.local src/scripts/test-solar-api.ts"
   },
@@ -33,6 +34,7 @@
     "react-dom": "19.2.4",
     "suncalc": "^1.9.0",
     "three": "^0.184.0",
+    "three-mesh-bvh": "^0.9.9",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
