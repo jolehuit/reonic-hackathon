@@ -3,7 +3,7 @@
   "checkpoint_id": "cbad135a221c",
   "strategy": "manual-commit",
   "branch": "feat/Dev-D",
-  "checkpoints_count": 18,
+  "checkpoints_count": 21,
   "files_touched": [
     "DEV_D.md",
     "package.json",
@@ -25,13 +25,19 @@
       "transcript": "/cb/ad135a221c/0/full.jsonl",
       "content_hash": "/cb/ad135a221c/0/content_hash.txt",
       "prompt": "/cb/ad135a221c/0/prompt.txt"
+    },
+    {
+      "metadata": "/cb/ad135a221c/1/metadata.json",
+      "transcript": "/cb/ad135a221c/1/full.jsonl",
+      "content_hash": "/cb/ad135a221c/1/content_hash.txt",
+      "prompt": "/cb/ad135a221c/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 373,
-    "cache_creation_tokens": 846737,
-    "cache_read_tokens": 31116297,
-    "output_tokens": 151849,
-    "api_call_count": 218
+    "input_tokens": 430,
+    "cache_creation_tokens": 928721,
+    "cache_read_tokens": 32058768,
+    "output_tokens": 168439,
+    "api_call_count": 240
   }
 }

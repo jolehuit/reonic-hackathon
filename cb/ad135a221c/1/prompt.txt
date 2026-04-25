@@ -1,0 +1,21 @@
+Je suis le DEV D explique mon role et la stack que je vais utiliser
+
+---
+
+je veux utiliser 3d tiles de google pour la photogrammétrie
+
+---
+
+change dans le DEV D pour expliquer que les tuiles je vais utiliser les 3D tiles de google
+
+---
+
+ok mtn explique moi le role du dev D
+
+---
+
+donc en retour j'envoie quoi dans le JSON ?
+
+---
+
+donc le back c'est nextjs qu'on utilise
