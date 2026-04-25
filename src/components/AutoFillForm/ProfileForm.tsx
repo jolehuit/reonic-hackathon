@@ -16,6 +16,7 @@ const HOUSE_PROFILES: Record<HouseId, CustomerProfile> = {
     evAnnualKm: 15000,
     heatingType: 'gas',
     houseSizeSqm: 140,
+    isJumelee: false,
   },
   hamburg: {
     annualConsumptionKwh: 5200,
@@ -23,6 +24,7 @@ const HOUSE_PROFILES: Record<HouseId, CustomerProfile> = {
     hasEv: false,
     heatingType: 'oil',
     houseSizeSqm: 165,
+    isJumelee: false,
   },
   ruhr: {
     annualConsumptionKwh: 6100,
@@ -30,6 +32,7 @@ const HOUSE_PROFILES: Record<HouseId, CustomerProfile> = {
     hasEv: false,
     heatingType: 'oil',
     houseSizeSqm: 190,
+    isJumelee: true,
   },
 };
 
@@ -38,7 +41,9 @@ const FIELD_DELAY_MS = 600; // typewriter stagger
 export function ProfileForm() {
   const phase = useStore((s) => s.phase);
   const selectedHouse = useStore((s) => s.selectedHouse);
+  const profile = useStore((s) => s.profile);
   const setProfile = useStore((s) => s.setProfile);
+  const updateProfileField = useStore((s) => s.updateProfileField);
   const setPhase = useStore((s) => s.setPhase);
 
   const [filledIdx, setFilledIdx] = useState(0);
@@ -54,7 +59,7 @@ export function ProfileForm() {
 
     setPhase('autofilling');
 
-    const fields = 5;
+    const fields = 6;
     let i = 0;
     const interval = setInterval(() => {
       i++;
@@ -72,6 +77,8 @@ export function ProfileForm() {
   if (phase === 'idle' || phase === 'agent-running' || phase === 'interactive' || phase === 'reviewing' || phase === 'approved') return null;
   if (!selectedHouse) return null;
   const target = HOUSE_PROFILES[selectedHouse];
+  const isJumeleeFromStore = profile?.isJumelee ?? target.isJumelee;
+  const canEdit = phase === 'ready-to-design';
 
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/90 p-6 backdrop-blur min-w-[400px]">
@@ -82,6 +89,28 @@ export function ProfileForm() {
         <Row label="Electric vehicle" value={filledIdx >= 3 ? (target.hasEv ? `✓ Yes (${target.evAnnualKm} km)` : '✗ No') : ''} />
         <Row label="Existing heating" value={filledIdx >= 4 ? target.heatingType.toUpperCase() : ''} />
         <Row label="House size" value={filledIdx >= 5 ? `${target.houseSizeSqm} m²` : ''} />
+        {filledIdx >= 6 && canEdit ? (
+          <label
+            className="flex cursor-pointer items-center justify-between border-b border-zinc-800 pb-1"
+            title="Cochez si votre maison partage son toit avec un voisin (Doppelhaus). La surface PV disponible sera divisée par 2."
+          >
+            <span className="text-zinc-500">Maison jumelée</span>
+            <span className="flex items-center gap-2 text-zinc-100">
+              <input
+                type="checkbox"
+                checked={isJumeleeFromStore}
+                onChange={(e) => updateProfileField('isJumelee', e.target.checked)}
+                className="h-4 w-4 cursor-pointer accent-amber-500"
+              />
+              {isJumeleeFromStore ? '✓ Oui (toit partagé)' : '✗ Non'}
+            </span>
+          </label>
+        ) : (
+          <Row
+            label="Maison jumelée"
+            value={filledIdx >= 6 ? (target.isJumelee ? '✓ Oui (toit partagé)' : '✗ Non') : ''}
+          />
+        )}
       </div>
       {phase === 'ready-to-design' && (
         <button

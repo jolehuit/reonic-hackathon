@@ -24,6 +24,11 @@
 .DS_Store
 *.pem
 
+# Photogrammetry dumps from bake:fetch — large (~10-15 MB), regenerable.
+# Analysis JSONs (small) are committed; raw triangle dumps are not.
+public/baked/*-photogrammetry.json
+public/baked/*-photogrammetry.glb
+
 # debug
 npm-debug.log*
 yarn-debug.log*

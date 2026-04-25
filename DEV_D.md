@@ -1,7 +1,7 @@
-# DEV D — Data Pipeline (3D Tiles → Analysis) + Pioneer + Ship
+# DEV D — Data Pipeline (3D Tiles → Analysis) + Ship
 
 **Branch** : `feat/geometry`
-**Files owned** : `src/scripts/{fetch-3d-tiles,analyze-roof,place-panels}.ts` + `public/baked/*-analysis.json` + `public/baked/{house}-photogrammetry.glb` (cache only) + Pioneer fine-tune ownership + submission
+**Files owned** : `src/scripts/{fetch-3d-tiles,analyze-roof,place-panels}.ts` + `public/baked/*-analysis.json` + `public/baked/{house}-photogrammetry.glb` (cache only) + submission
 **Pair sync** :
 - Sat 17:00 with Dev A — handoff `analysis.json` shape + format checkpoint
 - Sat 11:00 floating with Dev B — confirm shape `analysis.json` consumed by `/api/design`
@@ -10,11 +10,10 @@
 
 ---
 
-## Le rôle, en 3 phrases
+## Le rôle, en 2 phrases
 
-1. **Pipeline data offline** : tu télécharges la photogrammétrie 3D Tiles autour de chaque adresse demo, tu fais tourner notre engine custom (DBSCAN ou estimation simple) dessus, et tu produis un `{house}-analysis.json` que Dev A consomme pour générer le modèle stylé runtime.
-2. **Pioneer fine-tune** (side challenge 700€) : tu pilotes le fine-tune classifier sur 1 620 projets Reonic. L'endpoint REST est consommé par Dev B dans `lib/pioneer.ts`.
-3. **Ship** : push GitHub final + submission form Sun ≤ 14:00.
+1. **Pipeline data offline** : tu télécharges la photogrammétrie via **Google 3D Tiles API** (`https://tile.googleapis.com/v1/3dtiles/root.json`, auth `GoogleCloudAuthPlugin`) autour de chaque adresse demo, tu fais tourner notre engine custom (DBSCAN ou estimation simple) dessus, et tu produis un `{house}-analysis.json` que Dev A consomme pour générer le modèle stylé runtime.
+2. **Ship** : push GitHub final + submission form Sun ≤ 14:00.
 
 **Tu ne touches pas au rendu 3D.** Dev A possède tout le visuel.
 
@@ -27,21 +26,27 @@ git checkout feat/geometry
 pnpm install
 cp .env.local.example .env.local
 # Fill GOOGLE_MAPS_API_KEY (compte temp Google DeepMind sur place)
-# Fill PIONEER_API_URL + PIONEER_API_KEY au stand Pioneer/Fastino
 pnpm dev   # vérifier que /design/brandenburg affiche le procedural placeholder de Dev A
 ```
+
+**Source photogrammétrie** : **Google 3D Tiles** (Maps Photorealistic 3D Tiles).
+- Endpoint : `https://tile.googleapis.com/v1/3dtiles/root.json`
+- Auth : `GoogleCloudAuthPlugin` du package `3d-tiles-renderer` (clé `GOOGLE_MAPS_API_KEY`)
+- Couverture : monde entier en photogrammétrie aérienne ; les 3 adresses demo (Brandenburg, Hamburg, Ruhr) sont toutes couvertes en haute résolution.
+- Pourquoi Google : seule source qui te permet d'enchaîner *n'importe quelle* adresse en démo (vs GLBs Reonic d'origine, limités à 3 maisons hardcodées).
 
 À lire :
 - https://github.com/NASA-AMMOS/3DTilesRendererJS (TilesRenderer + GoogleCloudAuthPlugin)
 - https://developers.google.com/maps/documentation/tile/3d-tiles
 - `node_modules/3d-tiles-renderer/README.md`
+- Exemple direct : `node_modules/3d-tiles-renderer/example/googleMapsExample.html`
 
 ---
 
 ## Pipeline (deux étapes seulement)
 
 ```
-1. fetch-3d-tiles.ts  → public/baked/{house}-photogrammetry.glb     (cache offline, JAMAIS servi côté front)
+1. fetch-3d-tiles.ts  → Google 3D Tiles API → public/baked/{house}-photogrammetry.glb     (cache offline, JAMAIS servi côté front)
 2. analyze-roof.ts    → public/baked/{house}-analysis.json          (footprint + faces + obstructions + modulePositions)
                                                                        ↓
                                                                 Dev A consomme dans House.tsx (procedural runtime)
@@ -56,13 +61,11 @@ pnpm dev   # vérifier que /design/brandenburg affiche le procedural placeholder
 
 | # | Tâche | ETA | Critique ? |
 |---|---|---|---|
-| D0 | **Sat 15:00-17:00** : test fetch 3D Tiles offline (script Node ou page Vite headless) sur Brandenburg lat/lng. Output : un GLB téléchargé valide. | **2h hard timebox** | OUI |
+| D0 | **Sat 15:00-17:00** : test fetch **Google 3D Tiles** offline (TilesRenderer + GoogleCloudAuthPlugin via tsx Node, fallback Vite headless) sur Brandenburg lat/lng → ECEF via `tiles.ellipsoid.getCartesianFromCartographic`, crop bbox ~80×80m, export GLB via `GLTFExporter`. Output : un GLB téléchargé valide. | **2h hard timebox** | OUI |
 | D1 | **🚨 Sat 17:00 CHECKPOINT pair A** : la mesh photogrammétrique chargée est-elle exploitable (DBSCAN convergent, building visible) ? Go/no-go. | 30min | OUI |
 | D2a | **Si OK** : impl `analyze-roof.ts` complet (DBSCAN normales → faces + obstructions + yield + footprint + panneaux placés via `place-panels.ts`) | 2h30 | A, B |
 | D2b | **Si KO** : fallback "estimate space" (autorisé par le brief) — ouvrir le GLB dans Blender, mesurer manuellement footprint + faces toit, hardcoder en JSON. 30min/maison × 3 = 1h30. | 1h30 | A, B |
 | D3 | **`place-panels.ts::placePanelsOnFace`** : projection face polygon en 2D, edge offset 0.5m, grid 1.7×1.0m + 0.05 gap, filter dehors polygon AND obstructions, reproject en 3D | 1h | A panels |
-| D4 | **Pioneer agent setup + lance fine-tune classif** Sat soir : synthetic data agent (~10k samples augmentés des 1620), fine-tune sur HP / module brand / inverter type | 1h + wait | side prize |
-| D5 | **Pioneer monitor + deploy** : exposer un endpoint REST que Dev B consomme dans `lib/pioneer.ts` | 1h | partner tech |
 | D6 | **`public/baked/house-profiles.json`** (sync `ProfileForm.tsx::HOUSE_PROFILES`) | 15min | UI |
 | D7 | **Repo public** Sun 9-10h : déjà sur `jolehuit/reonic-hackathon` — vérifier que tous les pushs sont à jour | 15min | submission |
 | D8 | **Submission form + opt-in compétition** | 30min | submission |
@@ -90,7 +93,6 @@ pnpm dev   # vérifier que /design/brandenburg affiche le procedural placeholder
 src/scripts/fetch-3d-tiles.ts        — squelette OK, à finir (download offline)
 src/scripts/analyze-roof.ts          — squelette OK, à finir (DBSCAN + faces + obstructions + footprint)
 src/scripts/place-panels.ts          — squelette OK, à finir (grid placement)
-src/lib/pioneer.ts                   — Dev B owne le wrapper, mais tu peux contribuer côté env-var et endpoint URL
 public/baked/brandenburg-analysis.json — override le mock
 public/baked/hamburg-analysis.json   — créer
 public/baked/ruhr-analysis.json      — créer
@@ -107,7 +109,6 @@ public/baked/house-profiles.json     — autofill profiles
 - [ ] `pnpm bake:fetch` produit 3 GLB photogrammétriques valides en cache (jamais expose au front)
 - [ ] `pnpm bake:analyze` produit 3 `analysis.json` avec faces, obstructions, modulePositions, buildingFootprint, yield
 - [ ] `placePanelsOnFace(face, [], 24)` retourne 24 positions distinctes valides
-- [ ] Pioneer endpoint répond pour les 3 classifs (HP / brand / inverter)
 - [ ] Repo public sur GitHub à jour (avant Sun 12h)
 - [ ] Submission form rempli **avant Sun 14:00**
 
@@ -119,9 +120,8 @@ Le brief autorise explicitement *"If that's too hard, build something that estim
 
 | Cas | Plan B |
 |---|---|
-| **fetch-3d-tiles offline trop dur après 2h** | Skip 3D Tiles, ouvrir directement les GLBs Reonic d'origine (toujours dispos dans `public/models/`) dans Blender et hardcoder les analyses. On perd le pitch "any address" mais on garde la démo. |
+| **fetch Google 3D Tiles offline trop dur après 2h** | Skip Google 3D Tiles, ouvrir directement les GLBs Reonic d'origine (toujours dispos dans `public/models/`) dans Blender et hardcoder les analyses. On perd le pitch "any address" mais on garde la démo. |
 | **DBSCAN converge mal** | Fallback "estimate space" : Blender manuel → JSON. Brief OK. 30min/maison. |
-| **Pioneer fine-tune foire** | `PIONEER_DISABLED=true` env var → Dev B bascule k-NN. Tu perds le 700€ side challenge mais sauves la démo. |
 
 ---
 
@@ -131,4 +131,4 @@ Le brief autorise explicitement *"If that's too hard, build something that estim
 - Dev B consomme `analysis.json` dans `/api/design`
 - Tu pousses la submission finale et le repo public
 
-Si tu finis tôt : aide Dev A sur le polish des paramètres procédural ou Dev B sur Pioneer wrapper.
+Si tu finis tôt : aide Dev A sur le polish des paramètres procédural ou Dev B sur le wrapper API.

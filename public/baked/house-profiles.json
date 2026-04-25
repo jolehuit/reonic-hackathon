@@ -1,0 +1,30 @@
+{
+  "_note": "Autofill defaults consumed by ProfileForm.tsx::HOUSE_PROFILES. Keep keys in sync with src/lib/types.ts::CustomerProfile.",
+  "brandenburg": {
+    "annualConsumptionKwh": 4200,
+    "inhabitants": 3,
+    "hasEv": false,
+    "evAnnualKm": 0,
+    "heatingType": "gas",
+    "houseSizeSqm": 140,
+    "isJumelee": false
+  },
+  "hamburg": {
+    "annualConsumptionKwh": 5100,
+    "inhabitants": 4,
+    "hasEv": true,
+    "evAnnualKm": 15000,
+    "heatingType": "heatpump",
+    "houseSizeSqm": 165,
+    "isJumelee": false
+  },
+  "ruhr": {
+    "annualConsumptionKwh": 3600,
+    "inhabitants": 2,
+    "hasEv": false,
+    "evAnnualKm": 0,
+    "heatingType": "oil",
+    "houseSizeSqm": 110,
+    "isJumelee": true
+  }
+}

@@ -10,9 +10,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "bake:fetch": "tsx src/scripts/fetch-3d-tiles.ts",
-    "bake:analyze": "tsx src/scripts/analyze-roof.ts",
-    "bake:all": "pnpm bake:fetch && pnpm bake:analyze"
+    "bake:fetch": "tsx --env-file=.env.local src/scripts/fetch-3d-tiles.ts",
+    "bake:analyze": "tsx --env-file=.env.local src/scripts/analyze-roof.ts",
+    "bake:all": "pnpm bake:fetch && pnpm bake:analyze",
+    "test:solar": "tsx --env-file=.env.local src/scripts/test-solar-api.ts"
   },
   "dependencies": {
     "3d-tiles-renderer": "^0.4.24",

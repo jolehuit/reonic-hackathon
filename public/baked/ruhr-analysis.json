@@ -1,0 +1,63 @@
+{
+  "houseId": "ruhr",
+  "_note": "MOCK analysis — replaced by Dev D's analyze-roof.ts output. Compact terraced house, single south-facing pitch dominant.",
+  "faces": [
+    {
+      "id": 0,
+      "normal": [0, 0.866, 0.5],
+      "area": 18,
+      "usableArea": 16.1,
+      "azimuth": 200,
+      "tilt": 30,
+      "vertices": [
+        [-3, 2.8, 2.2],
+        [3, 2.8, 2.2],
+        [3, 3.8, 0],
+        [-3, 3.8, 0]
+      ],
+      "yieldKwhPerSqm": 1140
+    },
+    {
+      "id": 1,
+      "normal": [0, 0.866, -0.5],
+      "area": 18,
+      "usableArea": 18,
+      "azimuth": 20,
+      "tilt": 30,
+      "vertices": [
+        [-3, 2.8, -2.2],
+        [3, 2.8, -2.2],
+        [3, 3.8, 0],
+        [-3, 3.8, 0]
+      ],
+      "yieldKwhPerSqm": 740
+    }
+  ],
+  "obstructions": [
+    {
+      "id": "chimney-1",
+      "type": "chimney",
+      "position": [1.8, 4.1, -0.4],
+      "radius": 0.35
+    },
+    {
+      "id": "dormer-1",
+      "type": "dormer",
+      "position": [-1.0, 3.5, 1.3],
+      "radius": 0.55
+    }
+  ],
+  "modulePositions": [
+    { "x": -2.4, "y": 3.2, "z": 1.4, "faceId": 0 },
+    { "x": -0.6, "y": 3.2, "z": 1.4, "faceId": 0 },
+    { "x":  1.2, "y": 3.2, "z": 1.4, "faceId": 0 },
+    { "x":  2.4, "y": 3.2, "z": 1.4, "faceId": 0 },
+    { "x": -2.4, "y": 3.5, "z": 0.6, "faceId": 0 },
+    { "x":  1.2, "y": 3.5, "z": 0.6, "faceId": 0 },
+    { "x":  2.4, "y": 3.5, "z": 0.6, "faceId": 0 }
+  ],
+  "buildingFootprint": {
+    "center": [0, 0, 0],
+    "size": [6, 5.5, 4.4]
+  }
+}
