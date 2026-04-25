@@ -1,0 +1,60 @@
+{
+  "houseId": "hamburg",
+  "_note": "MOCK analysis — replaced by Dev D's analyze-roof.ts output. Single hipped roof + larger footprint than Brandenburg.",
+  "faces": [
+    {
+      "id": 0,
+      "normal": [0, 0.766, 0.643],
+      "area": 31,
+      "usableArea": 29.6,
+      "azimuth": 180,
+      "tilt": 40,
+      "vertices": [
+        [-4.2, 3.2, 3],
+        [4.2, 3.2, 3],
+        [4.2, 4.6, 0],
+        [-4.2, 4.6, 0]
+      ],
+      "yieldKwhPerSqm": 1210
+    },
+    {
+      "id": 1,
+      "normal": [0, 0.766, -0.643],
+      "area": 31,
+      "usableArea": 31,
+      "azimuth": 0,
+      "tilt": 40,
+      "vertices": [
+        [-4.2, 3.2, -3],
+        [4.2, 3.2, -3],
+        [4.2, 4.6, 0],
+        [-4.2, 4.6, 0]
+      ],
+      "yieldKwhPerSqm": 680
+    }
+  ],
+  "obstructions": [
+    {
+      "id": "vent-1",
+      "type": "vent",
+      "position": [-2.5, 4.4, 0.6],
+      "radius": 0.3
+    }
+  ],
+  "modulePositions": [
+    { "x": -3.4, "y": 3.7, "z": 1.8, "faceId": 0 },
+    { "x": -1.6, "y": 3.7, "z": 1.8, "faceId": 0 },
+    { "x":  0.2, "y": 3.7, "z": 1.8, "faceId": 0 },
+    { "x":  2.0, "y": 3.7, "z": 1.8, "faceId": 0 },
+    { "x":  3.8, "y": 3.7, "z": 1.8, "faceId": 0 },
+    { "x": -3.4, "y": 4.0, "z": 1.0, "faceId": 0 },
+    { "x": -1.6, "y": 4.0, "z": 1.0, "faceId": 0 },
+    { "x":  0.2, "y": 4.0, "z": 1.0, "faceId": 0 },
+    { "x":  2.0, "y": 4.0, "z": 1.0, "faceId": 0 },
+    { "x":  3.8, "y": 4.0, "z": 1.0, "faceId": 0 }
+  ],
+  "buildingFootprint": {
+    "center": [0, 0, 0],
+    "size": [8.4, 6.5, 6]
+  }
+}

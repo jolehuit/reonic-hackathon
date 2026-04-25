@@ -1,13 +1,14 @@
 // POST /api/design — OWNED by Dev B
 // Assembles a complete DesignResult for the demo:
 // - reads pre-baked roof geometry (from Dev D's analyze-roof.ts output)
+// - applies isJumelee divisor (semi-detached roof is shared with neighbour)
 // - calls k-NN sizing on 1620 Reonic projects
 // - computes financials (price, payback, CO2)
 // - returns the full BOM the UI / 3D scene can consume.
 
-import { NextRequest, NextResponse } from 'next/server';
-import fs from 'node:fs/promises';
+import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { recommendSystem } from '@/lib/sizing';
 import { computeFinancials } from '@/lib/financials';
@@ -62,10 +63,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 2. Compute the maximum solar capacity the roof can host (south-ish faces only)
+  // 2. Compute the maximum solar capacity the roof can host (south-ish faces only),
+  //    using usable area (raw area minus obstruction footprints).
+  //    isJumelee (Doppelhaus / semi-detached) means the OSM building polygon covers
+  //    BOTH halves of a shared roof → user only owns half of the surface.
+  const houseShareDivisor = profile.isJumelee ? 2 : 1;
   const southFaces = roof.faces.filter((f) => isSouthish(f.azimuth));
-  const roofMaxKwp = southFaces.reduce((sum, f) => sum + f.area * PANEL_EFFICIENCY, 0)
-    || roof.faces.reduce((sum, f) => sum + f.area * PANEL_EFFICIENCY, 0); // fallback if no south face
+  const rawRoofMaxKwp =
+    southFaces.reduce((sum, f) => sum + f.usableArea * PANEL_EFFICIENCY, 0)
+    || roof.faces.reduce((sum, f) => sum + f.usableArea * PANEL_EFFICIENCY, 0); // fallback if no south face
+  const roofMaxKwp = rawRoofMaxKwp / houseShareDivisor;
 
   // 3. k-NN sizing on the 1620 Reonic projects
   const reco = await recommendSystem(profile, roofMaxKwp);

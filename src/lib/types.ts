@@ -13,6 +13,7 @@ export interface CustomerProfile {
   evAnnualKm?: number;          // e.g. 15000
   heatingType: HeatingType;
   houseSizeSqm: number;
+  isJumelee: boolean;           // semi-detached (Doppelhaus): roof shared with neighbour → /api/design divides usable area by 2
 }
 
 // Refinement toggles (post-design)
@@ -26,7 +27,8 @@ export interface DesignRefinements {
 export interface RoofFace {
   id: number;
   normal: [number, number, number];
-  area: number;          // m²
+  area: number;          // m² — raw geometric area (sum of triangle areas in the cluster)
+  usableArea: number;    // m² — area minus obstruction footprints with safety margin
   azimuth: number;       // 0-360°
   tilt: number;          // degrees
   vertices: number[][];  // polygon
