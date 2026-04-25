@@ -1,0 +1,2 @@
+Pull toutes les dernières modif et voici ta mission.
+  Tu dois tout merge proprement sur le main en résolvant tous les conflits puis supprimer les branches autres que main.
