@@ -54,7 +54,7 @@ const SEQUENCE: SeqStep[] = [
   { id: 'pricing_out',     phase: 'ANALYZE', kind: 'done',   label: 'Total: €11 400 · Payback 9.4 yrs · CO₂ 8.2 t/25 yrs',         durationMs: 800  },
 
   // ─── Phase 3 : RENDER ────────────────────────────────────────────
-  { id: 'stylize',         phase: 'RENDER',  kind: 'render', label: 'Generating stylized low-poly model from analysis...',         durationMs: 1500 },
+  { id: 'stylize',         phase: 'RENDER',  kind: 'render', label: 'AI generating stylized mesh from photogrammetry + analysis...', durationMs: 1500 },
   { id: 'stylize_out',     phase: 'RENDER',  kind: 'done',   label: 'Architectural mockup ready · footprint 7×5 m · roof 35°',    durationMs: 600  },
   { id: 'panels_drop',     phase: 'RENDER',  kind: 'render', label: 'Dropping panels onto rendered roof...',                       durationMs: 1900 },
   { id: 'finalize',        phase: 'RENDER',  kind: 'render', label: 'Lighting · materials · contact shadows...',                  durationMs: 800  },

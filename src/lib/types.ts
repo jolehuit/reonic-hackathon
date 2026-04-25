@@ -44,6 +44,11 @@ export interface RoofGeometry {
   houseId: HouseId;
   faces: RoofFace[];
   obstructions: Obstruction[];
+  modulePositions?: { x: number; y: number; z: number; faceId: number }[];
+  buildingFootprint?: {
+    center: [number, number, number];
+    size: [number, number, number];
+  };
 }
 
 // AI design output

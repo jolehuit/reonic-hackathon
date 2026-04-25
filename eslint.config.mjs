@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Personal dev tooling, not part of the project source
+    ".opencode/**",
+    ".claude/**",
   ]),
 ]);
 

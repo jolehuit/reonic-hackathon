@@ -1,18 +1,45 @@
-# DEV A — 3D Engine & Animation Orchestration (Stylized render)
+# DEV A — 3D Engine, Stylized Model & Animation Orchestration
 
 **Branch** : `feat/3d`
-**Files owned** : `src/components/Scene3D/*` + `src/components/Scene3D/Orchestrator.tsx` + `public/sounds/*` integration
+**Files owned** : tout `src/components/Scene3D/*` (House.tsx, Panels.tsx, Inverter, Battery, HeatPump, Wallbox, Heatmap, Sun, CameraRig, Orchestrator) + `public/sounds/*`
 **Pair sync** :
-- Sat 17:00 with Dev D — checkpoint analysis-roof + stylized model handoff
+- Sat 17:00 with Dev D — handoff `analysis.json` (D fournit, A consomme)
 - Sat 22:00 with Dev C — Orchestrator ↔ store ↔ animations
 **Frozen** : `lib/types.ts` after Sat 15:30 (B+C pair)
-**Charge estimée** : ~9h utiles
+**Charge estimée** : ~10h utiles
 
 ---
 
 ## Le rôle, en 1 phrase
 
-Tu rends la **scène stylée** : pas une mesh photogrammétrique brute, mais un modèle low-poly cel-shaded propre (généré par Dev D depuis l'analyse 3D Tiles), avec des panneaux qui apparaissent dessus et une caméra cinématique. **3D Tiles n'est jamais affiché.** Style cible : architectural mockup / Apple Keynote.
+Tu **possèdes tout le visuel** : tu génères le modèle 3D stylé **runtime en r3f** depuis le `analysis.json` que Dev D te livre (footprint + faces toiture + obstructions), tu rends les composants énergétiques (panneaux, batterie, etc.), tu pilotes la caméra cinématique et l'orchestrator d'animation. **3D Tiles brut n'est jamais affiché.** Style cible : architectural mockup / Apple Keynote.
+
+---
+
+## ⚠️ Architecture clé : la mesh stylée est **générée par l'AI agent** depuis l'analyse de Dev D
+
+Dev D livre **uniquement** `public/baked/{house}-analysis.json` (footprint + faces + obstructions + panneaux + buildingFootprint). À partir de ces inputs + le résultat 3D Tiles, **l'AI génère le modèle stylé final** que le user voit. Dans la narrative démo, ça correspond à la phase **RENDER** de l'agent trace.
+
+Tu as **2 façons d'implémenter** ça (à toi de choisir samedi selon ton temps) :
+
+### Option A — Procédural pur (simple, safe, déjà câblé)
+La fonction procédurale dans `House.tsx` lit `analysis.json` et construit la mesh r3f à la volée :
+- Volumes de murs depuis `buildingFootprint.size`
+- Plans de toit depuis `faces[].vertices` (BufferGeometry triangulée)
+- Cheminées/lucarnes depuis `obstructions[]`
+- Tout en `MeshToonMaterial` blanc cassé + outline shader noir au composer level
+
+→ Le squelette est déjà dans `House.tsx`. Pitch : *"L'AI agent génère le modèle depuis l'analyse géométrique (procedural code triggered by the agent)"*.
+
+### Option B — Gemini Vision + procédural (stretch goal, vraiment "AI-driven")
+Pendant la phase RENDER, on appelle Gemini Vision avec un screenshot de la mesh photogrammétrique + analysis.json. Gemini retourne des params (couleurs murs, type de toit, balcons, etc.) → la fonction procédurale les utilise.
+
+→ +2h dev en pair avec Dev B (qui possède `lib/gemini.ts`). Pitch beaucoup plus fort : *"Gemini Vision interprète la photogrammétrie et génère le mockup stylé"*.
+
+### Reco
+Commence Option A samedi (déjà prêt). Si tu finis tes autres tâches dimanche matin avant 8h et qu'il te reste de l'énergie, upgrade vers Option B. **Pas obligatoire** : la phase RENDER reste impressionnante en procédural.
+
+Avantage commun : pas de GLB à baker, pas de fichier binaire, le modèle s'adapte automatiquement à n'importe quel `analysis.json`.
 
 ---
 
