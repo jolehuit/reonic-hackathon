@@ -11,7 +11,6 @@ import { useMemo } from 'react';
 import { Quaternion, Vector3 } from 'three';
 import { useStore } from '@/lib/store';
 import { useHouseGeometry } from './HouseGeometry';
-import { useSceneVision } from './vision/useSceneVision';
 import { rescaleY } from './vision/scale';
 import { DEFAULT_VISION_PARAMS } from './vision/visionTypes';
 
@@ -23,10 +22,9 @@ const UP = new Vector3(0, 1, 0);
 export function Panels() {
   const design = useStore((s) => s.design);
   const { faces } = useHouseGeometry();
-  const { params: aiParams } = useSceneVision();
-  // Match StylizedHouse: when Gemini hasn't responded, fall back to the same
-  // defaults so panel positions land on the procedural roof, not inside it.
-  const visionParams = aiParams ?? DEFAULT_VISION_PARAMS;
+  // The Gemini-OSM vision pipeline is gone (replaced by Trellis); panel Y
+  // positions now ride on the baked defaults so they sit on the roof plane.
+  const visionParams = DEFAULT_VISION_PARAMS;
 
   const rotationByFaceId = useMemo(() => {
     const map = new Map<number, Quaternion>();
