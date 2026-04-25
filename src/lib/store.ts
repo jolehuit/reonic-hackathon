@@ -65,10 +65,18 @@ export interface ManualInputs {
   };
 }
 
+export type TrellisStatus = 'idle' | 'generating' | 'ready' | 'error';
+
 interface AppState {
   // Phase
   phase: AppPhase;
   setPhase: (phase: AppPhase) => void;
+
+  // Trellis (image-to-3D) generation status. Written by TrellisModel, read by
+  // Orchestrator (which gates phase transitions on it) and the design page
+  // overlays (which only mount once the GLB is in the scene).
+  trellisStatus: TrellisStatus;
+  setTrellisStatus: (s: TrellisStatus) => void;
 
   // House selection — either a demo HouseId or 'custom' for an arbitrary address.
   selectedHouse: HouseId | 'custom' | null;
@@ -157,8 +165,11 @@ export const useStore = create<AppState>((set) => ({
   phase: 'idle',
   setPhase: (phase) => set({ phase }),
 
+  trellisStatus: 'idle',
+  setTrellisStatus: (trellisStatus) => set({ trellisStatus }),
+
   selectedHouse: null,
-  selectHouse: (id) => set({ selectedHouse: id, phase: 'house-selected' }),
+  selectHouse: (id) => set({ selectedHouse: id, phase: 'house-selected', trellisStatus: 'idle' }),
 
   customAddress: null,
   setCustomAddress: (customAddress) => set({ customAddress }),
@@ -202,6 +213,7 @@ export const useStore = create<AppState>((set) => ({
   reset: () =>
     set({
       phase: 'idle',
+      trellisStatus: 'idle',
       selectedHouse: null,
       customAddress: null,
       manualInputs: defaultManualInputs,

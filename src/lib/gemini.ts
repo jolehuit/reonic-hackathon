@@ -8,10 +8,11 @@ import { streamText, generateText, Output } from 'ai';
 import { z } from 'zod';
 import type { CustomerProfile, DesignResult, HeatingType } from './types';
 
-// Model selection: gemini-2-5-flash is the cheapest+fastest reliable option.
-// Bump to gemini-3-pro-preview if you want frontier reasoning.
-const MODEL_FAST = google('gemini-2-5-flash');
-const MODEL_QUALITY = google('gemini-3-pro-preview');
+// Model selection: gemini-3-flash-preview is the current fast model.
+// (The previous string used dashes — `gemini-2-5-flash` — which 404s on the
+// v1beta endpoint; the model identifier wants dots.)
+const MODEL_FAST = google('gemini-3-flash-preview');
+const MODEL_QUALITY = google('gemini-3-flash-preview');
 
 // --- 1. Streaming explanation for AgentTrace ---
 

@@ -55,7 +55,7 @@ const SEQUENCE: SeqStep[] = [
   { id: 'stylize_out',     phase: 'RENDER',  kind: 'done',   label: 'Architectural mockup ready · footprint 7×5 m · roof 35°',    durationMs: 600  },
   { id: 'panels_drop',     phase: 'RENDER',  kind: 'render', label: 'Dropping panels onto rendered roof...',                       durationMs: 1900 },
   { id: 'finalize',        phase: 'RENDER',  kind: 'render', label: 'Lighting · materials · contact shadows...',                  durationMs: 800  },
-  { id: 'ready',           phase: 'RENDER',  kind: 'done',   label: 'Ready. Edit anything below ↓',                               durationMs: 0    },
+  { id: 'ready',           phase: 'RENDER',  kind: 'render', label: 'Generating photoreal 3D building (Trellis-2)…',              durationMs: 0    },
 ];
 
 export function Orchestrator() {
@@ -102,7 +102,13 @@ export function Orchestrator() {
       .catch(() => null);
 
     (async () => {
-      for (const step of steps) {
+      // Animate every step EXCEPT the final 'ready' marker — we hold that one
+      // until the real Trellis 3D generation has actually completed, so the
+      // KPI / Evidence / Control overlays don't pop in over an empty scene.
+      const animatedSteps = steps.slice(0, -1);
+      const readyStep = steps[steps.length - 1];
+
+      for (const step of animatedSteps) {
         if (cancelled) return;
         updateStepStatus(step.id, 'running');
         await new Promise((r) => setTimeout(r, step.durationMs));
@@ -118,6 +124,18 @@ export function Orchestrator() {
         }
         setDesign(design);
       }
+
+      // Wait for Trellis-2 to finish (it may already be done — the user could
+      // also have spent the full mocked 22s waiting on it).
+      if (readyStep) updateStepStatus(readyStep.id, 'running');
+      while (!cancelled) {
+        const t = useStore.getState().trellisStatus;
+        if (t === 'ready' || t === 'error') break;
+        await new Promise((r) => setTimeout(r, 200));
+      }
+      if (cancelled) return;
+      if (readyStep) updateStepStatus(readyStep.id, 'done');
+
       setPhase('interactive');
     })();
 

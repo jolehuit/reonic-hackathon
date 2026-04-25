@@ -44,12 +44,12 @@ export async function POST(req: NextRequest) {
 
   // 2. Run trellis-2.
   try {
-    const { glbUrl, requestId } = await generateTrellisModel({
-      image: buf,
-      fileName: `oblique-${lat.toFixed(5)}-${lng.toFixed(5)}.png`,
-    });
+    const { glbUrl, requestId } = await generateTrellisModel({ image: buf });
     return NextResponse.json({ ok: true, glbUrl, requestId, lat, lng });
   } catch (err) {
+    // Log full stack server-side; bubble the message back so the UI badge is
+    // useful and the dev terminal shows what fal actually rejected.
+    console.error('[/api/trellis] trellis pipeline failed:', err);
     return NextResponse.json(
       { ok: false, error: err instanceof Error ? err.message : 'trellis failed' },
       { status: 502 },

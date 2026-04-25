@@ -9,7 +9,7 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
 import { Edges, Html } from '@react-three/drei';
-import { Box3, Group, Mesh, Vector3 } from 'three';
+import { Box3, Group, Mesh, Shape, Vector3 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { useStore } from '@/lib/store';
 import { useHouseGeometry } from './HouseGeometry';
@@ -22,18 +22,30 @@ type Status =
   | { kind: 'ready'; glbUrl: string }
   | { kind: 'error'; message: string };
 
+// Aesthetic skeleton dimensions — keep the placeholder tall and house-shaped
+// regardless of the eventual footprint (which can be wide/squat for some demo
+// houses and would render as a flat slab). The GLB replaces this once ready,
+// at which point its real footprint determines the size.
+const SKELETON_WIDTH = 4;
+const SKELETON_DEPTH = 4.4;
+const SKELETON_WALL = 3.5;
+
 export function TrellisModel({ houseId }: { houseId: HouseId | 'custom' }) {
   const coords = useResolvedCoords(houseId);
   const { width, depth, wallHeight } = useHouseGeometry();
+  const setTrellisStatus = useStore((s) => s.setTrellisStatus);
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
 
   // Trigger /api/trellis whenever lat/lng changes. The route is sync (~30-60s)
-  // so we just await the JSON; the skeleton animates while we wait.
+  // so we just await the JSON; the skeleton animates while we wait. We also
+  // mirror the status into the Zustand store so the design page overlays
+  // (KPISidebar, ControlPanel, …) and the Orchestrator can gate on it.
   useEffect(() => {
     if (!coords) return;
     let cancelled = false;
     const startedAt = Date.now();
     setStatus({ kind: 'generating', sinceMs: startedAt });
+    setTrellisStatus('generating');
 
     (async () => {
       try {
@@ -46,35 +58,42 @@ export function TrellisModel({ houseId }: { houseId: HouseId | 'custom' }) {
         if (cancelled) return;
         if (!json.ok || !json.glbUrl) {
           setStatus({ kind: 'error', message: json.error ?? 'Generation failed' });
+          setTrellisStatus('error');
           return;
         }
         setStatus({ kind: 'ready', glbUrl: json.glbUrl });
+        setTrellisStatus('ready');
       } catch (err) {
         if (cancelled) return;
         setStatus({
           kind: 'error',
           message: err instanceof Error ? err.message : 'network error',
         });
+        setTrellisStatus('error');
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [coords?.lat, coords?.lng, houseId]);
+  }, [coords?.lat, coords?.lng, houseId, setTrellisStatus]);
 
   return (
     <group>
       <Ground />
       {status.kind === 'ready' ? (
-        <Suspense fallback={<Skeleton width={width} depth={depth} height={wallHeight} />}>
+        <Suspense
+          fallback={
+            <Skeleton width={SKELETON_WIDTH} depth={SKELETON_DEPTH} height={SKELETON_WALL} />
+          }
+        >
           <LoadedGlb url={status.glbUrl} width={width} depth={depth} height={wallHeight} />
         </Suspense>
       ) : (
         <Skeleton
-          width={width}
-          depth={depth}
-          height={wallHeight}
+          width={SKELETON_WIDTH}
+          depth={SKELETON_DEPTH}
+          height={SKELETON_WALL}
           message={
             status.kind === 'generating'
               ? 'Generating 3D model'
@@ -107,96 +126,325 @@ function Skeleton({
   message?: string;
   tone?: 'busy' | 'error';
 }) {
-  const groupRef = useRef<Group>(null);
-  const meshRef = useRef<Mesh>(null);
+  const houseRef = useRef<Group>(null);
+  const wallsRef = useRef<Mesh>(null);
+  const roofRef = useRef<Mesh>(null);
+  const scanRef = useRef<Mesh>(null);
+  const haloRef = useRef<Mesh>(null);
+  const startedAt = useRef<number>(performance.now());
+  const [elapsedSec, setElapsedSec] = useState(0);
+
+  useEffect(() => {
+    if (tone !== 'busy') return;
+    const id = setInterval(() => {
+      setElapsedSec(Math.floor((performance.now() - startedAt.current) / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [tone]);
+
+  // Tall storybook roof so the silhouette reads as "house" not "shed".
+  const roofHeight = height * 0.75;
+  const totalH = height + roofHeight;
+  const planSize = Math.max(width, depth);
+
+  // Triangular gable cross-section, extruded along the depth axis to make a
+  // proper house roof (not a 4-sided pyramid).
+  const roofShape = useMemo(() => {
+    const s = new Shape();
+    s.moveTo(-width / 2, 0);
+    s.lineTo(width / 2, 0);
+    s.lineTo(0, roofHeight);
+    s.lineTo(-width / 2, 0);
+    return s;
+  }, [width, roofHeight]);
 
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
-    // Pulse opacity 0.18 → 0.4 → 0.18 over ~2s.
-    const pulse = 0.29 + Math.sin(t * 3) * 0.11;
-    const mat = meshRef.current?.material;
-    if (mat && 'opacity' in mat) {
-      (mat as { opacity: number }).opacity = pulse;
+    // Continuous slow yaw — looks like the house is being inspected from all
+    // sides. ~1 turn every 12 seconds.
+    if (houseRef.current) {
+      houseRef.current.rotation.y = t * (Math.PI * 2) / 12;
     }
-    // Slow yaw rotation so it doesn't feel frozen.
-    if (groupRef.current) groupRef.current.rotation.y = t * 0.12;
+    // Walls + roof: gentle opacity pulse on the wireframe edges.
+    const pulse = 0.55 + Math.sin(t * 2.5) * 0.25;
+    const wallsMat = wallsRef.current?.material as { opacity?: number } | undefined;
+    if (wallsMat && 'opacity' in wallsMat) wallsMat.opacity = pulse;
+    const roofMat = roofRef.current?.material as { opacity?: number } | undefined;
+    if (roofMat && 'opacity' in roofMat) roofMat.opacity = pulse;
+
+    // Scan plane sweeping bottom→top→bottom over ~3s.
+    if (scanRef.current) {
+      const phase = (Math.sin(t * 1.0) + 1) * 0.5;
+      scanRef.current.position.y = phase * totalH;
+      const mat = scanRef.current.material as { opacity?: number } | undefined;
+      if (mat && 'opacity' in mat) mat.opacity = 0.6 - Math.abs(phase - 0.5) * 0.5;
+    }
+    // Halo at the ground — slow expand/contract.
+    if (haloRef.current) {
+      const breath = 1 + (Math.sin(t * 1.6) + 1) * 0.18;
+      haloRef.current.scale.set(breath, breath, breath);
+      const mat = haloRef.current.material as { opacity?: number } | undefined;
+      if (mat && 'opacity' in mat) mat.opacity = 0.32 - (Math.sin(t * 1.6) + 1) * 0.1;
+    }
   });
 
   const color = tone === 'error' ? '#dc2626' : '#3b82f6';
+  const glow = tone === 'error' ? '#fca5a5' : '#60a5fa';
 
   return (
-    <group ref={groupRef}>
-      <mesh ref={meshRef} position={[0, height / 2, 0]} castShadow={false} receiveShadow={false}>
-        <boxGeometry args={[width, height, depth]} />
-        <meshBasicMaterial color={color} transparent opacity={0.25} wireframe={false} depthWrite={false} />
-        <Edges color={color} threshold={1} />
+    <group>
+      {/* ─── Rotating house skeleton (walls + gable roof) ────────────── */}
+      <group ref={houseRef}>
+        {/* Walls — wireframe box. Faint solid fill so the silhouette reads. */}
+        <mesh ref={wallsRef} position={[0, height / 2, 0]}>
+          <boxGeometry args={[width, height, depth]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={0.08}
+            depthWrite={false}
+            wireframe={false}
+          />
+          <Edges color={color} threshold={1} lineWidth={2} />
+        </mesh>
+
+        {/* Gable roof — triangular prism extruded from a 2D triangle shape. */}
+        <mesh ref={roofRef} position={[0, height, -depth / 2]}>
+          <extrudeGeometry args={[roofShape, { depth, bevelEnabled: false }]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={0.08}
+            depthWrite={false}
+          />
+          <Edges color={color} threshold={1} lineWidth={2} />
+        </mesh>
+      </group>
+
+      {/* ─── Scan plane traveling vertically (NOT inside the rotating group
+          so the scan direction stays world-up, not house-up) ─────────── */}
+      <mesh ref={scanRef} position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[planSize * 1.2, planSize * 1.2]} />
+        <meshBasicMaterial color={glow} transparent opacity={0.5} depthWrite={false} toneMapped={false} />
       </mesh>
-      {/* Pyramidal "roof" hint so the skeleton reads as a house. */}
-      <mesh position={[0, height + (height * 0.35) / 2, 0]}>
-        <coneGeometry args={[Math.max(width, depth) * 0.6, height * 0.35, 4]} />
-        <meshBasicMaterial color={color} transparent opacity={0.18} depthWrite={false} />
-        <Edges color={color} threshold={1} />
+
+      {/* ─── Ground halo ─────────────────────────────────────────────── */}
+      <mesh ref={haloRef} position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[planSize * 0.55, planSize * 0.72, 64]} />
+        <meshBasicMaterial color={glow} transparent opacity={0.25} depthWrite={false} toneMapped={false} />
       </mesh>
+
+      {/* ─── Floating badge — fixed pixel size, sits well above model ── */}
       {message && (
         <Html
-          position={[0, height + height * 0.6, 0]}
+          position={[0, totalH * 1.7, 0]}
           center
-          distanceFactor={10}
           style={{ pointerEvents: 'none' }}
+          zIndexRange={[16777271, 16777271]}
         >
-          <div className={tone === 'error' ? 'tm-badge tm-badge-error' : 'tm-badge tm-badge-busy'}>
-            <span className="tm-dot" />
-            {message}
-            {tone === 'busy' && <span className="tm-ellipsis" />}
+          <div className={tone === 'error' ? 'tm-card tm-card-error' : 'tm-card tm-card-busy'}>
+            <div className="tm-card-bg" />
+            <div className="tm-card-inner">
+              <div className="tm-orb">
+                <span className="tm-orb-core" />
+                <span className="tm-orb-ring tm-orb-ring-1" />
+                <span className="tm-orb-ring tm-orb-ring-2" />
+              </div>
+              <div className="tm-text">
+                <div className="tm-title">
+                  <span className="tm-title-text">{message}</span>
+                  {tone === 'busy' && <span className="tm-ellipsis" />}
+                </div>
+                {tone === 'busy' && (
+                  <div className="tm-sub">
+                    <span className="tm-bars">
+                      <span /><span /><span /><span /><span />
+                    </span>
+                    <span className="tm-elapsed">
+                      {elapsedSec}s elapsed · usually ~45s
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           <style>{`
-            .tm-badge {
+            .tm-card {
+              position: relative;
+              padding: 22px 34px;
+              border-radius: 22px;
+              font: 600 22px/1.2 system-ui, -apple-system, 'Segoe UI', sans-serif;
+              white-space: nowrap;
+              backdrop-filter: blur(18px) saturate(150%);
+              -webkit-backdrop-filter: blur(18px) saturate(150%);
+              overflow: hidden;
+              box-shadow:
+                0 1px 0 rgba(255,255,255,0.7) inset,
+                0 20px 50px rgba(15,23,42,0.22),
+                0 4px 14px rgba(15,23,42,0.12);
+              transform: translateZ(0);
+            }
+            .tm-card-busy {
+              color: #0c1f5a;
+              background: linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(241,245,255,0.92) 100%);
+              border: 1px solid rgba(59,130,246,0.35);
+            }
+            .tm-card-error {
+              color: #7f1d1d;
+              background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(254,242,242,0.95) 100%);
+              border: 1px solid rgba(220,38,38,0.45);
+            }
+            /* Animated shimmer streaking diagonally across the card */
+            .tm-card-bg {
+              position: absolute;
+              inset: 0;
+              pointer-events: none;
+              background: linear-gradient(
+                115deg,
+                transparent 30%,
+                rgba(96,165,250,0.22) 48%,
+                rgba(96,165,250,0.08) 52%,
+                transparent 70%
+              );
+              background-size: 220% 100%;
+              animation: tm-shimmer 2.6s linear infinite;
+              mix-blend-mode: screen;
+            }
+            .tm-card-error .tm-card-bg {
+              background: linear-gradient(
+                115deg,
+                transparent 30%,
+                rgba(248,113,113,0.22) 48%,
+                rgba(248,113,113,0.08) 52%,
+                transparent 70%
+              );
+              background-size: 220% 100%;
+              animation: tm-shimmer 2.6s linear infinite;
+            }
+            .tm-card-inner {
+              position: relative;
+              display: flex;
+              align-items: center;
+              gap: 18px;
+            }
+            .tm-text {
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+            }
+            .tm-title {
+              display: inline-flex;
+              align-items: baseline;
+              font-size: 28px;
+              letter-spacing: -0.015em;
+              font-weight: 700;
+            }
+            .tm-title-text {
+              background: linear-gradient(90deg, currentColor 0%, currentColor 35%, #2563eb 50%, currentColor 65%, currentColor 100%);
+              background-size: 200% 100%;
+              -webkit-background-clip: text;
+              background-clip: text;
+              -webkit-text-fill-color: transparent;
+              animation: tm-text-shine 2.6s linear infinite;
+            }
+            .tm-card-error .tm-title-text {
+              -webkit-text-fill-color: currentColor;
+              background: none;
+              animation: none;
+            }
+            .tm-sub {
               display: inline-flex;
               align-items: center;
-              gap: 8px;
-              padding: 6px 12px;
-              border-radius: 999px;
-              font: 500 12px/1 system-ui, -apple-system, sans-serif;
-              white-space: nowrap;
-              backdrop-filter: blur(6px);
-              -webkit-backdrop-filter: blur(6px);
-              box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+              gap: 12px;
+              font-size: 14px;
+              font-weight: 500;
+              opacity: 0.7;
             }
-            .tm-badge-busy {
-              color: #1e3a8a;
-              background: rgba(255,255,255,0.85);
-              border: 1px solid rgba(59,130,246,0.4);
+            .tm-elapsed {
+              font-variant-numeric: tabular-nums;
             }
-            .tm-badge-error {
-              color: #991b1b;
-              background: rgba(255,255,255,0.9);
-              border: 1px solid rgba(220,38,38,0.5);
+            /* Equalizer-style bars (5 of them) */
+            .tm-bars {
+              display: inline-flex;
+              align-items: flex-end;
+              gap: 3px;
+              height: 16px;
             }
-            .tm-dot {
-              width: 8px;
-              height: 8px;
-              border-radius: 999px;
+            .tm-bars span {
+              width: 4px;
+              border-radius: 2px;
               background: currentColor;
-              animation: tm-pulse 1.2s ease-in-out infinite;
+              opacity: 0.85;
+              animation: tm-bar 1.1s ease-in-out infinite;
+            }
+            .tm-bars span:nth-child(1) { animation-delay: 0.0s;  }
+            .tm-bars span:nth-child(2) { animation-delay: 0.12s; }
+            .tm-bars span:nth-child(3) { animation-delay: 0.24s; }
+            .tm-bars span:nth-child(4) { animation-delay: 0.36s; }
+            .tm-bars span:nth-child(5) { animation-delay: 0.48s; }
+            @keyframes tm-bar {
+              0%, 100% { height: 30%; }
+              50%      { height: 100%; }
+            }
+            /* Orb on the left: solid core + two expanding rings */
+            .tm-orb {
+              position: relative;
+              width: 42px;
+              height: 42px;
+              flex-shrink: 0;
+            }
+            .tm-orb-core {
+              position: absolute;
+              inset: 12px;
+              border-radius: 999px;
+              background: radial-gradient(circle at 35% 30%, #93c5fd, #2563eb 70%);
+              box-shadow: 0 0 18px rgba(37,99,235,0.6);
+              animation: tm-orb-pulse 1.4s ease-in-out infinite;
+            }
+            .tm-card-error .tm-orb-core {
+              background: radial-gradient(circle at 35% 30%, #fca5a5, #b91c1c 70%);
+              box-shadow: 0 0 12px rgba(185,28,28,0.55);
+            }
+            .tm-orb-ring {
+              position: absolute;
+              inset: 0;
+              border-radius: 999px;
+              border: 2px solid rgba(37,99,235,0.6);
+              animation: tm-orb-ring 2s ease-out infinite;
+            }
+            .tm-orb-ring-2 { animation-delay: 1s; }
+            .tm-card-error .tm-orb-ring { border-color: rgba(185,28,28,0.6); }
+            @keyframes tm-orb-pulse {
+              0%, 100% { transform: scale(0.92); opacity: 0.85; }
+              50%      { transform: scale(1.08); opacity: 1;    }
+            }
+            @keyframes tm-orb-ring {
+              0%   { transform: scale(0.55); opacity: 0.85; }
+              80%  { opacity: 0; }
+              100% { transform: scale(1.6);  opacity: 0; }
             }
             .tm-ellipsis::after {
               content: '';
               display: inline-block;
-              width: 0;
+              width: 1.4em;
+              text-align: left;
               animation: tm-dots 1.4s steps(4, end) infinite;
-              overflow: hidden;
               vertical-align: bottom;
-            }
-            @keyframes tm-pulse {
-              0%, 100% { opacity: 0.35; transform: scale(0.85); }
-              50%      { opacity: 1;    transform: scale(1.15); }
+              padding-left: 2px;
             }
             @keyframes tm-dots {
-              0%   { content: ''; width: 0; }
-              25%  { content: '.'; width: 0.45em; }
-              50%  { content: '..'; width: 0.9em; }
-              75%  { content: '...'; width: 1.35em; }
-              100% { content: '...'; width: 1.35em; }
+              0%   { content: ''; }
+              25%  { content: '.'; }
+              50%  { content: '..'; }
+              75%, 100% { content: '...'; }
+            }
+            @keyframes tm-shimmer {
+              0%   { background-position: 100% 0; }
+              100% { background-position: -100% 0; }
+            }
+            @keyframes tm-text-shine {
+              0%   { background-position: 200% 0; }
+              100% { background-position: -200% 0; }
             }
           `}</style>
         </Html>
