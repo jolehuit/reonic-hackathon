@@ -1,0 +1,43 @@
+{
+  "houseId": "custom",
+  "lat": 48.913527,
+  "lng": 2.5149273,
+  "ts": 1777148589699,
+  "zoom": 20,
+  "metresPerPixel": 0.049056845698960634,
+  "imageSize": {
+    "w": 1280,
+    "h": 1280
+  },
+  "analysis": {
+    "bbox": {
+      "x": 596,
+      "y": 596,
+      "width": 48,
+      "height": 48
+    },
+    "footprintPx": [
+      [
+        619,
+        596
+      ],
+      [
+        644,
+        619
+      ],
+      [
+        619,
+        644
+      ],
+      [
+        596,
+        619
+      ]
+    ],
+    "roofType": "hip",
+    "ridgeAzimuthDeg": 0,
+    "estWallHeightM": 3,
+    "estRoofHeightM": 1.5,
+    "confidence": 0.8
+  }
+}
