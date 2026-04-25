@@ -1,78 +1,99 @@
-// Cockpit page — assembled by all 4 devs.
-//
-// Layout phases:
-//   - During `agent-running` : the AgentTrace takes a prominent left side panel
-//     (full visibility on the AI thinking + computing + rendering phases).
-//   - From `interactive` onwards : AgentTrace collapses, the user sees the clean
-//     stylized model + KPIs + sliders + evidence panel.
+// Plan Solar designer page.
+// Hosts all chrome state (controlled components) and renders the viewer slot.
+// The Cesium viewer is owned by another agent; ViewerSlot stays as a
+// placeholder until /tmp/build-viewer-handoff.md lands and we swap it in.
 
 'use client';
 
-import { use, useEffect } from 'react';
-import { Scene3D } from '@/components/Scene3D/Scene3D';
-import { Orchestrator } from '@/components/Scene3D/Orchestrator';
-import { AgentTrace } from '@/components/AgentTrace/AgentTrace';
-import { ProfileForm } from '@/components/AutoFillForm/ProfileForm';
-import { ControlPanel } from '@/components/ControlPanel/ControlPanel';
-import { KPISidebar } from '@/components/KPISidebar/KPISidebar';
-import { EvidencePanel } from '@/components/EvidencePanel/EvidencePanel';
-import { ApprovalModal } from '@/components/ApprovalModal/ApprovalModal';
-import { useStore } from '@/lib/store';
-import type { HouseId } from '@/lib/types';
+import { use, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import {
+  PlanSolarLayout,
+  ViewerSlot,
+  type DesignMode,
+  type MainTabId,
+  type SourceId,
+  type ToolId,
+  type ViewMode,
+} from '@/components/PlanSolarUI';
+import { GeneratedHouseViewer } from '@/components/GeneratedHouseViewer';
 
 interface Props {
-  params: Promise<{ houseId: HouseId }>;
+  params: Promise<{ houseId: string }>;
 }
+
+const PROJECT_TITLE = 'Plan solar';
+const CUSTOMER_LINE =
+  'Customer request: PV Comfort · 8.50 kW Peak · Purchase · £14,000.00';
+const HEADING_DEG = 18;
+const PITCH_DEG = 55;
+const ORIENTATION_DEG = 270;
 
 export default function DesignPage({ params }: Props) {
   const { houseId } = use(params);
-  const phase = useStore((s) => s.phase);
-  const selectHouse = useStore((s) => s.selectHouse);
+  const searchParams = useSearchParams();
+  const latParam = parseFloatOrNull(searchParams.get('lat'));
+  const lngParam = parseFloatOrNull(searchParams.get('lng'));
+  const radiusParam = parseFloatOrNull(searchParams.get('radius'));
+  const generatedMode = searchParams.get('generated') === '1';
 
-  useEffect(() => {
-    selectHouse(houseId);
-  }, [houseId, selectHouse]);
-
-  const showFullTrace = phase === 'agent-running';
+  const [selectedTool, setSelectedTool] = useState<ToolId>('select');
+  const [viewMode, setViewMode] = useState<ViewMode>('3D');
+  const [source, setSource] = useState<SourceId>('google');
+  const [designMode, setDesignMode] = useState<DesignMode>('building');
+  const [activeTab, setActiveTab] = useState<MainTabId>('3d-planning');
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [overflowOpen, setOverflowOpen] = useState(false);
+  const [googleEarth, setGoogleEarth] = useState(false);
+  const [googleSolar, setGoogleSolar] = useState(false);
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-zinc-950">
-      {/* Background 3D viewport */}
-      <div className="absolute inset-0">
-        <Scene3D houseId={houseId} />
-      </div>
-
-      <Orchestrator />
-
-      {/* AI agent trace — prominent during agent-running, hidden after */}
-      {showFullTrace && (
-        <aside className="absolute left-4 top-4 z-20 w-[380px]">
-          <AgentTrace />
-        </aside>
-      )}
-
-      {/* Right sidebar — KPIs + Evidence are visible from interactive onwards */}
-      {phase !== 'agent-running' && phase !== 'autofilling' && phase !== 'house-selected' && phase !== 'idle' && phase !== 'ready-to-design' && (
-        <aside className="absolute right-4 top-4 flex w-80 flex-col gap-3">
-          <KPISidebar />
-          <EvidencePanel />
-        </aside>
-      )}
-
-      {/* Bottom control panel — only shown when interactive */}
-      <div className="absolute bottom-4 left-4 right-4 flex justify-center">
-        <ControlPanel />
-      </div>
-
-      {/* Auto-fill modal (centered, only during certain phases) */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="pointer-events-auto">
-          <ProfileForm />
-        </div>
-      </div>
-
-      {/* HITL Review & Approve overlay */}
-      <ApprovalModal />
-    </main>
+    <PlanSolarLayout
+      viewer={
+        generatedMode ? (
+          <GeneratedHouseViewer houseId={houseId} />
+        ) : (
+          <ViewerSlot
+            viewMode={viewMode}
+            source={source}
+            heading={HEADING_DEG}
+            houseId={houseId}
+            latOverride={latParam}
+            lngOverride={lngParam}
+            radiusOverride={radiusParam}
+          />
+        )
+      }
+      projectTitle={PROJECT_TITLE}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      selectedTool={selectedTool}
+      onToolChange={setSelectedTool}
+      source={source}
+      onSourceChange={setSource}
+      designMode={designMode}
+      onDesignModeChange={setDesignMode}
+      overflowOpen={overflowOpen}
+      onOverflowToggle={() => setOverflowOpen((v) => !v)}
+      rightPanelOpen={rightPanelOpen}
+      onOpenRightPanel={() => setRightPanelOpen(true)}
+      onCloseRightPanel={() => setRightPanelOpen(false)}
+      googleEarth={googleEarth}
+      googleSolar={googleSolar}
+      onToggleGoogleEarth={setGoogleEarth}
+      onToggleGoogleSolar={setGoogleSolar}
+      viewMode={viewMode}
+      onViewModeChange={setViewMode}
+      heading={HEADING_DEG}
+      customerLine={CUSTOMER_LINE}
+      pitchDeg={PITCH_DEG}
+      orientationDeg={ORIENTATION_DEG}
+    />
   );
+}
+
+function parseFloatOrNull(v: string | null): number | null {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
 }
