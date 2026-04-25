@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Reonic AI Renewable Designer — Big Berlin Hack
 
-## Getting Started
+> AI Design Assistant validated against 1 620 real Reonic deliveries.
+> From address to signed offer in 30 seconds.
 
-First, run the development server:
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.local.example .env.local   # fill in keys
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Repo structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/
+│   ├── page.tsx                       ← Landing (Dev C)
+│   ├── design/[houseId]/page.tsx      ← Cockpit (assembled)
+│   └── api/
+│       ├── design/route.ts            ← BOM endpoint  (Dev B)
+│       ├── explain/route.ts           ← Gemini stream (Dev B)
+│       └── export/route.ts            ← PDF gen       (Dev B)
+├── components/
+│   ├── Scene3D/                       ← Dev A
+│   ├── AgentTrace/                    ← Dev C
+│   ├── ControlPanel/                  ← Dev C
+│   ├── KPISidebar/                    ← Dev C
+│   ├── EvidencePanel/                 ← Dev C
+│   ├── AutoFillForm/                  ← Dev C
+│   └── ApprovalModal/                 ← Dev C
+├── lib/
+│   ├── types.ts                       ← Shared (B+C frozen Sat 12h)
+│   ├── store.ts                       ← Dev C
+│   ├── sizing.ts                      ← Dev B
+│   ├── pioneer.ts                     ← Dev B
+│   ├── gemini.ts                      ← Dev B
+│   └── supabase.ts                    ← Dev B
+└── scripts/
+    ├── bake-roofs.ts                  ← Dev D (run once)
+    ├── bake-yield.ts                  ← Dev D (run once)
+    └── place-panels.ts                ← Dev D (used at runtime)
 
-## Learn More
+public/
+├── models/                            ← 4 GLB photogrammetric (already copied)
+├── baked/                             ← JSON output from Dev D scripts
+├── env/                               ← HDR env map (Dev A to add sunset_2k.hdr)
+└── sounds/                            ← 6 mp3 (Dev C to add)
 
-To learn more about Next.js, take a look at the following resources:
+data/                                  ← 4 CSVs Reonic (already copied)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Owner per branch
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Branch | Dev | Files |
+|---|---|---|
+| `feat/3d` | A | `components/Scene3D/*` |
+| `feat/backend` | B | `app/api/*` + `lib/{sizing,pioneer,gemini,supabase}.ts` |
+| `feat/ui` | C | `components/{AgentTrace,ControlPanel,KPISidebar,EvidencePanel,AutoFillForm,ApprovalModal}/*` + `lib/store.ts` + `app/page.tsx` |
+| `feat/geometry` | D | `scripts/*` + `public/baked/*` + GLB optimization |
 
-## Deploy on Vercel
+`lib/types.ts` is shared. Frozen after Sat 12h pair sync (B+C).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Stand-ups
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Sat 10:30 — kickoff
+- Sat 14:00 — DBSCAN risk validated by Dev D
+- Sat 19:00 — first end-to-end flow
+- Sat 23:00 — Pioneer status + sleep schedule
+- Sun 09:00 — freeze features, polish + Loom
+
+## Stop coding: **Sun 10:00**
+
+## Submission deadline: **Sun 14:00**
+
+## Demo flow (PRD §5)
+
+1. Land on `/`
+2. Click a house chip → `/design/[id]`
+3. Auto-fill form (typewriter ~3s)
+4. Click "Generate design" → 22s agent sequence
+5. Refine via sliders/toggles
+6. "Review & Approve" → HITL modal → PDF export
