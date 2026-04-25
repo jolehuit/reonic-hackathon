@@ -408,18 +408,35 @@ async function main() {
     const median = sorted[Math.floor(sorted.length / 2)];
     let pick = median;
 
+    // Tree-heavy override: when -J (low-shade, 45 % threshold) gives ≥ 1.6×
+    // more panels than -A (default 30 % threshold), the photogrammetry mesh
+    // includes vegetation and the strict shading rejects too many. Trust -J.
+    const aVariant = plausible.find((s) => s.variant.suffix === '-A');
+    const jVariant = plausible.find((s) => s.variant.suffix === '-J');
+    if (
+      pick === median &&
+      aVariant && jVariant &&
+      jVariant.panelCount >= aVariant.panelCount * 1.6 &&
+      jVariant.coverage <= 0.65
+    ) {
+      pick = jVariant;
+      pickedReason = `tree-heavy mesh detected (-J ${jVariant.panelCount} ≥ 1.6× -A ${aVariant.panelCount}) — switching to low-shade variant`;
+    }
+
     // Reihenhaus override: only if the median variant looks STARVED relative to
     // the largest variant's roof estimate (sign that OSM polygon is too tight).
     // Threshold: median panel area covers less than 20 % of max-roof estimate.
     // 20 % chosen so it triggers on Reihenhäuser (Address 4 = 19 %) but not on
     // residential houses where OSM is fine (Ritterstraße = 23 %).
-    const maxRoof = Math.max(...scored.map((s) => s.faceArea));
-    const medianCovOnMaxRoof = (median.panelCount * PANEL_AREA) / Math.max(maxRoof, 1);
-    if (medianCovOnMaxRoof < 0.20) {
-      const oVariant = plausible.find((s) => s.variant.suffix === '-O');
-      if (oVariant && oVariant.panelCount > median.panelCount * 1.3) {
-        pick = oVariant;
-        pickedReason = `median starved (${(medianCovOnMaxRoof * 100).toFixed(0)}% of max roof ${maxRoof.toFixed(0)} m²) — switching to MS Footprints (-O) ${oVariant.panelCount} panels`;
+    if (pick === median) {
+      const maxRoof = Math.max(...scored.map((s) => s.faceArea));
+      const medianCovOnMaxRoof = (median.panelCount * PANEL_AREA) / Math.max(maxRoof, 1);
+      if (medianCovOnMaxRoof < 0.20) {
+        const oVariant = plausible.find((s) => s.variant.suffix === '-O');
+        if (oVariant && oVariant.panelCount > median.panelCount * 1.3) {
+          pick = oVariant;
+          pickedReason = `median starved (${(medianCovOnMaxRoof * 100).toFixed(0)}% of max roof ${maxRoof.toFixed(0)} m²) — switching to MS Footprints (-O) ${oVariant.panelCount} panels`;
+        }
       }
     }
 
