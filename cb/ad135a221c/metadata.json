@@ -1,0 +1,37 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "cbad135a221c",
+  "strategy": "manual-commit",
+  "branch": "feat/Dev-D",
+  "checkpoints_count": 18,
+  "files_touched": [
+    "DEV_D.md",
+    "package.json",
+    "public/baked/brandenburg-analysis.json",
+    "public/baked/hamburg-analysis.json",
+    "public/baked/house-profiles.json",
+    "public/baked/ruhr-analysis.json",
+    "src/app/api/design/route.ts",
+    "src/components/AutoFillForm/ProfileForm.tsx",
+    "src/lib/types.ts",
+    "src/scripts/analyze-roof.ts",
+    "src/scripts/density-clustering.d.ts",
+    "src/scripts/fetch-3d-tiles.ts",
+    "src/scripts/place-panels.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/cb/ad135a221c/0/metadata.json",
+      "transcript": "/cb/ad135a221c/0/full.jsonl",
+      "content_hash": "/cb/ad135a221c/0/content_hash.txt",
+      "prompt": "/cb/ad135a221c/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 373,
+    "cache_creation_tokens": 846737,
+    "cache_read_tokens": 31116297,
+    "output_tokens": 151849,
+    "api_call_count": 218
+  }
+}

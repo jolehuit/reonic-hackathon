@@ -1,0 +1,234 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "cbad135a221c",
+  "session_id": "bd0f02ba-f76d-4bb1-a49d-bbddf114de6a",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-25T17:00:56.978463Z",
+  "branch": "feat/Dev-D",
+  "checkpoints_count": 18,
+  "files_touched": [
+    "DEV_D.md",
+    "package.json",
+    "public/baked/brandenburg-analysis.json",
+    "public/baked/hamburg-analysis.json",
+    "public/baked/house-profiles.json",
+    "public/baked/ruhr-analysis.json",
+    "src/app/api/design/route.ts",
+    "src/components/AutoFillForm/ProfileForm.tsx",
+    "src/lib/types.ts",
+    "src/scripts/analyze-roof.ts",
+    "src/scripts/density-clustering.d.ts",
+    "src/scripts/fetch-3d-tiles.ts",
+    "src/scripts/place-panels.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "233326a1b919",
+  "token_usage": {
+    "input_tokens": 373,
+    "cache_creation_tokens": 846737,
+    "cache_read_tokens": 31116297,
+    "output_tokens": 151849,
+    "api_call_count": 218
+  },
+  "session_metrics": {
+    "turn_count": 18
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-25T17:00:56.954243Z",
+    "agent_lines": 827,
+    "agent_removed": 0,
+    "human_added": 708,
+    "human_modified": 361,
+    "human_removed": 0,
+    "total_committed": 1731,
+    "total_lines_changed": 1896,
+    "agent_percentage": 43.61814345991561,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 11,
+      "user_lines_removed": 4,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "DEV_D.md": 11
+      },
+      "user_removed_per_file": {
+        "DEV_D.md": 4
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 12,
+      "user_lines_removed": 22,
+      "agent_lines_added": 703,
+      "agent_lines_removed": 79,
+      "user_added_per_file": {
+        "DEV_D.md": 7,
+        "package.json": 2,
+        "src/scripts/fetch-3d-tiles.ts": 3
+      },
+      "user_removed_per_file": {
+        "DEV_D.md": 14,
+        "package.json": 2,
+        "src/scripts/fetch-3d-tiles.ts": 6
+      }
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 707,
+      "agent_lines_removed": 93
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 707,
+      "agent_lines_removed": 93
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 2,
+      "user_lines_removed": 2,
+      "agent_lines_added": 883,
+      "agent_lines_removed": 94,
+      "user_added_per_file": {
+        "src/scripts/fetch-3d-tiles.ts": 2
+      },
+      "user_removed_per_file": {
+        "src/scripts/fetch-3d-tiles.ts": 2
+      }
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 883,
+      "agent_lines_removed": 94
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 9,
+      "user_lines_removed": 3,
+      "agent_lines_added": 883,
+      "agent_lines_removed": 94,
+      "user_added_per_file": {
+        "src/scripts/fetch-3d-tiles.ts": 9
+      },
+      "user_removed_per_file": {
+        "src/scripts/fetch-3d-tiles.ts": 3
+      }
+    },
+    {
+      "checkpoint_number": 8,
+      "user_lines_added": 12,
+      "user_lines_removed": 0,
+      "agent_lines_added": 889,
+      "agent_lines_removed": 94,
+      "user_added_per_file": {
+        "src/scripts/fetch-3d-tiles.ts": 12
+      }
+    },
+    {
+      "checkpoint_number": 9,
+      "user_lines_added": 25,
+      "user_lines_removed": 0,
+      "agent_lines_added": 901,
+      "agent_lines_removed": 94,
+      "user_added_per_file": {
+        "src/scripts/fetch-3d-tiles.ts": 25
+      }
+    },
+    {
+      "checkpoint_number": 10,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 926,
+      "agent_lines_removed": 94
+    },
+    {
+      "checkpoint_number": 11,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 3859,
+      "agent_lines_removed": 126
+    },
+    {
+      "checkpoint_number": 12,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 3859,
+      "agent_lines_removed": 126
+    },
+    {
+      "checkpoint_number": 13,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 3859,
+      "agent_lines_removed": 126
+    },
+    {
+      "checkpoint_number": 14,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 3859,
+      "agent_lines_removed": 126
+    },
+    {
+      "checkpoint_number": 15,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 3859,
+      "agent_lines_removed": 126
+    },
+    {
+      "checkpoint_number": 16,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 3859,
+      "agent_lines_removed": 126
+    },
+    {
+      "checkpoint_number": 17,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2077,
+      "agent_lines_removed": 130
+    },
+    {
+      "checkpoint_number": 18,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2155,
+      "agent_lines_removed": 146
+    },
+    {
+      "checkpoint_number": 19,
+      "user_lines_added": 1692,
+      "user_lines_removed": 166,
+      "agent_lines_added": 1597,
+      "agent_lines_removed": 148,
+      "user_added_per_file": {
+        "package.json": 2,
+        "public/baked/brandenburg-analysis.json": 487,
+        "public/baked/brandenburg-photogrammetry.json": 1,
+        "public/baked/brandenburg-solar-api.test.json": 952,
+        "src/scripts/analyze-roof.ts": 12,
+        "src/scripts/fetch-3d-tiles.ts": 1,
+        "src/scripts/test-solar-api.ts": 237
+      },
+      "user_removed_per_file": {
+        "package.json": 1,
+        "public/baked/brandenburg-analysis.json": 157,
+        "public/baked/brandenburg-photogrammetry.json": 1,
+        "src/scripts/analyze-roof.ts": 6,
+        "src/scripts/fetch-3d-tiles.ts": 1
+      }
+    }
+  ]
+}

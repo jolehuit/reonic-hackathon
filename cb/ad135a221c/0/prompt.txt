@@ -1,0 +1,103 @@
+je suis le DEV D fais le boiler plate
+
+---
+
+continue
+
+---
+
+donc actuellment je peux calculer les m2 d'une maison depuis les tuiles de 3d tiles ?
+
+---
+
+donc si sur le toit il a y a des obstacles par exemple une cheminé alors elle sera pris en compte et donc la surface sera moins grande
+
+---
+
+je veux absolument detecter les obstacle qu'il pourrait y avoir sur le toit pour pas fausser les m2 disponible sur le toit
+
+---
+
+ok donc la si sur mon toit il y a une partie avec une decoration elle sera pas comtabilisé ?
+
+---
+
+explique comment fonctionne l'algo pour calculer la surface du toit
+
+---
+
+a quoi sert bake
+
+---
+
+le bake sert juste pour les 3 exemples ?
+
+---
+
+mais bake je dev et je vois que ca bug comment resoudre ?
+
+---
+
+ok donc apres ca il me reste quoi a faire ?
+
+---
+
+mais j'ai mis ma clef api google
+
+---
+
+lance le projet et test sur une adresse pour recuperer les m2 de la maison
+
+---
+
+comment tu as analyse ?
+
+---
+
+Comment je peux verifier si la valeur est bonne ?
+
+---
+
+donne l'adresse de test je vais aller verifier
+
+---
+
+Comment il trouve la maison si les maison sont collé ?
+
+---
+
+et pourquoi pas la strategie 1 si elle est utilisé par tout le monde ?
+
+---
+
+ok fait
+
+---
+
+je te propose une facon de modeliser les maison mitoyennes qui sont sur le meme toit et tu me dis 
+
+pour moi je vois ca en si le user de base choisi maison mitoyenne unis (ou meilleur libelle si tu trouve) alors si coché on divise par 2 la maison car en general les maison mitoyenne c'est une maison divisé par 2
+
+---
+
+je te propose une facon de modeliser les maison mitoyennes qui sont sur le meme toit et tu me dis 
+
+pour moi je vois ca en si le user de base choisi maison mitoyenne unis (ou meilleur libelle si tu trouve) alors si coché on divise par 2 la maison car en general les maison mitoyenne c'est une maison divisé par 2
+
+---
+
+je te propose une facon de modeliser les maison mitoyennes qui sont sur le meme toit et tu me dis 
+
+pour moi je vois ca en si le user de base choisi maison mitoyenne unis (ou meilleur libelle si tu trouve) alors si coché on divise par 2 la maison car en general les maison mitoyenne c'est une maison divisé par 2
+
+---
+
+mitoyen je veux dire que c'est une maison avec le meme toit
+
+---
+
+je valide le plan
+
+---
+
+"52.408276, 12.970500" test avec cette adresse
