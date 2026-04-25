@@ -27,17 +27,31 @@ const SEQUENCE: Omit<AgentStep, 'status'>[] = [
 
 export function Orchestrator() {
   const phase = useStore((s) => s.phase);
+  const profile = useStore((s) => s.profile);
+  const selectedHouse = useStore((s) => s.selectedHouse);
   const setAgentSteps = useStore((s) => s.setAgentSteps);
   const updateStepStatus = useStore((s) => s.updateStepStatus);
   const setPhase = useStore((s) => s.setPhase);
+  const setDesign = useStore((s) => s.setDesign);
 
   useEffect(() => {
-    if (phase !== 'agent-running') return;
+    if (phase !== 'agent-running' || !profile || !selectedHouse) return;
 
     const steps: AgentStep[] = SEQUENCE.map((s) => ({ ...s, status: 'pending' }));
     setAgentSteps(steps);
 
     let cancelled = false;
+
+    // Fire the actual /api/design call in parallel with the visible animation.
+    // Whoever lands first wins; we wait for both before transitioning to interactive.
+    const designPromise = fetch('/api/design', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ profile, houseId: selectedHouse }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null);
+
     (async () => {
       for (const step of steps) {
         if (cancelled) return;
@@ -46,13 +60,16 @@ export function Orchestrator() {
         await new Promise((r) => setTimeout(r, step.durationMs));
         updateStepStatus(step.id, 'done');
       }
+      const design = await designPromise;
+      if (cancelled) return;
+      if (design) setDesign(design);
       setPhase('interactive');
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [phase, setAgentSteps, updateStepStatus, setPhase]);
+  }, [phase, profile, selectedHouse, setAgentSteps, updateStepStatus, setPhase, setDesign]);
 
   return null;
 }

@@ -1,0 +1,42 @@
+{
+  "houseId": "brandenburg",
+  "_note": "MOCK pre-baked roof geometry — replaced by Dev D bake-roofs.ts output. Allows Dev A and Dev B to work in parallel before DBSCAN is ready.",
+  "faces": [
+    {
+      "id": 0,
+      "normal": [0.05, 0.95, 0.31],
+      "area": 47.2,
+      "azimuth": 195,
+      "tilt": 35,
+      "vertices": [
+        [-3.5, 4.2, 1.0],
+        [3.5, 4.2, 1.0],
+        [3.5, 5.8, -2.5],
+        [-3.5, 5.8, -2.5]
+      ],
+      "yieldKwhPerSqm": 1180
+    },
+    {
+      "id": 1,
+      "normal": [-0.05, 0.95, -0.31],
+      "area": 47.2,
+      "azimuth": 15,
+      "tilt": 35,
+      "vertices": [
+        [-3.5, 4.2, -1.0],
+        [3.5, 4.2, -1.0],
+        [3.5, 5.8, 2.5],
+        [-3.5, 5.8, 2.5]
+      ],
+      "yieldKwhPerSqm": 720
+    }
+  ],
+  "obstructions": [
+    {
+      "id": "chimney-1",
+      "type": "chimney",
+      "position": [1.2, 6.0, -0.5],
+      "radius": 0.4
+    }
+  ]
+}

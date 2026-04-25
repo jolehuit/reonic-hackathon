@@ -7,7 +7,6 @@ import type { HouseId } from '@/lib/types';
 const PATHS: Record<HouseId, string> = {
   brandenburg: '/models/brandenburg.glb',
   hamburg: '/models/hamburg.glb',
-  'north-germany': '/models/north-germany.glb',
   ruhr: '/models/ruhr.glb',
 };
 

@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
 import type { CustomerProfile, HouseId } from '@/lib/types';
 
@@ -24,14 +24,6 @@ const HOUSE_PROFILES: Record<HouseId, CustomerProfile> = {
     heatingType: 'oil',
     houseSizeSqm: 165,
   },
-  'north-germany': {
-    annualConsumptionKwh: 3800,
-    inhabitants: 2,
-    hasEv: true,
-    evAnnualKm: 10000,
-    heatingType: 'gas',
-    houseSizeSqm: 110,
-  },
   ruhr: {
     annualConsumptionKwh: 6100,
     inhabitants: 5,
@@ -50,11 +42,17 @@ export function ProfileForm() {
   const setPhase = useStore((s) => s.setPhase);
 
   const [filledIdx, setFilledIdx] = useState(0);
+  const startedFor = useRef<HouseId | null>(null);
 
   useEffect(() => {
-    if (phase !== 'house-selected' || !selectedHouse) return;
+    if (phase !== 'house-selected' || !selectedHouse) {
+      startedFor.current = null;
+      return;
+    }
+    if (startedFor.current === selectedHouse) return;
+    startedFor.current = selectedHouse;
+
     setPhase('autofilling');
-    setFilledIdx(0);
 
     const fields = 5;
     let i = 0;

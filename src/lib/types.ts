@@ -1,7 +1,7 @@
 // Shared TS contracts — owned jointly by Dev B (backend) and Dev C (UI)
 // Pair sync sam 12h. After that, this file is FROZEN unless team-wide change.
 
-export type HouseId = 'brandenburg' | 'hamburg' | 'north-germany' | 'ruhr';
+export type HouseId = 'brandenburg' | 'hamburg' | 'ruhr';
 
 export type HeatingType = 'oil' | 'gas' | 'heatpump' | 'other';
 

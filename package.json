@@ -2,11 +2,17 @@
   "name": "reonic-hackathon",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "bake:roofs": "tsx src/scripts/bake-roofs.ts",
+    "bake:yield": "tsx src/scripts/bake-yield.ts",
+    "bake:all": "pnpm bake:roofs && pnpm bake:yield"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.64",
@@ -29,6 +35,7 @@
   },
   "devDependencies": {
     "@gltf-transform/cli": "^4.3.0",
+    "@gltf-transform/core": "^4.3.0",
     "@tailwindcss/postcss": "^4",
     "@types/howler": "^2.2.12",
     "@types/node": "^20",

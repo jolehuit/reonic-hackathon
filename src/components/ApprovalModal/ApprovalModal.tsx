@@ -14,6 +14,7 @@ const CHECKLIST = [
 export function ApprovalModal() {
   const phase = useStore((s) => s.phase);
   const design = useStore((s) => s.design);
+  const profile = useStore((s) => s.profile);
   const setPhase = useStore((s) => s.setPhase);
   const [checks, setChecks] = useState<boolean[]>(CHECKLIST.map(() => false));
 
@@ -26,7 +27,29 @@ export function ApprovalModal() {
       setChecks((prev) => prev.map((v, idx) => (idx === i ? true : v)));
     }
     await new Promise((r) => setTimeout(r, 500));
-    // TODO Dev C: trigger /api/export and download PDF
+
+    // Trigger PDF export and download
+    try {
+      const res = await fetch('/api/export', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ profile, design }),
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `quick-offer-${Date.now()}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+    } catch {
+      /* swallow — phase still advances */
+    }
+
     setPhase('approved');
   };
 
