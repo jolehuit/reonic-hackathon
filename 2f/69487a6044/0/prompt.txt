@@ -1,0 +1,2675 @@
+je suis le dev c explique moi ce que je dois faire dans l'ordre et tu vas faire ensuite étapes par étape
+
+---
+
+juste avant de commencer voici la solution de reonic, je veux que l'on suit la même charte graphique, je vais te donner en screen plusieurs examples
+Est ce que c'est bon pour toi ?
+
+---
+
+ouais et on continue étape par étape comme tu l'as prévu
+
+---
+
+améliore ça c'est pas bon la
+
+---
+
+qu'on soit d'accord tu n'empiete pas sur les dev des autres, on se conentre que sur le dev c, tu es d'accord ? Si t'as empieté adapte pour que ce ne soit pas le cas
+
+---
+
+oui parfait on enchaine
+
+---
+
+donne moi le lien pour ce qui est à télecharger et ensuite ce que je dois faire avec
+
+---
+
+c'est des . wav
+
+---
+
+c'est bon je les ai déplacé dans le dossier vérifie que tout est bon
+
+---
+
+j'ai pas eu de bruit et ça reste bloqué sur ça quand je clique sur le chip
+
+---
+
+oui j'ai les bruits mais regarde quand même en mode debug
+
+---
+
+j'ai juste ça
+
+---
+
+j'ai mis claude in chrome regarde par toi même
+
+---
+
+copy paste : Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+forward-logs-shared.ts:95 [HMR] connected
+forward-logs-shared.ts:95 THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
+(anonymous) @ forward-logs-shared.ts:95Understand this warning
+3forward-logs-shared.ts:95 THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+(anonymous) @ forward-logs-shared.ts:95Understand this warning
+15forward-logs-shared.ts:95 THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+(anonymous) @ forward-logs-shared.ts:95
+warn @ three.core.js:2001
+(anonymous) @ three.module.js:9137
+(anonymous) @ three.module.js:17638
+update @ events-760a1017.esm.js:16029
+loop @ events-760a1017.esm.js:16056
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017.esm.js:16041
+requestAnimationFrame
+loop @ events-760a1017
+
+[Message truncated - exceeded 50,000 character limit]
+
+---
+
+oui
+
+---
+
+au final le script on verra après 
+il faut vraiment ce concentré sur le design je veux que se soit ressemblant à 100% avec la solution que l'on veut améliorer
+retravaille le design
+
+---
+
+retravaille la partie sur le screen pour que ce soit le plus ressemblant possible
+
+---
+
+est ce que ces étapes ont été respectés ? [1] Page d'accueil
+    "Choisis une maison" → 3 chips
+              ↓
+[2] Formulaire qui s'auto-remplit
+    (effet machine à écrire, 3 secondes)
+              ↓
+[3] Bouton "Générer"
+              ↓
+[4] L'agent IA tourne (~22 sec)
+    Étapes qui s'allument une par une, sons subtils
+              ↓
+[5] Maison 3D apparaît avec panneaux
+    Chiffres clés à droite (kWp, €, payback)
+              ↓
+[6] L'utilisateur joue avec les sliders
+    Les chiffres bougent en live
+              ↓
+[7] "Show similar projects"
+    "Notre design ✓ vs 47 projets Reonic"
+              ↓
+[8] Bouton "Approve" → PDF téléchargé
+
+Est ce que tu n'as touché que à ça ? src/app/page.tsx                   ← page d'accueil
+src/components/AgentTrace/         ← liste des étapes IA
+src/components/AutoFillForm/       ← formulaire qui se remplit tout seul
+src/components/ControlPanel/       ← sliders + toggles
+src/components/KPISidebar/         ← chiffres clés (€, kWh, CO₂)
+src/components/EvidencePanel/      ← "47 projets similaires"
+src/components/ApprovalModal/      ← modal de validation finale
+public/sounds/                     ← 6 mp3 à télécharger
+
+---
+
+et est ce que c'est normal que pour l'instant il n'y a que les maisons en démo ? comment on fera quand on rentrera une adresse ?
+
+---
+
+non on va utiliser l'adresse pour cherhcher avec l'auto complétion de google
+C'est leas autres dev qui vont s'occupper de me renvoyer la maison généré et les autres données
+
+---
+
+il doit avoir aussi les autres éélements que l'on doit rentrer à la main dans le form 
+Incorpore tout ce que tu vois dans les screens
+
+---
+
+incorpore tout ce que tu vois dans les screens dans le form 
+Y'en a d'autres mais pour l'instant fait ça on va rajouter après
+Fait en sorte que ce soit identique
+
+---
+
+<ide_opened_file>The user opened the file /Users/lionelleguier/reonic-hackathon/reonic-hackathon/DEV_A.md in the IDE. This may or may not be related to the current task.</ide_opened_file>
+j'ai la clé pour l'api key google maps je l'ai mets ou ?
+
+---
+
+<ide_opened_file>The user opened the file /Users/lionelleguier/reonic-hackathon/reonic-hackathon/.gitignore in the IDE. This may or may not be related to the current task.</ide_opened_file>
+créer le fichier env si il n'est pas crée
+
+---
+
+<ide_opened_file>The user opened the file /Users/lionelleguier/reonic-hackathon/reonic-hackathon/.env.local in the IDE. This may or may not be related to the current task.</ide_opened_file>
+redmemare le serv
+
+---
+
+<ide_opened_file>The user opened the file /Users/lionelleguier/reonic-hackathon/reonic-hackathon/.env.local in the IDE. This may or may not be related to the current task.</ide_opened_file>
+j'ai ça comme message
+
+---
+
+j'ai ça
+
+---
+
+j'ai cca
+
+---
+
+j'ai ca
+
+---
+
+je vois pas de requete maps
+
+---
+
+window.google = window.google || {};
+google.maps = google.maps || {};
+(function() {
+  
+  var modules = google.maps.modules = {};
+  google.maps.__gjsload__ = function(name, text) {
+    modules[name] = text;
+  };
+  
+  google.maps.Load = function(apiLoad) {
+    delete google.maps.Load;
+    apiLoad([0.009999999776482582,[null,[["https://khms0.googleapis.com/kh?v=1008\u0026hl=fr-FR\u0026gl=US\u0026","https://khms1.googleapis.com/kh?v=1008\u0026hl=fr-FR\u0026gl=US\u0026"],null,null,null,1,"1008",["https://khms0.google.com/kh?v=1008\u0026hl=fr-FR\u0026gl=US\u0026","https://khms1.google.com/kh?v=1008\u0026hl=fr-FR\u0026gl=US\u0026"]],null,null,null,null,[["https://cbks0.googleapis.com/cbk?","https://cbks1.googleapis.com/cbk?"]],[["https://khms0.googleapis.com/kh?v=169\u0026hl=fr-FR\u0026gl=US\u0026","https://khms1.googleapis.com/kh?v=169\u0026hl=fr-FR\u0026gl=US\u0026"],null,null,null,null,"169",["https://khms0.google.com/kh?v=169\u0026hl=fr-FR\u0026gl=US\u0026","https://khms1.google.com/kh?v=169\u0026hl=fr-FR\u0026gl=US\u0026"]],null,null,null,null,null,null,null,[["https://streetviewpixels-pa.googleapis.com/v1/thumbnail?hl=fr-FR\u0026gl=US\u0026","https://streetviewpixels-pa.googleapis.com/v1/thumbnail?hl=fr-FR\u0026gl=US\u0026"]]],["fr-FR","US",null,0,null,null,"https://maps.gstatic.com/mapfiles/",null,"https://maps.googleapis.com","https://maps.googleapis.com",null,"https://maps.google.com",null,"https://maps.gstatic.com/maps-api-v3/api/images/","https://www.google.com/maps",null,"https://www.google.com",1,"https://maps.googleapis.com/maps_api_js_slo/log?hasfast=true",0,1],["https://maps.googleapis.com/maps-api-v3/api/js/64/9c/intl/fr_ALL","3.64.9c"],[963839371],null,null,null,[112],null,null,"",["places"],null,1,"https://khms.googleapis.com/mz?v=1008\u0026","REDACTED","https://earthbuilder.googleapis.com","https://earthbuilder.googleapis.com",null,"https://mts.googleapis.com/maps/vt/icon",[["https://maps.googleapis.com/maps/vt"],["https://maps.googleapis.com/maps/vt"],null,null,null,null,null,null,null,null,null,null,["https://www.google.com/maps/vt"],"/maps/vt",776000000,776,776540319],2,500,[null,null,null,null,"https://www.google.com/maps/preview/log204","","https://static.panoramio.com.storage.googleapis.com/photos/",["https://geo0.ggpht.com/cbk","https://geo1.ggpht.com/cbk","https://geo2.ggpht.com/cbk","https://geo3.ggpht.com/cbk"],"https://maps.googleapis.com/maps/api/js/GeoPhotoService.GetMetadata","https://maps.googleapis.com/maps/api/js/GeoPhotoService.SingleImageSearch",["https://lh3.ggpht.com/jsapi2/a/b/c/","https://lh4.ggpht.com/jsapi2/a/b/c/","https://lh5.ggpht.com/jsapi2/a/b/c/","https://lh6.ggpht.com/jsapi2/a/b/c/"],"https://streetviewpixels-pa.googleapis.com/v1/tile",["https://lh3.googleusercontent.com/","https://lh4.googleusercontent.com/","https://lh5.googleusercontent.com/","https://lh6.googleusercontent.com/"]],null,null,null,null,"/maps/api/js/ApplicationService.GetEntityDetails",0,null,null,null,null,[],["64.9c"],1,0,[1],"REDACTED/REDACTED///////////8BEg0IBBD+//////////REDACTED",null,1,0.009999999776482582,null,[[[6,"1776947942"]]],null,"",null,1], loadScriptTime);
+  };
+  var loadScriptTime = (new Date).getTime();
+})();
+// inlined
+google.maps.__gjsload__('places', function(_){var uqa=function(a){a==null||(0,_.lj)(a);if(a!=null)return _.mj(a)},vqa=function(a){return a in kD?kD[a][1]:a},lD=function(a,b){if(!a||!isFinite(a)||b==0)return a;a=String(a).split("e");return parseFloat(a[0]+"e"+(parseInt(a[1]||0,10)+b))},wqa=function(a,b){return a&&isFinite(a)?lD(Math.round(lD(a,b)),-b):a},oD=function(a,b){var c;if(c=b){a:if(b&&b.length===3){for(c=0;c<3;c++){var d=b[c];if(d<"A"||d>"Z"&&d<"a"||d>"z"){c=!1;break a}}c=!0}else c=!1;c=!c}if(c)throw new TypeError("Currency must be valid ISO code");
+this.rh=null;this.Vh=this.qh=this.Ch=!1;this.zh=b?b.toUpperCase():null;this.xh=40;this.oh=1;this.uh=0;this.mh=3;this.yh=this.nh=0;this.Lh=!1;this.Hh=this.Gh="";this.Ah=mD.pA;this.Bh="";this.ph=1;this.th=!1;this.sh=[];this.Fh=this.Qh=!1;this.wh=0;this.Ph=typeof a==="number"?a:-1;this.Nh=typeof a==="string"?a:"";if(_.Cfa&&typeof a==="number"&&a!=5&&a!=6)xqa(this,this.Ph);else if(this.rh=null,typeof a==="number")switch(a){case 1:nD(this,mD.iA);break;case 2:nD(this,mD.AE);break;case 3:nD(this,mD.xE);
+break;case 4:a=mD.mE;b=["0"];if(c=kD[this.zh||mD.gv]){c=c[0]&7;if(c>0)for(b.push("."),d=0;d<c;d++)b.push("0");a=a.replace(/0.00/g,b.join(""))}nD(this,a);break;case 5:yqa(this,1);break;case 6:yqa(this,2);break;default:throw Error("Unsupported pattern type.");}else nD(this,a)},nD=function(a,b){a.Nh=b.replace(/ /g,"\u00a0");const c=[0];a.Gh=pD(a,b,c);var d=c[0];let e=-1,f=0;var g=0,h=0;let k=-1;const n=b.length;for(let p=!0;c[0]<n&&p;c[0]++)switch(b.charAt(c[0])){case "#":g>0?h++:f++;k>=0&&e<0&&k++;
+break;case "0":if(h>0)throw Error('Unexpected "0" in pattern "'+b+'"');g++;k>=0&&e<0&&k++;break;case ",":k>0&&a.sh.push(k);k=0;break;case ".":if(e>=0)throw Error('Multiple decimal separators in pattern "'+b+'"');e=f+g+h;break;case "E":if(a.Fh)throw Error('Multiple exponential symbols in pattern "'+b+'"');a.Fh=!0;a.yh=0;c[0]+1<n&&b.charAt(c[0]+1)=="+"&&(c[0]++,a.Lh=!0);for(;c[0]+1<n&&b.charAt(c[0]+1)=="0";)c[0]++,a.yh++;if(f+g<1||a.yh<1)throw Error('Malformed exponential pattern "'+b+'"');p=!1;break;
+default:c[0]--,p=!1}g==0&&f>0&&e>=0&&(g=e,g==0&&g++,h=f-g,f=g-1,g=1);if(e<0&&h>0||e>=0&&(e<f||e>f+g)||k==0)throw Error('Malformed pattern "'+b+'"');h=f+g+h;a.mh=e>=0?h-e:0;e>=0&&(a.nh=f+g-e,a.nh<0&&(a.nh=0));a.oh=(e>=0?e:h)-f;a.Fh&&(a.xh=f+a.oh,a.mh==0&&a.oh==0&&(a.oh=1));a.sh.push(Math.max(0,k));a.Qh=e==0||e==h;d=c[0]-d;a.Hh=pD(a,b,c);c[0]<b.length&&b.charAt(c[0])==";"?(c[0]++,a.ph!=1&&(a.th=!0),a.Ah=pD(a,b,c),c[0]+=d,a.Bh=pD(a,b,c)):(a.Ah+=a.Gh,a.Bh+=a.Hh)},yqa=function(a,b){a.wh=b;nD(a,mD.iA);
+a.qh=a.qh||0!=a.nh;a.nh=0;a.qh=a.qh||2!=a.mh;a.mh=2;if(a.nh>0)throw Error("Can't combine significant digits and minimum fraction digits");a.Ch=2!==a.uh;a.uh=2},xqa=function(a,b){const c={notation:"standard",minimumIntegerDigits:Math.min(21,Math.max(1,a.oh))};a.Lh&&(c.signDisplay="always");a.Ch?(c.minimumSignificantDigits=1,c.maximumSignificantDigits=Math.max(1,Math.min(21,a.uh))):a.qh&&(c.minimumFractionDigits=Math.max(0,a.nh),c.maximumFractionDigits=Math.min(20,Math.max(0,a.mh)));switch(b){case 1:c.style=
+"decimal";break;case 2:c.notation="scientific";c.maximumFractionDigits=Math.min(20,Math.max(0,a.yh));break;case 3:c.style="percent";break;case 4:c.style="currency";b=a.zh||mD.gv;c.currency=b;b=b in kD?kD[b][0]%16:2;a.qh?(c.minimumFractionDigits=Math.max(a.nh,0),c.maximumFractionDigits=Math.min(a.mh,20)):(c.minimumFractionDigits=Math.max(0,b),c.maximumFractionDigits=Math.min(c.minimumFractionDigits,20));switch(0){default:case 1:c.currencyDisplay="symbol";break;case 2:c.currencyDisplay="code";break;
+case 0:c.currencyDisplay="symbol"}break;case 5:a.wh=1;c.notation="compact";c.compactDisplay="short";break;case 6:a.wh=2;c.notation="compact";c.compactDisplay="long";break;default:throw Error("Unsupported ECMAScript NumberFormat custom pattern = "+a.Nh);}try{let d;(d="fr".replace("_","-"))&&d in zqa&&(c.numberingSystem=zqa[d]);a.rh=new Intl.NumberFormat(d,c)}catch(d){throw a.rh=null,Error("ECMAScript NumberFormat error: "+d);}Aqa=a.Vh=a.Ch=a.qh=!1},qD=function(a,b){var c=lD(b,a.mh);a.uh>0&&(c=Bqa(c,
+a.uh,a.mh));c=Math.round(c);let d;if(isFinite(c)){if(d=Math.floor(lD(c,-a.mh)),c=Math.floor(c-lD(d,a.mh)),c<0||c>=lD(1,a.mh))d=Math.round(b),c=0}else d=b,c=0;return{jG:d,YK:c}},rD=function(a,b,c,d){if(a.nh>a.mh)throw Error("Min value must be less than max value");d||(d=[]);b=qD(a,b);var e=b.jG,f=b.YK,g=a.nh>0||f>0||!1;b=a.nh;g&&(b=a.nh);for(var h="",k=e;k>1E20;)h="0"+h,k=Math.round(lD(k,-1));h=k+h;const n=mD.nE;k=mD.sA.codePointAt(0);var p=h.length,r=0;if(e>0||c>0){for(e=p;e<c;e++)d.push(String.fromCodePoint(k));
+if(a.sh.length>=2)for(c=1;c<a.sh.length;c++)r+=a.sh[c];c=p-r;if(c>0){e=a.sh;r=p=0;var t=mD.kA,v=h.length;for(let y=0;y<v;y++)if(d.push(String.fromCodePoint(k+Number(h.charAt(y))*1)),v-y>1){var w=e[r];if(y<c){let E=c-y;(w===1||w>0&&E%w===1)&&d.push(t)}else r<e.length&&(y===c?r+=1:w===y-c-p+1&&(d.push(t),p+=w,r+=1))}}else{c=h;h=a.sh;e=mD.kA;w=c.length;t=[];for(p=h.length-1;p>=0&&w>0;p--){r=h[p];for(v=0;v<r&&w-v-1>=0;v++)t.push(String.fromCodePoint(k+Number(c.charAt(w-v-1))*1));w-=r;w>0&&t.push(e)}d.push.apply(d,
+t.reverse())}}else g||d.push(String.fromCodePoint(k));(a.Qh||g)&&d.push(n);f=String(f);g=f.split("e+");g.length==2&&(f=String(Bqa(parseFloat(g[0]),a.uh,1)),f=f.replace(".",""),f+="0".repeat(parseInt(g[1],10)-f.length+1));a.mh+1>f.length&&(f="1"+"0".repeat(a.mh-f.length)+f);for(a=f.length;f.charAt(a-1)=="0"&&a>b+1;)a--;for(b=1;b<a;b++)d.push(String.fromCodePoint(k+Number(f.charAt(b))*1))},Cqa=function(a,b,c){c.push(mD.oE);b<0?(b=-b,c.push(mD.pA)):a.Lh&&c.push(mD.zE);b=""+b;var d=mD.sA;for(let e=b.length;e<
+a.yh;e++)c.push(d);a=d.codePointAt(0)-_.Dfa;for(d=0;d<b.length;d++)c.push(String.fromCodePoint(a+b.codePointAt(d)))},pD=function(a,b,c){let d="",e=!1;const f=b.length;for(;c[0]<f;c[0]++){const g=b.charAt(c[0]);if(g=="'")c[0]+1<f&&b.charAt(c[0]+1)=="'"?(c[0]++,d+="'"):e=!e;else if(e)d+=g;else switch(g){case "#":case "0":case ",":case ".":case ";":return d;case "\u00a4":c[0]+1<f&&b.charAt(c[0]+1)=="\u00a4"?(c[0]++,d+=a.zh||mD.gv):d+=vqa(a.zh||mD.gv);break;case "%":if(!a.th&&a.ph!=1)throw Error("Too many percent/permill");
+if(a.th&&a.ph!=100)throw Error("Inconsistent use of percent/permill characters");a.ph=100;a.th=!1;d+=mD.wE;break;case "\u2030":if(!a.th&&a.ph!=1)throw Error("Too many percent/permill");if(a.th&&a.ph!=1E3)throw Error("Inconsistent use of percent/permill characters");a.ph=1E3;a.th=!1;d+=mD.yE;break;default:d+=g}}return d},Dqa=function(a,b){a=a.wh==1?sD.hA:sD.lE;a==null&&(a=sD.hA);if(b<3)return tD;b=Math.min(14,b);var c=a[lD(1,b)];for(--b;!c&&b>=3;)c=a[lD(1,b)],b--;if(!c)return tD;c=c.other;var d=a=
+"",e=c.indexOf(";");e>=0&&(c=c.substring(0,e),e=c.substring(e+1))&&(d=/([^0]*)(0+)(.*)/.exec(e),a=d[1],d=d[3]);return c&&c!="0"?(c=/([^0]*)(0+)(.*)/.exec(c))?{UA:b+1-(c[2].length-1),tC:a,uC:d,prefix:c[1],suffix:c[3]}:tD:tD},uD=function(a){if(!isFinite(a))return a>0?a:0;let b=0;for(;(a/=10)>=1;)b++;return b},Bqa=function(a,b,c){if(!a)return a;b=b-uD(a)-1;return b<-c?wqa(a,-c):wqa(a,b)},vD=function(a){this.oh=a;this.nh=this.mh=this.qh=null;a=mD;const b=sD;if(Eqa!==a||Fqa!==b)Eqa=a,Fqa=b,Gqa=new oD(1);
+this.rh=Gqa},wD=function(a,b,c,d,e){for(let r=0;r<b.length;r++){var f=void 0;switch(b[r].type){case 4:e.push(b[r].value);break;case 3:f=b[r].value;var g=a,h=e,k=c[f];k===void 0?h.push("Undefined parameter - "+f):(g.mh.push(k),h.push(g.ph(g.mh)));break;case 2:f=b[r].value;g=a;h=c;k=d;var n=e,p=f.Qx;h[p]===void 0?n.push("Undefined parameter - "+p):(p=f[h[p]],p===void 0&&(p=f.other),wD(g,p,h,k,n));break;case 0:f=b[r].value;Hqa(a,f,c,_.Hfa,d,e);break;case 1:f=b[r].value,Hqa(a,f,c,_.Ffa,d,e)}}},Hqa=function(a,
+b,c,d,e,f){var g=b.Qx,h=b.OE;const k=+c[g];isNaN(k)?f.push("Undefined or invalid parameter - "+g):(h=k-h,g=b[c[g]],g===void 0&&(d=d(Math.abs(h)),g=b[d],g===void 0&&(g=b.other)),b=[],wD(a,g,c,e,b),c=b.join(""),e?f.push(c):(a=a.rh.format(h),f.push(c.replace(/#/g,a))))},Iqa=function(a,b){const c=a.qh,d=(0,_.Pa)(a.ph,a);b=b.replace(_.Jfa,function(){c.push("'");return d(c)});return b=b.replace(_.Ifa,function(e,f){c.push(f);return d(c)})},xD=function(a){var b=0;const c=[],d=[],e=/[{}]/g;e.lastIndex=0;for(var f;f=
+e.exec(a);){const g=f.index;f[0]=="}"?(c.pop(),c.length==0&&(f={type:1},f.value=a.substring(b,g),d.push(f),b=g+1)):(c.length==0&&(b=a.substring(b,g),b!=""&&d.push({type:0,value:b}),b=g+1),c.push("{"))}a=a.substring(b);a!=""&&d.push({type:0,value:a});return d},yD=function(a,b){const c=[];b=xD(b);for(let e=0;e<b.length;e++){const f={};if(0==b[e].type)f.type=4,f.value=b[e].value;else if(1==b[e].type){var d=b[e].value;switch(Jqa.test(d)?0:Kqa.test(d)?1:Lqa.test(d)?2:/^\s*\w+\s*/.test(d)?3:5){case 2:f.type=
+2;f.value=Mqa(a,b[e].value);break;case 0:f.type=0;f.value=Nqa(a,b[e].value);break;case 1:f.type=1;f.value=Oqa(a,b[e].value);break;case 3:f.type=3,f.value=b[e].value}}c.push(f)}return c},Mqa=function(a,b){let c="";b=b.replace(Lqa,function(f,g){c=g;return""});const d={};d.Qx=c;b=xD(b);let e=0;for(;e<b.length;){const f=b[e].value;e++;let g;1==b[e].type&&(g=yD(a,b[e].value));d[f.replace(/\s/g,"")]=g;e++}return d},Nqa=function(a,b){let c="",d=0;b=b.replace(Jqa,function(g,h,k){c=h;k&&(d=parseInt(k,10));
+return""});const e={};e.Qx=c;e.OE=d;b=xD(b);let f=0;for(;f<b.length;){const g=b[f].value;f++;let h;1==b[f].type&&(h=yD(a,b[f].value));e[g.replace(/\s*(?:=)?(\w+)\s*/,"$1")]=h;f++}return e},Oqa=function(a,b){let c="";b=b.replace(Kqa,function(f,g){c=g;return""});const d={};d.Qx=c;d.OE=0;b=xD(b);let e=0;for(;e<b.length;){const f=b[e].value;e++;let g;1==b[e].type&&(g=yD(a,b[e].value));d[f.replace(/\s*(?:=)?(\w+)\s*/,"$1")]=g;e++}return d},zD=function(a){return a==null?null:a},AD=function(a,b){return(new vD(a)).format(b)},
+Pqa=function(a){_.vp(a);return{rk:b=>b===null?null:b.trim().split(/\s+/).map(c=>_.rp(c,a)).filter(c=>c!==null)||null,Nj:b=>b===null?null:b.map(c=>_.up(a,c)).join(" ")}},BD=function(a){return(b,c)=>_.xda(b,c,{get(){return(this.Bk??Qqa??(Qqa=document.createDocumentFragment())).querySelectorAll(a)}})},Rqa=async function(a,b){a.nh||(b=b(await _.Vl("util")),a.nh=a.mh===5||a.mh===9?new b.aJ:new b.ZI);return a.nh},Sqa=function(a,b){return function*(){if(a!==void 0){let c=0;for(const d of a)yield b(d,c++)}}()},
+CD=function(a){a=_.an(b=>{b=(0,_.Zr)(b);if(b.includes("/"))throw _.Vm('Field with "/" specified: '+b);b=b.replace(/\./g,"/");b==="utc_offset_minutes"?b="utc_offset":b==="utc_offset"&&_.Km("utc_offset is deprecated as of November 2019. Use utc_offset_minutes instead. See https://goo.gle/js-open-now");b==="opening_hours/open_now"&&_.Km("opening_hours.open_now is deprecated as of November 2019. Use the isOpen() method from a PlacesService.getDetails() result instead. See https://goo.gle/js-open-now.");
+b==="permanently_closed"&&_.Km("permanently_closed is deprecated as of May 2020 and will beturned off in May 2021. Use business_status instead.");return b})(a);if(!a.length)throw _.Vm("At least one field must be specified.");return a},DD=function(a){return _.N(_.an(_.Zr))(a)},Uqa=function(a,b){return _.dg(a,_.oi,2,Tqa,b)},Vqa=function(a,b,c){c=c||{};c.format="jspb";this.mh=new _.Rs(c);this.nh=a==void 0?a:a.replace(/\/+$/,"")},Xqa=function(a,b,c){return a.mh.mh(a.nh+"/$rpc/google.maps.geocode.v4.GeocodeService/GeocodeLocation",
+b,c||{},Wqa)},Yqa=function(){const a=document.body,b=window;ED===null&&(ED=!1,a.addEventListener("pointerdown",()=>{ED=!0},!0),a.addEventListener("click",()=>{ED=!1},!0));FD===null&&(FD=!1,b.addEventListener("blur",()=>{FD=!0},!0),b.addEventListener("focus",()=>{FD=!1},!0))},ID=function(a){a.Gh&&(a.Gh=!1,GD(a),HD(a))},HD=function(a){const b=a.Qk&&a.Gh?0:1;b===0&&a.Xh!==0?(a.nh.append(a.wh),a.nh.showModal(),a.mh.focus(),a.Xh=0):b===1&&a.Xh!==1&&(a.nh.close(),a.Bk?.append(a.wh),JD(a),a.Xh=1)},Zqa=function(a,
+b=a.ph){b!==-1&&(KD(a,-1),a.mh.value=a.predictions[b].text.text,a.ci.setFormValue(a.mh.value),a.Ql(a.predictions[b]),ID(a),a.mh.focus())},KD=function(a,b){var c=a.Fh[a.ph];c&&(c.removeAttribute("aria-selected"),c.setAttribute("part","prediction-item"),a.mh.setAttribute("aria-activedescendant",""));a.ph===-1&&(a.Am=a.mh.value);a.ph=b;if(c=a.Fh[b])c.setAttribute("aria-selected","true"),c.setAttribute("part","prediction-item prediction-item-selected"),a.mh.setAttribute("aria-activedescendant",c.id),
+c.appendChild(a.Hh);a.ph===-1?(a.mh.value=a.Am,a.Ph.appendChild(a.Hh)):a.mh.value=a.predictions[b].text.text},$qa=function(a){a.Ah.classList.add("back-button");a.Ah.setAttribute("aria-label","Quitter la recherche en plein \u00e9cran");_.Tt(_.Sha(),a.Ah);a.Ah.addEventListener("click",()=>{ID(a)})},ara=function(a){a.th.classList.add("clear-button");a.th.setAttribute("aria-label","Effacer la saisie");LD(a);a.th.addEventListener("click",()=>{GD(a);a.mh.value="";LD(a);JD(a)});_.Tt((0,_.Q)`<svg width="21" height="20" fill="none" viewBox="0 0 21 20"><path fill="#1f1f1f" fill-rule="evenodd" d="M10.8 0a10 10 0 100 20 10 10 0 100-20m2.59 6L10.8 8.59 8.21 6 6.8 7.41 9.39 10 6.8 12.59 8.21 14l2.59-2.59L13.39 14l1.41-1.41L12.21 10l2.59-2.59zM2.8 10a8.01 8.01 0 0016 0 8.01 8.01 0 00-16 0" clip-rule="evenodd"/></svg>`,
+a.th)},cra=function(a){a.mh.setAttribute("part","input");a.mh.setAttribute("aria-autocomplete","list");a.mh.setAttribute("autocomplete","off");a.mh.setAttribute("role","combobox");a.mh.setAttribute("aria-expanded","false");a.mh.setAttribute("aria-haspopup","listbox");a.mh.getAttribute("aria-label")||a.mh.setAttribute("aria-label","Rechercher un lieu");a.mh.addEventListener("input",()=>{a.mh.removeAttribute("aria-activedescendant");LD(a);a.Gh=!0;bra(a,a.mh.value);HD(a);a.ci.setFormValue(a.mh.value)});
+a.mh.addEventListener("blur",b=>{b.relatedTarget||ED||FD?b.relatedTarget&&!a.Bk?.contains(b.relatedTarget)&&ID(a):(a.Qk&&a.nh.focus(),JD(a))});a.mh.addEventListener("keydown",a.rr)},dra=function(a){const b=document.createElement("div");b.setAttribute("role","presentation");b.classList.add("attributions");_.Tt((0,_.Q)`<gmp-internal-attribution></gmp-internal-attribution>`,b);a.qh.classList.add("dropdown");a.qh.append(a.oh,b);a.qh.style.display="none";a.qh.setAttribute("part","prediction-list")},era=
+function(a){a.nh.setAttribute("aria-label","Rechercher un lieu");a.nh.tabIndex=-1;a.nh.addEventListener("focus",()=>{JD(a)})},LD=function(a){a.th.style.visibility=a.mh.value?.length>0?"visible":"hidden"},JD=function(a){a.pi!==null&&clearTimeout(a.pi);a.pi=setTimeout(()=>{a.mh.focus();a.pi=null},0)},GD=function(a){a.oh.textContent="";a.mh.removeAttribute("aria-controls");a.mh.removeAttribute("aria-activedescendant");a.mh.setAttribute("aria-expanded","false");a.qh.style.display="none"},fra=function(a){a.Gh&&
+a.Fh.length&&(a.mh.setAttribute("aria-controls",a.oh.id),a.oh.style.display="inline",a.Fh.forEach(a.oh.appendChild,a.oh),a.mh.setAttribute("aria-expanded","true"),a.qh.style.display="flex")},hra=function(a,b){GD(a);a.ph=-1;a.predictions=b;a.Fh=a.predictions.map((c,d)=>{const e=document.createElement("li");e.setAttribute("part","prediction-item");e.setAttribute("role","option");e.id=_.ro();e.appendChild(gra(a,c));e.addEventListener("click",()=>{Zqa(a,d)});return e});fra(a)},ira=function(a){const b=
+new Set;return a.filter(c=>{if(b.has(c.constructor))return!1;b.add(c.constructor);return!0})},jra=function(a){return Intl.NumberFormat(_.rl?.nh().nh()||void 0,{maximumFractionDigits:1,minimumFractionDigits:1}).format(a)},kra=function(a){return Array.from({length:10}).fill("empty").fill("filled",0,Math.round(a*2))},lra=function(a){const b="Note\u00a0: "+jra(a)+" sur\u00a05";return(0,_.Q)`
+    <div class="icons" role="img" aria-label=${b}>
+      ${Sqa(kra(a),(c,d)=>(0,_.Q)`
+          <svg
+            class="star-${c} half-star-${d%2&&d!==0?"right":"left"}"
+            viewBox=${d%2?"6 0 6 12":"0 0 6 12"}
+            version="1"
+            xmlns="http://www.w3.org/2000/svg">
+            <path fill="currentColor" d=${"M6.00002 9.23652L2.91908 11.4787C2.78946 11.573 2.62246 11.5995 2.47003 11.5499C2.20746 11.4643 2.06393 11.1822 2.14945 10.9196L3.32835 7.29985L0.275172 5.12724C0.143349 5.03343 0.0650635 4.88164 0.0650635 4.71985C0.0650635 4.44371 0.288921 4.21985 0.565063 4.21985H4.30835L5.52412 0.446794C5.57347 0.293635 5.69351 0.173588 5.84667 0.124237C6.10951 0.0395456 6.39123 0.183959 6.47592 0.446794L7.69169 4.21985H11.435C11.5968 4.21985 11.7486 4.29814 11.8424 4.42996C12.0025 4.65495 11.9499 4.96713 11.7249 5.12724L8.67169 7.29985L9.8506 10.9196C9.90024 11.072 9.87378 11.239 9.77945 11.3687C9.61696 11.5919 9.30423 11.6412 9.08096 11.4787L6.00002 9.23652Z"} />
+          </svg>
+        `)}
+    </div>
+  `},MD=function(a,b){try{_.Zm(HTMLInputElement,"HTMLInputElement")(a)}catch(c){if(_.Wm(c),!a)return}_.L(window,154340);_.Vl("places_impl").then(c=>{b=b||{};this.setValues(b);c.PJ(this,a);_.Ko(a)});console.warn("As of March 1st, 2025, google.maps.places.Autocomplete is not available to new customers. Please use google.maps.places.PlaceAutocompleteElement instead. At this time, google.maps.places.Autocomplete is not scheduled to be discontinued, but google.maps.places.PlaceAutocompleteElement is recommended over google.maps.places.Autocomplete. While google.maps.places.Autocomplete will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.Autocomplete will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide.")},
+ND=function(){this.mh=null;_.Vl("places_impl").then(a=>{this.mh=a.hK()});console.warn("As of March 1st, 2025, google.maps.places.AutocompleteService is not available to new customers. Please use google.maps.places.AutocompleteSuggestion instead. At this time, google.maps.places.AutocompleteService is not scheduled to be discontinued, but google.maps.places.AutocompleteSuggestion is recommended over google.maps.places.AutocompleteService. While google.maps.places.AutocompleteService will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.AutocompleteService will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide.")},
+OD=function(a,b,c,d,e,f){a=(0,_.Q)`
+    ${a}
+    <span aria-hidden="true">${b}</span>
+  `;f=f?f.join(" "):"";return d?(0,_.Q)`<a
+        class="contacts-row ${f}"
+        .href=${d}
+        .target=${e?"_self":"_blank"}
+        .ariaLabel=${e?c(b):_.Or(c(b))}>
+        ${a}
+      </a>`:(0,_.Q)`<div class="contacts-row ${f}">
+        ${a}
+        <span class="sr-only">${c(b)}</span>
+      </div>`},mra=function(a){return"Adresse\u00a0: "+a},pra=function(a){a=nra(a).flatMap(({heading:b,features:c})=>c.length?(0,_.Q)`
+      <div class="features-section">
+        <div class="section-heading">${b}</div>
+        <ul>
+          ${c.map(ora)}
+        </ul>
+      </div>
+    `:[]);return a.length?(0,_.Q)`
+        <section class="features" aria-label="${"Caract\u00e9ristiques"}">
+          ${_.Tr(a,(0,_.Q)`<hr />`)}
+        </section>
+      `:null},ora=function(a){const b=c=>AD(a,{VARIANT:c,AVAILABILITY_INDICATOR:""});return(0,_.Q)`
+    <li>
+      <div aria-hidden="true">
+        ${(0,_.Q)`<svg viewBox="0 -960 960 960"><path fill="currentColor" d="M382-240 154-468l57-57 171 171 367-367 57 57z"/></svg>`}
+        <span>${b("short")}</span>
+      </div>
+      <span class="sr-only">${b("standalone")}</span>
+    </li>
+  `},nra=function(a){const b=a.accessibilityOptions,c=a.paymentOptions,d=a.parkingOptions,e=[];e.push({heading:"Services disponibles",features:[a.hasDineIn&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Repas sur place}standalone{Possibilit\u00e9 de manger sur place}other{}}",a.hasOutdoorSeating&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Terrasse}standalone{Dispose d'une terrasse}other{}}",a.isReservable&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Accepte les r\u00e9servations}standalone{Accepte les r\u00e9servations}other{}}",
+a.hasTakeout&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Plats \u00e0 emporter}standalone{Propose des plats \u00e0 emporter}other{}}",a.hasDelivery&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Livraison}standalone{Propose la livraison}other{}}",a.hasCurbsidePickup&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Drive disponible}standalone{Possibilit\u00e9 de retirer ses achats au drive}other{}}"].filter(_.Em)});e.push({heading:"Populaire pour",features:[a.servesBreakfast&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Petit-d\u00e9jeuner}standalone{Sert le petit-d\u00e9jeuner}other{}}",
+a.servesLunch&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} D\u00e9jeuner}standalone{Sert \u00e0 d\u00e9jeuner}other{}}",a.servesBrunch&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Brunch}standalone{Sert des brunchs}other{}}",a.servesDinner&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} D\u00eener}standalone{Sert \u00e0 d\u00eener}other{}}",a.servesDessert&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Dessert}standalone{Propose des desserts}other{}}"].filter(_.Em)});e.push({heading:"Accessibilit\u00e9",
+features:[b?.hasWheelchairAccessibleEntrance&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Entr\u00e9e accessible en fauteuil roulant}standalone{Dispose d'une entr\u00e9e accessible en fauteuil roulant}other{}}",b?.hasWheelchairAccessibleParking&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Parking accessible en fauteuil roulant}standalone{Dispose d'un parking accessible en fauteuil roulant}other{}}",b?.hasWheelchairAccessibleRestroom&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Toilettes accessibles en fauteuil roulant}standalone{Dispose de toilettes accessibles en fauteuil roulant}other{}}",
+b?.hasWheelchairAccessibleSeating&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Places assises accessibles en fauteuil roulant}standalone{Propose des places assises accessibles en fauteuil roulant}other{}}"].filter(_.Em)});e.push({heading:"Offres",features:[a.servesBeer&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Bi\u00e8re}standalone{Sert de la bi\u00e8re}other{}}",a.servesWine&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Vin}standalone{Sert du vin}other{}}",a.servesCoffee&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Caf\u00e9}standalone{Sert du caf\u00e9}other{}}",
+a.servesCocktails&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Cocktails}standalone{Sert des cocktails}other{}}",a.servesVegetarianFood&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Plats v\u00e9g\u00e9tariens}standalone{Sert des plats v\u00e9g\u00e9tariens}other{}}"].filter(_.Em)});e.push({heading:"Services",features:[a.hasRestroom&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Toilettes}standalone{Dispose de toilettes}other{}}",a.hasWiFi&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Wi-Fi}standalone{Propose une connexion Wi-Fi}other{}}"].filter(_.Em)});
+e.push({heading:"Caract\u00e9ristiques",features:[a.isGoodForGroups&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Convient aux groupes}standalone{Convient aux groupes}other{}}",a.isGoodForWatchingSports&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Convient pour regarder du sport}standalone{Convient pour regarder du sport}other{}}",a.hasLiveMusic&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Concerts}standalone{Propose des concerts}other{}}"].filter(_.Em)});e.push({heading:"Paiements",
+features:[c?.acceptsCashOnly&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Argent liquide seulement}standalone{Argent liquide seulement}other{}}",c?.acceptsCreditCards&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Cartes de cr\u00e9dit}standalone{Cartes de cr\u00e9dit accept\u00e9es}other{}}",c?.acceptsDebitCards&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Cartes de d\u00e9bit}standalone{Cartes de d\u00e9bit accept\u00e9es}other{}}",c?.acceptsNFC&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Paiements mobiles NFC}standalone{Paiements mobiles NFC accept\u00e9s}other{}}"].filter(_.Em)});
+e.push({heading:"Enfants",features:[a.isGoodForChildren&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Convient aux enfants}standalone{Convient aux enfants}other{}}",a.hasMenuForChildren&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Menu enfant}standalone{Propose un menu enfant}other{}}"].filter(_.Em)});e.push({heading:"Animaux de compagnie",features:[a.allowsDogs&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Chiens accept\u00e9s}standalone{Accepte les chiens}other{}}"].filter(_.Em)});
+e.push({heading:"Parking",features:[d?.hasFreeParkingLot&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Parking gratuit}standalone{Dispose d'un parking gratuit}other{}}",d?.hasPaidParkingLot&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Parking payant}standalone{Dispose d'un parking payant}other{}}",d?.hasFreeStreetParking&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Parking gratuit dans la rue}standalone{Parking gratuit dans la rue}other{}}",d?.hasPaidStreetParking&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Parking payant dans la rue}standalone{Parking payant dans la rue}other{}}",
+d?.hasFreeGarageParking&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Parking couvert gratuit}standalone{Dispose d'un parking couvert gratuit}other{}}",d?.hasPaidGarageParking&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Parking couvert payant}standalone{Dispose d'un parking couvert payant}other{}}",d?.hasValetParking&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Service de voiturier}standalone{Dispose d'un service de voiturier}other{}}"].filter(_.Em)});return e},qra=function(a){a=[a.allowsDogs&&
+"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Chiens accept\u00e9s}standalone{Accepte les chiens}other{}}",a.hasTakeout&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Plats \u00e0 emporter}standalone{Propose des plats \u00e0 emporter}other{}}",a.hasDelivery&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Livraison}standalone{Propose la livraison}other{}}",a.hasDineIn&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Repas sur place}standalone{Possibilit\u00e9 de manger sur place}other{}}",
+a.hasCurbsidePickup&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Drive disponible}standalone{Possibilit\u00e9 de retirer ses achats au drive}other{}}",a.isReservable&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Accepte les r\u00e9servations}standalone{Accepte les r\u00e9servations}other{}}",a.servesBreakfast&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Petit-d\u00e9jeuner}standalone{Sert le petit-d\u00e9jeuner}other{}}",a.servesLunch&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} D\u00e9jeuner}standalone{Sert \u00e0 d\u00e9jeuner}other{}}",
+a.servesDinner&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} D\u00eener}standalone{Sert \u00e0 d\u00eener}other{}}",a.servesBeer&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Bi\u00e8re}standalone{Sert de la bi\u00e8re}other{}}",a.servesWine&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Vin}standalone{Sert du vin}other{}}",a.servesBrunch&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Brunch}standalone{Sert des brunchs}other{}}",a.servesVegetarianFood&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Plats v\u00e9g\u00e9tariens}standalone{Sert des plats v\u00e9g\u00e9tariens}other{}}",
+a.hasOutdoorSeating&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Terrasse}standalone{Dispose d'une terrasse}other{}}",a.hasLiveMusic&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Concerts}standalone{Propose des concerts}other{}}",a.hasMenuForChildren&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Menu enfant}standalone{Propose un menu enfant}other{}}",a.servesCocktails&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Cocktails}standalone{Sert des cocktails}other{}}",a.servesDessert&&
+"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Dessert}standalone{Propose des desserts}other{}}",a.servesCoffee&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Caf\u00e9}standalone{Sert du caf\u00e9}other{}}",a.hasRestroom&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Toilettes}standalone{Dispose de toilettes}other{}}",a.isGoodForChildren&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Convient aux enfants}standalone{Convient aux enfants}other{}}",a.isGoodForGroups&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Convient aux groupes}standalone{Convient aux groupes}other{}}",
+a.isGoodForWatchingSports&&"{VARIANT,select, short{{AVAILABILITY_INDICATOR} Convient pour regarder du sport}standalone{Convient pour regarder du sport}other{}}"].filter(_.Em).slice(0,2).map(b=>AD(b,{VARIANT:"standalone"}));return a.length===0?(0,_.Q)``:(0,_.Q)`
+    <div class="attribute-tags">
+      ${a.map(b=>(0,_.Q)`<span class="attribute-tag">${b}</span>`)}
+    </div>
+  `},PD=function(a,b){a.qC[Math.min(Math.max(a.mh+b,0),a.qC.length-1)].focus()},QD=function(a){if(a)return a===_.Ot?!0:Array.isArray(a)?a.every(QD):!1;a=typeof a;return a==="undefined"||a==="object"||a==="string"},RD=function(a){a=a.filter(b=>!QD(b));return a.length?(0,_.Q)`${_.Tr(a,(0,_.Q)`<hr />`)}`:null},SD=function(...a){return _.Tr(a.filter(b=>!QD(b)),(0,_.Q)`<span aria-hidden="true" class="interpunct">\u00b7</span>`)},rra=function(a,b,c){a=a.periods.map(({open:d})=>d.mh(b,c));return a.length?
+new Date(Math.min(...a)):void 0},sra=function(a,b,c){a=a.periods.map(({close:d})=>d?.mh(b,c)).filter(Boolean);return a.length?new Date(Math.min(...a)):void 0},ura=function(a){return a===null||a===0?null:tra.get(a)||null},aE=function(a,b){for(const [d,e]of Object.entries(b)){var c=d;const f=e;if(vra.has(c))switch(a.Rw.add(c),c){case "accessibilityOptions":a.uh=f?new TD(f):null;break;case "addressComponents":a.oh=f.map(g=>new wra(g));break;case "attributions":a.xh=f.map(g=>new xra(g));break;case "consumerAlert":a.zh=
+f?new yra(f):null;break;case "evChargeAmenitySummary":a.Ch=f?new UD(f,g=>a.Bu({id:g.id})):null;break;case "evChargeOptions":a.Fh=f?new zra(f):null;break;case "fuelOptions":c={};a.requestedLanguage!=null&&(c.language=a.requestedLanguage);a.requestedRegion!=null&&(c.region=a.requestedRegion);a.Gh=f?new Ara(f,c):null;break;case "neighborhoodSummary":a.Nh=f?new Bra(f,g=>a.Bu({id:g.id})):null;break;case "generativeSummary":a.Hh=f?new Cra(f):null;break;case "googleMapsLinks":a.Lh=f?new Dra(f):null;break;
+case "id":Era(a,f);break;case "resourceName":Era(a,f);break;case "location":a.ph=f?new _.sn(f):null;break;case "regularOpeningHours":try{a.nh=f&&f?.periods?.length?new VD(f):null}catch(g){_.Km(`Place ${a.id} returned invalid opening hours.`,g),_.L(window,148228),a.nh=null}break;case "currentOpeningHours":try{a.mh=f&&f?.weekdayDescriptions?.length?new VD(f):null}catch(g){_.Km(`Place ${a.id} returned invalid current opening hours.`,g),_.L(window,148228),a.mh=null}break;case "regularSecondaryOpeningHours":a.Zh=
+f.map(g=>new WD(g));break;case "currentSecondaryOpeningHours":a.Bh=f.map(g=>new WD(g));break;case "parkingOptions":a.Qh=f?new XD(f):null;break;case "paymentOptions":a.Ph=f?new YD(f):null;break;case "photos":a.Vh=f.map(g=>{try{return new ZD(g)}catch(h){_.Km(`Place ${a.id} returned an invalid photo.`,h),_.L(window,148229)}}).filter(Boolean);break;case "plusCode":a.qh=f?new _.Pu(f):null;break;case "postalAddress":a.rh=f?new _.Qu(f):null;break;case "priceRange":c={};a.requestedLanguage!=null&&(c.language=
+a.requestedLanguage);a.requestedRegion!=null&&(c.region=a.requestedRegion);a.Xh=f?new Fra(f,c):null;break;case "reviews":a.mi=f.map(g=>new $D(g));break;case "reviewSummary":a.ci=f?new Gra(f):null;break;case "viewport":a.th=f?new _.zo(f):f;break;case "timeZone":a.xi=f?new Hra(f):null;break;case "types":a.sh=f||[];break;case "subDestinations":a.pi=f.map(g=>a.Bu({id:g.id}));break;case "addressDescriptor":a.wh=f?new Ira(f,g=>a.Bu(g)):null;break;case "busyness":a.yh=f?new Jra(f):null;break;case "containingPlaces":a.Ah=
+f?f.map(g=>a.Bu(g)):null}}a.Di={...a.Di,...b}},Era=function(a,b){b=_.ms(b);a.id!==b&&b!==""&&(a.id!==""&&console.warn(`Please note that the 'id' property of this place has changed: ${a.id} -> ${b}`),Object.defineProperty(a,"id",{enumerable:!0,writable:!1,value:b}),Object.defineProperty(a,"resourceName",{enumerable:!0,writable:!1,value:`places/${b}`}))},Mra=function(a,b,c){if(a.length===0)return!1;if(Kra(a))return!0;const d=new bE(c.getUTCDay(),c.getUTCHours(),c.getUTCMinutes(),0);return Lra(a,b).some(e=>
+e.includes(d))},Kra=function(a){return a.length===1&&!a[0].close&&!!a[0].open&&a[0].open.day===0&&a[0].open.hour===0&&a[0].open.minute===0},Lra=function(a,b){const c=[];a.forEach(d=>{var e=d.close;d=d.open;e=new cE(new bE(d.day,d.hour,d.minute,b),new bE(e.day,e.hour,e.minute,b));e.endTime.compare(e.startTime)<0?(d=new cE(new bE(0,0,0,0),e.endTime),c.push(new cE(e.startTime,new bE(0,0,10080,0))),c.push(d)):c.push(e)});return c},Nra=function(a){const b=Math.abs(a%60);var c=Math.floor(Math.abs(a/60));
+return`${a<0?"-":"+"}${c<10?`0${c}`:c}:${b<10?`0${b}`:b}`},Ora=function(a){if(!a)return!1;const b=new dE;b.place=a;return b.oi()!==null},Pra=function(a){if(!a.place)return null;switch(a.place.businessStatus){case "CLOSED_PERMANENTLY":return(0,_.Q)`
+          <span class="closed">${"Ferm\u00e9 d\u00e9finitivement"}</span>
+        `;case "CLOSED_TEMPORARILY":return(0,_.Q)`
+          <span class="closed">${"Ferm\u00e9 temporairement"}</span>
+        `}var b=a.place.regularOpeningHours,c=a.place.utcOffsetMinutes;const d=b?.periods;if(!d||!d.length||c==null)return null;if(Kra(d))return(0,_.Q)`<span class="open">${"Ouvert 24h/24"}</span>`;var e=Nra(c),f=new Date;if(Mra(d,c,f)){f=sra(b,f.getTime(),c);if(!f)return null;e=AD("Ferme \u00e0 {nextClosingTime}",{nextClosingTime:eE(a,{timeStyle:"short",timeZone:e},f)});a=(0,_.Q)`<span class="open">${"Ouvert"}</span>`}else{b=rra(b,f.getTime(),c);if(!b)return null;c=eE(a,{weekday:"short",timeZone:e},
+b);e=AD("{nextOpeningDayOfWeek,select, null{Ouvre \u00e0 {nextOpeningTime}}other{Ouvre \u00e0 {nextOpeningTime} {nextOpeningDayOfWeek}}}",{nextOpeningTime:eE(a,{timeStyle:"short",timeZone:e},b),nextOpeningDayOfWeek:c===eE(a,{weekday:"short",timeZone:e},f)?"null":c});a=(0,_.Q)`<span class="closed">${"Ferm\u00e9"}</span>`}return SD(a,(0,_.Q)`<span>${e}</span>`)},Rra=function(a){if(a.weekdayDescriptions&&a.weekdayDescriptions.length!==0){var b=Qra(a);return(0,_.Q)`
+      <ul id="weekly-hours" class="weekly-hours">
+        ${a.weekdayDescriptions.map((c,d)=>d===0&&b?(0,_.Q)`<li><strong>${c}</strong></li>`:(0,_.Q)`<li>${c}</li>`)}
+      </ul>
+    `}},eE=function(a,b,c){const {requestedLanguage:d,requestedRegion:e}=a.place??{};a=d?new Intl.Locale(d,{region:e??void 0}):a.nh;return Intl.DateTimeFormat(a,b).format(c)},Qra=function(a){if(!a.place||!a.weekdayDescriptions||!a.place.utcOffsetMinutes)return!1;let b;try{b=eE(a,{weekday:"long",timeZone:Nra(a.place.utcOffsetMinutes)},new Date)}catch(d){return!1}const c=a.weekdayDescriptions.findIndex(d=>d.startsWith(b));if(c===-1)return!1;a.weekdayDescriptions=a.weekdayDescriptions.slice(c).concat(a.weekdayDescriptions.slice(0,
+c));return!0},Sra=function(a){const b=a.authorAttribution;if(!b)return null;var c=(c=b.displayName)?"Photo de "+c:"";return(0,_.Q)`
+    <div class="header">
+      <a
+        target="_blank"
+        href="${b.uri??void 0??_.Ot}"
+        class="header-author">
+        ${b.photoURI?(0,_.Q)`
+        <img
+          class="author-photo"
+          alt=${c}
+          title=${c}
+          aria-hidden="true"
+          src=${b.photoURI} />
+      `:""}${(0,_.Q)`
+    <div class="author-right">
+      <div class="author-name-container">
+        <span class="author-name">${b.displayName}</span>
+        ${b.uri?(0,_.Q)`
+              ${_.Ur({className:"",ariaLabel:_.Or()})}
+            `:""}
+      </div>
+      ${a.relativePublishTimeDescription?(0,_.Q)`
+            <span class="relative-time">
+              ${a.relativePublishTimeDescription}
+            </span>
+          `:""}
+    </div>
+  `}
+      </a>
+      ${a.flagContentURI?(0,_.Q)`<div class="report-button-container">
+            <gmp-internal-menu
+              .menuItems=${[...(a.flagContentURI?[{text:"Signaler l'avis",uri:a.flagContentURI}]:[])]}></gmp-internal-menu>
+          </div>`:""}
+    </div>
+  `},Tra=function(a,b){try{var c=(new Intl.DisplayNames(void 0,{type:"language"})).of(b)}catch(d){c=""}b=(b=c)?"Voir l'original ("+b+")":"Voir l'original";return(0,_.Q)`
+      <div class="translation-container">
+        <button class="translation-button" @click=${a.mh}>
+          ${a.kx?(0,_.Q)`<span class="toggle-translation-text"
+                >${"Voir la traduction"}</span
+              >`:(0,_.Q)`
+                ${SD((0,_.Q)`<span class="translated-by"
+                    >${"Traduit par Google"}</span
+                  >`,(0,_.Q)`<span class="toggle-translation-text"
+                    >${b}</span
+                  >`)}
+              `}
+        </button>
+      </div>
+    `},Vra=function(a,b){if(b===0)return(0,_.Q)``;const c=AD("{NUM_IMAGE,plural, =1{1\u00a0photo}one{#\u00a0photo}other{#\u00a0photos}}",{NUM_IMAGE:a});a=b===1?c:(new Intl.NumberFormat).format(a);return(0,_.Q)`
+    <div
+      class=${(0,_.Xr)({"lightbox-affordance":!0,tight:b===3})}
+      role="img"
+      .title=${c}
+      .ariaLabel=${c}>
+      ${Ura} ${a}
+    </div>
+  `},Wra=function(a=!1){return(0,_.Q)`<div
+    class="load-error"
+    aria-label=${a?_.Ot:"Impossible de charger l'image"}
+    >${a?(0,_.Q)`<span>${"Impossible de charger l'image"}</span>`:""}</div
+  >`},Xra=function(a=!1){a?({className:a}={className:"default-image"},a=(0,_.Q)`${(0,_.Q)`<svg width="200" height="200" fill="none" class="${a}" viewBox="0 0 200 200"><g clip-path="url(#clip0_9694_33011)"><path fill="#f2f2f2" d="M0 0h200v200H0z" class="backgrou
+
+[Message truncated - exceeded 50,000 character limit]
+
+---
+
+j'ai pas d'extensions bloquantes
+
+---
+
+Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+forward-logs-shared.ts:95 [HMR] connected
+AddressSearch.tsx:92 [gmaps] useEffect mount, API_KEY? true len: 39
+AddressSearch.tsx:46 [gmaps] loadGoogleMaps called, key prefix: AIzaSyBl
+AddressSearch.tsx:70 [gmaps] appending script: https://maps.googleapis.com/maps/api/js?REDACTED&libraries=places&loading=async
+AddressSearch.tsx:63 [gmaps] script onload fired, window.google? true
+AddressSearch.tsx:98 [gmaps] .then ran, cancelled? false window.google? true
+AddressSearch.tsx:122 [gmaps] .catch fired: TypeError: Cannot read properties of undefined (reading 'Autocomplete')
+    at AddressSearch.useEffect (AddressSearch.tsx:100:50)
+error @ intercept-console-error.ts:48
+(anonymous) @ AddressSearch.tsx:122
+Promise.catch
+(anonymous) @ AddressSearch.tsx:121
+react_stack_bottom_frame @ react-dom-client.development.js:28326
+runWithFiberInDEV @ react-dom-client.development.js:986
+commitHookEffectListMount @ react-dom-client.development.js:13663
+commitHookPassiveMountEffects @ react-dom-client.development.js:13750
+commitPassiveMountOnFiber @ react-dom-client.development.js:16721
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16756
+flushPassiveEffects @ react-dom-client.development.js:19946
+(anonymous) @ react-dom-client.development.js:19370
+performWorkUntilDeadline @ scheduler.development.js:45
+<AddressSearch>
+(anonymous) @ react-jsx-dev-runtime.development.js:342
+Home @ page.tsx:129
+react_stack_bottom_frame @ react-dom-client.development.js:28241
+renderWithHooksAgain @ react-dom-client.development.js:8025
+renderWithHooks @ react-dom-client.development.js:7937
+updateFunctionComponent @ react-dom-client.development.js:10442
+beginWork @ react-dom-client.development.js:12112
+runWithFiberInDEV @ react-dom-client.development.js:986
+performUnitOfWork @ react-dom-client.development.js:18988
+workLoopConcurrentByScheduler @ react-dom-client.development.js:18982
+renderRootConcurrent @ react-dom-client.development.js:18964
+performWorkOnRoot @ react-dom-client.development.js:17822
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:20471
+performWorkUntilDeadline @ scheduler.development.js:45
+<Home>
+(anonymous) @ react-jsx-runtime.development.js:342
+ClientPageRoot @ client-page.tsx:70
+react_stack_bottom_frame @ react-dom-client.development.js:28241
+renderWithHooksAgain @ react-dom-client.development.js:8025
+renderWithHooks @ react-dom-client.development.js:7937
+updateFunctionComponent @ react-dom-client.development.js:10442
+beginWork @ react-dom-client.development.js:12052
+runWithFiberInDEV @ react-dom-client.development.js:986
+performUnitOfWork @ react-dom-client.development.js:18988
+workLoopConcurrentByScheduler @ react-dom-client.development.js:18982
+renderRootConcurrent @ react-dom-client.development.js:18964
+performWorkOnRoot @ react-dom-client.development.js:17822
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:20471
+performWorkUntilDeadline @ scheduler.development.js:45
+"use client"
+Function.all @ VM161 <anonymous>:1
+initializeElement @ react-server-dom-turbopack-client.browser.development.js:1974
+"use server"
+ResponseInstance @ react-server-dom-turbopack-client.browser.development.js:2833
+createResponseFromOptions @ react-server-dom-turbopack-client.browser.development.js:4788
+(anonymous) @ react-server-dom-turbopack-client.browser.development.js:5191
+(anonymous) @ app-index.tsx:265
+(anonymous) @ hmr-runtime.ts:650
+runModuleExecutionHooks @ dev-base.ts:213
+instantiateModuleShared @ hmr-runtime.ts:648
+instantiateModule @ dev-base.ts:181
+(anonymous) @ dev-base.ts:135
+commonJsRequire @ runtime-utils.ts:440
+(anonymous) @ app-next-turbopack.ts:12
+(anonymous) @ app-bootstrap.ts:79
+loadScriptsInSequence @ app-bootstrap.ts:23
+appBootstrap @ app-bootstrap.ts:61
+(anonymous) @ app-next-turbopack.ts:11
+(anonymous) @ hmr-runtime.ts:650
+runModuleExecutionHooks @ dev-base.ts:213
+instantiateModuleShared @ hmr-runtime.ts:648
+instantiateModule @ dev-base.ts:181
+getOrInstantiateRuntimeModule @ dev-base.ts:101
+registerChunk @ runtime-backend-dom.ts:65
+await in registerChunk
+registerChunk @ dev-base.ts:562
+(anonymous) @ dev-backend-dom.ts:145
+(anonymous) @ dev-backend-dom.ts:145Understand this error
+forward-logs-shared.ts:95 [Fast Refresh] rebuilding
+forward-logs-shared.ts:95 [Fast Refresh] done in 137ms
+
+---
+
+Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+forward-logs-shared.ts:95 [HMR] connected
+AddressSearch.tsx:123 [gmaps] failed: Error: Autocomplete constructor unavailable
+    at AddressSearch.useEffect (AddressSearch.tsx:98:36)
+error @ intercept-console-error.ts:48
+(anonymous) @ AddressSearch.tsx:123
+await in (anonymous)
+(anonymous) @ AddressSearch.tsx:126
+react_stack_bottom_frame @ react-dom-client.development.js:28326
+runWithFiberInDEV @ react-dom-client.development.js:986
+commitHookEffectListMount @ react-dom-client.development.js:13663
+commitHookPassiveMountEffects @ react-dom-client.development.js:13750
+commitPassiveMountOnFiber @ react-dom-client.development.js:16721
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16756
+flushPassiveEffects @ react-dom-client.development.js:19946
+(anonymous) @ react-dom-client.development.js:19370
+performWorkUntilDeadline @ scheduler.development.js:45
+<AddressSearch>
+(anonymous) @ react-jsx-dev-runtime.development.js:342
+Home @ page.tsx:129
+react_stack_bottom_frame @ react-dom-client.development.js:28241
+renderWithHooksAgain @ react-dom-client.development.js:8025
+renderWithHooks @ react-dom-client.development.js:7937
+updateFunctionComponent @ react-dom-client.development.js:10442
+beginWork @ react-dom-client.development.js:12112
+runWithFiberInDEV @ react-dom-client.development.js:986
+performUnitOfWork @ react-dom-client.development.js:18988
+workLoopConcurrentByScheduler @ react-dom-client.development.js:18982
+renderRootConcurrent @ react-dom-client.development.js:18964
+performWorkOnRoot @ react-dom-client.development.js:17822
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:20471
+performWorkUntilDeadline @ scheduler.development.js:45
+<Home>
+(anonymous) @ react-jsx-runtime.development.js:342
+ClientPageRoot @ client-page.tsx:70
+react_stack_bottom_frame @ react-dom-client.development.js:28241
+renderWithHooksAgain @ react-dom-client.development.js:8025
+renderWithHooks @ react-dom-client.development.js:7937
+updateFunctionComponent @ react-dom-client.development.js:10442
+beginWork @ react-dom-client.development.js:12052
+runWithFiberInDEV @ react-dom-client.development.js:986
+performUnitOfWork @ react-dom-client.development.js:18988
+workLoopConcurrentByScheduler @ react-dom-client.development.js:18982
+renderRootConcurrent @ react-dom-client.development.js:18964
+performWorkOnRoot @ react-dom-client.development.js:17822
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:20471
+performWorkUntilDeadline @ scheduler.development.js:45
+"use client"
+Function.all @ VM251 <anonymous>:1
+initializeElement @ react-server-dom-turbopack-client.browser.development.js:1974
+"use server"
+ResponseInstance @ react-server-dom-turbopack-client.browser.development.js:2833
+createResponseFromOptions @ react-server-dom-turbopack-client.browser.development.js:4788
+(anonymous) @ react-server-dom-turbopack-client.browser.development.js:5191
+(anonymous) @ app-index.tsx:265
+(anonymous) @ hmr-runtime.ts:650
+runModuleExecutionHooks @ dev-base.ts:213
+instantiateModuleShared @ hmr-runtime.ts:648
+instantiateModule @ dev-base.ts:181
+(anonymous) @ dev-base.ts:135
+commonJsRequire @ runtime-utils.ts:440
+(anonymous) @ app-next-turbopack.ts:12
+(anonymous) @ app-bootstrap.ts:79
+loadScriptsInSequence @ app-bootstrap.ts:23
+appBootstrap @ app-bootstrap.ts:61
+(anonymous) @ app-next-turbopack.ts:11
+(anonymous) @ hmr-runtime.ts:650
+runModuleExecutionHooks @ dev-base.ts:213
+instantiateModuleShared @ hmr-runtime.ts:648
+instantiateModule @ dev-base.ts:181
+getOrInstantiateRuntimeModule @ dev-base.ts:101
+registerChunk @ runtime-backend-dom.ts:65
+await in registerChunk
+registerChunk @ dev-base.ts:562
+(anonymous) @ dev-backend-dom.ts:145
+(anonymous) @ dev-backend-dom.ts:145Understand this error
+
+---
+
+Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+forward-logs-shared.ts:95 [HMR] connected
+AddressSearch.tsx:127 [gmaps] failed: Error: Google Maps importLibrary unavailable
+    at AddressSearch.useEffect (AddressSearch.tsx:87:17)
+error @ intercept-console-error.ts:48
+(anonymous) @ AddressSearch.tsx:127
+await in (anonymous)
+(anonymous) @ AddressSearch.tsx:130
+react_stack_bottom_frame @ react-dom-client.development.js:28326
+runWithFiberInDEV @ react-dom-client.development.js:986
+commitHookEffectListMount @ react-dom-client.development.js:13663
+commitHookPassiveMountEffects @ react-dom-client.development.js:13750
+commitPassiveMountOnFiber @ react-dom-client.development.js:16721
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16741
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16713
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16998
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:16666
+commitPassiveMountOnFiber @ react-dom-client.development.js:16756
+flushPassiveEffects @ react-dom-client.development.js:19946
+(anonymous) @ react-dom-client.development.js:19370
+performWorkUntilDeadline @ scheduler.development.js:45
+<AddressSearch>
+(anonymous) @ react-jsx-dev-runtime.development.js:342
+Home @ page.tsx:129
+react_stack_bottom_frame @ react-dom-client.development.js:28241
+renderWithHooksAgain @ react-dom-client.development.js:8025
+renderWithHooks @ react-dom-client.development.js:7937
+updateFunctionComponent @ react-dom-client.development.js:10442
+beginWork @ react-dom-client.development.js:12112
+runWithFiberInDEV @ react-dom-client.development.js:986
+performUnitOfWork @ react-dom-client.development.js:18988
+workLoopConcurrentByScheduler @ react-dom-client.development.js:18982
+renderRootConcurrent @ react-dom-client.development.js:18964
+performWorkOnRoot @ react-dom-client.development.js:17822
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:20471
+performWorkUntilDeadline @ scheduler.development.js:45
+<Home>
+(anonymous) @ react-jsx-runtime.development.js:342
+ClientPageRoot @ client-page.tsx:70
+react_stack_bottom_frame @ react-dom-client.development.js:28241
+renderWithHooksAgain @ react-dom-client.development.js:8025
+renderWithHooks @ react-dom-client.development.js:7937
+updateFunctionComponent @ react-dom-client.development.js:10442
+beginWork @ react-dom-client.development.js:12052
+runWithFiberInDEV @ react-dom-client.development.js:986
+performUnitOfWork @ react-dom-client.development.js:18988
+workLoopConcurrentByScheduler @ react-dom-client.development.js:18982
+renderRootConcurrent @ react-dom-client.development.js:18964
+performWorkOnRoot @ react-dom-client.development.js:17822
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:20471
+performWorkUntilDeadline @ scheduler.development.js:45
+"use client"
+Function.all @ VM394 <anonymous>:1
+initializeElement @ react-server-dom-turbopack-client.browser.development.js:1974
+"use server"
+ResponseInstance @ react-server-dom-turbopack-client.browser.development.js:2833
+createResponseFromOptions @ react-server-dom-turbopack-client.browser.development.js:4788
+(anonymous) @ react-server-dom-turbopack-client.browser.development.js:5191
+(anonymous) @ app-index.tsx:265
+(anonymous) @ hmr-runtime.ts:650
+runModuleExecutionHooks @ dev-base.ts:213
+instantiateModuleShared @ hmr-runtime.ts:648
+instantiateModule @ dev-base.ts:181
+(anonymous) @ dev-base.ts:135
+commonJsRequire @ runtime-utils.ts:440
+(anonymous) @ app-next-turbopack.ts:12
+(anonymous) @ app-bootstrap.ts:79
+loadScriptsInSequence @ app-bootstrap.ts:23
+appBootstrap @ app-bootstrap.ts:61
+(anonymous) @ app-next-turbopack.ts:11
+(anonymous) @ hmr-runtime.ts:650
+runModuleExecutionHooks @ dev-base.ts:213
+instantiateModuleShared @ hmr-runtime.ts:648
+instantiateModule @ dev-base.ts:181
+getOrInstantiateRuntimeModule @ dev-base.ts:101
+registerChunk @ runtime-backend-dom.ts:65
+await in registerChunk
+registerChunk @ dev-base.ts:562
+(anonymous) @ dev-backend-dom.ts:145
+(anonymous) @ dev-backend-dom.ts:145Understand this error
+
+---
+
+c'est bon par contre le form s'affiche mal et j'ai l'image de la maison génére en background
+
+---
+
+rajoute la proposition d'offre (premier screen ) 
+Quand tu clique sur le premier tu choisis un des choix (deuxième screen)
+
+---
+
+quand on a choisi la première offre on a ensuitedeux autres trucs à remplir (premier screen) 
+Quand tu cliques sur le storage unit tu as deuxième screen 
+et ensuite quand tu cliques sur l'option find the right charger tu as l'offre (troisième screen )
+
+---
+
+il manque find the right charger (premier screen ) 
+et quand tu cliques dessus (deuxième screen
+
+---
+
+une fois quand on affiché le ev charger on a un dashboard qui s'affiche sur le côté par rapport aux infos que l'on a donné
+
+---
+
+vérifie que le right charger est bien pris dans les calculs
+
+---
+
+j'ai mis ev charger no mais il apparait quand même sur le schéma
+
+---
+
+j'ai mis ev charger no mais il apparait quand même sur le schéma
+Pareil pour système solaire
+Vérifie pour tous les cas
+Le schéma doit être en accord avec ce qui a été rempli dans le form
+
+---
+
+j'ai mis ev charger no mais il apparait quand même sur le schéma
+Pareil pour système solaire
+Vérifie pour tous les cas
+Le schéma doit être en accord avec ce qui a été rempli dans le form
+
+---
+
+quand on clique sur la barre bleu en bas du dashboard on a les résultats en détail comme ça
+
+---
+
+quand on clique sur envoyer la demande à la fin on tombe sur ce formulaire que la personne doit remplir 
+L'adresse est déja rempli avec celle que l'on a mise au début
+
+---
+
+fais que les versions demo s'appuie sur le même formulaire type
+
+---
+
+enlève cette partie sur la première page , on rentre l'adresse déja quand on fait start now sur le deuxième screen
