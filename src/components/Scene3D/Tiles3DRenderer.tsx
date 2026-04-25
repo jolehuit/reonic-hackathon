@@ -286,11 +286,18 @@ function BuildingClipper({ polygon }: { polygon: ClipPolygon }) {
     planes.push(new Plane(topNormal, -topNormal.dot(topEcef)));
 
     gl.clippingPlanes = planes;
-    gl.localClippingEnabled = true;
     invalidate();
 
     // eslint-disable-next-line no-console
-    console.log('[BuildingClipper] applied', { sides: ecefVerts.length, top: polygon.topAlt });
+    console.log('[BuildingClipper] applied', {
+      sides: ecefVerts.length,
+      top: polygon.topAlt,
+      planes: planes.length,
+      // Verify the centroid is on the kept side of every plane (sanity check).
+      centroidOnPositiveSide: planes.every((p) => p.distanceToPoint(centroid) >= -0.5),
+      // Verify a vertex is on the kept side too (edges cross through vertices).
+      vertexOnPositiveSide: planes.every((p) => p.distanceToPoint(ecefVerts[0]) >= -0.5),
+    });
 
     return () => {
       gl.clippingPlanes = [];

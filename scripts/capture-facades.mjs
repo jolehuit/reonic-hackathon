@@ -143,64 +143,44 @@ async function fetchClosestBuilding(lat, lng) {
   };
 }
 
-// ─── 3. cardinal facades from bbox ────────────────────────────────────────
-// For each cardinal direction, pick the facade midpoint on that side of the
-// bbox. Camera sits OUTSIDE perpendicular to the facade.
+// ─── 3. cardinal facades — orbit-mode azimuths ────────────────────────────
+// Tiles3DRenderer azimuth convention:
+//   0 = camera north of building (sees north facade)
+//   90 = camera east, 180 = south, 270 = west.
 function planFacades(building) {
-  const { bbox, centroid, widthM, depthM, heightM } = building;
-  // With clipping enabled, only the building footprint is visible — we can
-  // afford a wider FOV and farther distance (where Google's tile LOD exists)
-  // and still get a tight crop because everything else is masked black.
-  const FOV = 35;
-  const fovRad = (FOV * Math.PI) / 180;
-  const facadeFor = (side) => {
-    let target;       // facade midpoint (lat/lng)
-    let normalLngLat; // outward unit normal in lat/lng deltas
-    let facadeWidth;  // facade real-world width in meters
-    if (side === 'north') {
-      target = { lat: bbox.north, lng: centroid.lng };
-      normalLngLat = { dLat: 1, dLng: 0 };
-      facadeWidth = widthM;
-    } else if (side === 'south') {
-      target = { lat: bbox.south, lng: centroid.lng };
-      normalLngLat = { dLat: -1, dLng: 0 };
-      facadeWidth = widthM;
-    } else if (side === 'east') {
-      target = { lat: centroid.lat, lng: bbox.east };
-      normalLngLat = { dLat: 0, dLng: 1 };
-      facadeWidth = depthM;
-    } else { // west
-      target = { lat: centroid.lat, lng: bbox.west };
-      normalLngLat = { dLat: 0, dLng: -1 };
-      facadeWidth = depthM;
-    }
-    // Distance so that facadeWidth fits ~50% of frame width. Clamp to >= 80m
-    // because Google's photogrammetric LOD becomes too coarse below ~60m and
-    // returns empty / blocky tiles.
-    const distance = Math.max(80, (facadeWidth * 0.5) / Math.tan(fovRad / 2) / 0.5);
-    const cosLat = Math.cos((target.lat * Math.PI) / 180);
-    const dLatPerM = 1 / 111320;
-    const dLngPerM = 1 / (111320 * cosLat);
-    const cameraLat = target.lat + normalLngLat.dLat * distance * dLatPerM;
-    const cameraLng = target.lng + normalLngLat.dLng * distance * dLngPerM;
-    return {
-      side,
-      target,
-      cameraLat,
-      cameraLng,
-      facadeWidth,
-      distance,
-      fov: FOV,
-    };
-  };
-  return [facadeFor('north'), facadeFor('east'), facadeFor('south'), facadeFor('west')];
+  const { centroid, widthM, depthM, heightM } = building;
+  const facades = [
+    { side: 'north', azimuth: 0,   facadeWidth: widthM },
+    { side: 'east',  azimuth: 90,  facadeWidth: depthM },
+    { side: 'south', azimuth: 180, facadeWidth: widthM },
+    { side: 'west',  azimuth: 270, facadeWidth: depthM },
+  ];
+  // Use orbit mode (proven working): camera at fixed range/altitude around
+  // the building centroid. Smaller building → shorter range when tiles allow.
+  const range = 120;
+  const altitude = Math.max(heightM * 9, 80); // higher angle for taller buildings
+  return facades.map((f) => ({
+    ...f,
+    centroid,
+    range,
+    altitude,
+  }));
 }
 
 // ─── 4. capture each facade via Playwright ───────────────────────────────
 function encodeClipPolygon(building) {
-  // Browser-equivalent base64 of JSON.
+  // Three.js global clipping planes can only represent CONVEX intersections
+  // (AND of half-spaces). OSM building polygons are often L/U-shaped, so we
+  // clip to the bbox (4 vertices CCW) rather than the actual footprint.
+  const { bbox } = building;
+  const vertices = [
+    { lat: bbox.south, lng: bbox.west },
+    { lat: bbox.south, lng: bbox.east },
+    { lat: bbox.north, lng: bbox.east },
+    { lat: bbox.north, lng: bbox.west },
+  ];
   const polygon = {
-    vertices: building.polygonLngLat.map((p) => ({ lat: p.lat, lng: p.lng })),
+    vertices,
     topAlt: building.heightM + 2,
     bottomAlt: -1,
   };
@@ -223,89 +203,34 @@ async function captureFacades(plans, building, terrainHeightM) {
   const page = await ctx.newPage();
   page.on('console', (m) => {
     const t = m.text();
-    if (t.includes('[Tiles3DRenderer]') || t.includes('[BuildingClipper]')) {
+    if (t.includes('[Tiles3DRenderer]') || t.includes('[BuildingClipper]') || t.includes('clip')) {
       console.log('  ' + t);
     }
   });
 
-  const clipParam = encodeClipPolygon(building);
-
   const results = [];
   for (let i = 0; i < plans.length; i++) {
     const p = plans[i];
-    const cameraAlt = terrainHeightM + Math.max(building.heightM * 0.6, 5);
-    const targetAlt = terrainHeightM + building.heightM * 0.45;
+    // Orbit mode around the BUILDING CENTROID (not the geocoded street point).
     const url =
       `${BASE_URL}/design/${HOUSE_ID}?source=tiles&lock=1` +
-      `&clat=${p.cameraLat}&clng=${p.cameraLng}&calt=${cameraAlt}` +
-      `&tlat=${p.target.lat}&tlng=${p.target.lng}&talt=${targetAlt}` +
-      `&fov=${p.fov}` +
-      `&clip=${encodeURIComponent(clipParam)}`;
-    console.log(`[capture ${i + 1}/4] ${p.side}  dist=${p.distance.toFixed(1)}m  fov=${p.fov}°`);
+      `&azimuth=${p.azimuth}` +
+      `&_blat=${p.centroid.lat}&_blng=${p.centroid.lng}` +
+      `&range=${p.range}&alt=${p.altitude}`;
+    console.log(`[capture ${i + 1}/4] ${p.side}  azimuth=${p.azimuth}°  range=${p.range}m  alt=${p.altitude}m`);
     await page.goto(url, { waitUntil: 'networkidle', timeout: 60_000 });
     await page.waitForFunction(() => window.__cameraReady === true, { timeout: 30_000 });
     await page.addStyleTag({
       content: `.pointer-events-none.absolute, [class*="customer-profile"] { display:none !important; }`,
     });
     await page.waitForTimeout(5500);
-    const rawFile = `${i + 1}-${p.side}-raw.jpg`;
-    const cropFile = `${i + 1}-${p.side}.jpg`;
-    const rawPath = join(OUT_DIR, rawFile);
-    const cropPath = join(OUT_DIR, cropFile);
-    await page.screenshot({ path: rawPath, type: 'jpeg', quality: 92 });
-    // Tight crop: find the bounding box of non-near-black pixels and crop the
-    // PNG in-page (uses canvas API). The clipper guarantees everything outside
-    // the building footprint is the background color (~#0a0a0a).
-    const cropBuffer = await page.evaluate(async ({ srcDataUrl, threshold }) => {
-      const img = new Image();
-      img.src = srcDataUrl;
-      await new Promise((r) => (img.onload = r));
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-      let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
-      for (let y = 0; y < canvas.height; y++) {
-        for (let x = 0; x < canvas.width; x++) {
-          const idx = (y * canvas.width + x) * 4;
-          const r = data[idx], g = data[idx + 1], b = data[idx + 2];
-          if (r > threshold || g > threshold || b > threshold) {
-            if (x < minX) minX = x;
-            if (y < minY) minY = y;
-            if (x > maxX) maxX = x;
-            if (y > maxY) maxY = y;
-          }
-        }
-      }
-      if (maxX <= minX || maxY <= minY) return null;
-      const pad = 24;
-      const sx = Math.max(0, minX - pad);
-      const sy = Math.max(0, minY - pad);
-      const sw = Math.min(canvas.width - sx, maxX - minX + 2 * pad);
-      const sh = Math.min(canvas.height - sy, maxY - minY + 2 * pad);
-      const out = document.createElement('canvas');
-      out.width = sw;
-      out.height = sh;
-      const octx = out.getContext('2d');
-      octx.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
-      const blob = await new Promise((r) => out.toBlob(r, 'image/jpeg', 0.93));
-      const buf = await blob.arrayBuffer();
-      return Array.from(new Uint8Array(buf));
-    }, {
-      srcDataUrl: 'data:image/jpeg;base64,' + readFileSync(rawPath).toString('base64'),
-      threshold: 22,
-    });
-    if (cropBuffer && cropBuffer.length > 0) {
-      writeFileSync(cropPath, Buffer.from(cropBuffer));
-      console.log(`           ✓ ${cropFile} (cropped to building bounding box)`);
-    } else {
-      copyFileSync(rawPath, cropPath);
-      console.log(`           ⚠ ${cropFile} (no foreground detected — using raw)`);
-    }
-    results.push({ ...p, file: cropFile, rawFile, outPath: cropPath, cameraAlt, targetAlt });
+    const file = `${i + 1}-${p.side}.jpg`;
+    const outPath = join(OUT_DIR, file);
+    await page.screenshot({ path: outPath, type: 'jpeg', quality: 92 });
+    console.log(`           ✓ ${file}`);
+    results.push({ ...p, file, outPath });
   }
+  void terrainHeightM;
 
   await browser.close();
   return results;
@@ -436,7 +361,7 @@ async function main() {
   const plans = planFacades(building);
   for (const p of plans) {
     console.log(
-      `      ${p.side.padEnd(5)}  facadeW=${p.facadeWidth.toFixed(1)}m  dist=${p.distance.toFixed(1)}m  fov=${p.fov}°`,
+      `      ${p.side.padEnd(5)}  facadeW=${p.facadeWidth.toFixed(1)}m  azimuth=${p.azimuth}°  range=${p.range}m  alt=${p.altitude}m`,
     );
   }
 

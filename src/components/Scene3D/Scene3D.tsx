@@ -13,7 +13,7 @@ import { Environment, OrbitControls, ContactShadows } from '@react-three/drei';
 import { EffectComposer, Bloom, ToneMapping } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';
 import { NoToneMapping } from 'three';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useStore } from '@/lib/store';
 import { Sun } from './Sun';
 import { CameraRig } from './CameraRig';
@@ -24,6 +24,7 @@ import { VisionStatusBadge } from './VisionStatusBadge';
 import { VisionGate } from './VisionGate';
 import { BuildingRenderer } from './BuildingRenderer';
 import { Tiles3DRenderer, type ClipPolygon } from './Tiles3DRenderer';
+import { LocalTilesSceneContent } from './LocalTilesRenderer';
 import { useSceneSource, type SceneSource } from './vision/useSceneSource';
 import { HOUSE_COORDS } from './vision/houseLatLng';
 import type { HouseId } from '@/lib/types';
@@ -129,8 +130,35 @@ function ProceduralCanvas({ houseId, mode }: { houseId: HouseId; mode: AnalysisM
 
 function TilesScene({ houseId }: { houseId: HouseId }) {
   const coords = HOUSE_COORDS[houseId];
+  // Read URL params client-side only to avoid SSR/CSR hydration mismatch.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
   const explicit = readExplicitFromUrl();
   const clipPolygon = readClipPolygonFromUrl();
+  const localSlug = readLocalSlugFromUrl();
+  const localMinDepth = readLocalMinDepthFromUrl();
+
+  // Local tile mode: render GLBs previously downloaded by
+  // scripts/fetch-tiles-for-address.mjs — no streaming, no API quota.
+  if (localSlug) {
+    const radius = readRadiusFromUrl() ?? 30;
+    return (
+      <Canvas
+        dpr={[1, 2]}
+        camera={{ position: [40, 30, 40], fov: 45, near: 0.1, far: 5000 }}
+        gl={{ antialias: true, localClippingEnabled: true }}
+        style={{ background: '#0a0a0a' }}
+      >
+        <LocalTilesSceneContent
+          slug={localSlug}
+          minDepth={localMinDepth}
+          radiusM={radius}
+        />
+      </Canvas>
+    );
+  }
+
   return (
     <>
       <DevMockProvider houseId={houseId} />
@@ -155,13 +183,20 @@ function TilesScene({ houseId }: { houseId: HouseId }) {
               clipPolygon={clipPolygon ?? undefined}
             />
           ) : (
-            <Tiles3DRenderer
-              lat={coords.lat}
-              lng={coords.lng}
-              azimuth={readAzimuthFromUrl()}
-              lockCamera={readLockFromUrl()}
-              clipPolygon={clipPolygon ?? undefined}
-            />
+            (() => {
+              const o = readOrbitOverridesFromUrl();
+              return (
+                <Tiles3DRenderer
+                  lat={o.lat ?? coords.lat}
+                  lng={o.lng ?? coords.lng}
+                  range={o.range}
+                  altitude={o.altitude}
+                  azimuth={readAzimuthFromUrl()}
+                  lockCamera={readLockFromUrl()}
+                  clipPolygon={clipPolygon ?? undefined}
+                />
+              );
+            })()
           )}
         </Suspense>
       </Canvas>
@@ -192,6 +227,51 @@ interface ExplicitCameraParams {
   targetLng: number;
   targetAlt: number;
   fov?: number;
+}
+
+interface OrbitOverrides {
+  lat?: number;
+  lng?: number;
+  range?: number;
+  altitude?: number;
+}
+
+function readOrbitOverridesFromUrl(): OrbitOverrides {
+  if (typeof window === 'undefined') return {};
+  const q = new URLSearchParams(window.location.search);
+  const num = (k: string) => {
+    const v = q.get(k);
+    if (v === null) return undefined;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : undefined;
+  };
+  return {
+    lat: num('_blat'),
+    lng: num('_blng'),
+    range: num('range'),
+    altitude: num('alt'),
+  };
+}
+
+function readLocalSlugFromUrl(): string | null {
+  if (typeof window === 'undefined') return null;
+  return new URLSearchParams(window.location.search).get('local');
+}
+
+function readRadiusFromUrl(): number | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const v = new URLSearchParams(window.location.search).get('radius');
+  if (v === null) return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function readLocalMinDepthFromUrl(): number | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const v = new URLSearchParams(window.location.search).get('mindepth');
+  if (v === null) return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
 }
 
 function readClipPolygonFromUrl(): ClipPolygon | null {

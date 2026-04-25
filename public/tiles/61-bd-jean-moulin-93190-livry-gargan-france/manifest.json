@@ -1,0 +1,72 @@
+{
+  "address": "61 Bd Jean Moulin, 93190 Livry-Gargan, France",
+  "geocoded": {
+    "lat": 48.91352699999999,
+    "lng": 2.5149273
+  },
+  "ecef": [
+    4195682.243372186,
+    184282.64246456086,
+    4784289.460427239
+  ],
+  "rootTileset": "https://tile.googleapis.com/v1/3dtiles/root.json",
+  "session": "CMnMuMHXzKnNtgEQyY21zwY",
+  "maxDepth": 24,
+  "tileCount": 2,
+  "totalBytes": 45652,
+  "downloadedAt": "2026-04-25T18:57:13.734Z",
+  "tiles": [
+    {
+      "depth": 3,
+      "geometricError": 262978.76805165096,
+      "boundingVolumeType": "box",
+      "uri": "https://tile.googleapis.com/v1/3dtiles/datasets/CgIYAQ/files/AJVsH2wVL_a-BugmezveUzidF0xIEPNlNw1ZbMULCMMK_DVIKTLu_bsCwNjBm3Yxj9LbFUspaiQ1SZAbfrjflis51zB1Ln-8qh3qjuYS-PqkULop7W9qCxUdfc6DAXmI2Nzcz5p4Jd7Y-Qxe7j1tWRXOFZzXoZISgg.glb?session=CMnMuMHXzKnNtgEQyY21zwY",
+      "transform": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "file": "tile-d03-000.glb",
+      "bytes": 14944
+    },
+    {
+      "depth": 17,
+      "geometricError": 128.4076015877202,
+      "boundingVolumeType": "box",
+      "uri": "https://tile.googleapis.com/v1/3dtiles/datasets/CgIYAQ/files/AJVsH2xZsQqHmZ-_D5j7S3UhbYpJB92UqXjFdvpY0d8bucjuRH1YUndPfW1-cjl3kf6Qy387Dk7htPP_UdVK84a7KhWmFp7rxf_d5pQXXB8Z3W8N9xelUQoZu5f0z8_ThA0NaO6nZmB0bfDYY7-uU2Ujlqrbj8-xGXCUXD3WotUfENaStxiPSIs.glb",
+      "transform": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "file": "tile-d17-001.glb",
+      "bytes": 30708
+    }
+  ]
+}
