@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
     // Render the Cesium oblique page in headless Chromium and screenshot it.
     const origin = req.nextUrl.origin;
     const obliqueUrl =
-      `${origin}/oblique?lat=${lat}&lng=${lng}&zoom=${zoom}&heading=0&tilt=60`;
+      `${origin}/oblique?lat=${lat}&lng=${lng}&zoom=${zoom}&heading=0&tilt=40&range=100`;
     try {
       const { chromium } = await import('playwright');
       const browser = await chromium.launch({ headless: true });
@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
     buf = Buffer.from(await imgRes.arrayBuffer());
   }
 
-  return new NextResponse(buf, {
+  return new NextResponse(new Uint8Array(buf), {
     status: 200,
     headers: {
       'content-type': 'image/png',

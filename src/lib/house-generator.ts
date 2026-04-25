@@ -76,33 +76,64 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
     .png()
     .toBuffer();
 
-  // ── 3D oblique view via Google Aerial View API ──
-  // Google auto-generates a fly-around video of the address using the same
-  // Photorealistic 3D Tiles. We grab a still frame (IMAGE_HIGH thumbnail)
-  // which is cleanly framed on the property — no Cesium / Playwright needed.
+  // ── 3D oblique view via Playwright on /oblique ──
+  // The /oblique page renders Google Photorealistic 3D Tiles with the
+  // NASA-AMMOS `3d-tiles-renderer` (Three.js). The WebGL context uses
+  // preserveDrawingBuffer:true so Playwright can read the canvas.
   let tiltedBuf: Buffer | null = null;
   if (input.tilted) {
-    tiltedBuf = await fetchAerialViewStill(input.lat, input.lng, mapsKey);
+    const origin = input.origin ?? 'http://localhost:3000';
+    const obliqueUrl =
+      `${origin}/oblique?lat=${input.lat}&lng=${input.lng}` +
+      `&heading=0&tilt=60&range=110`;
+    try {
+      const { chromium } = await import('playwright');
+      const browser = await chromium.launch({ headless: true });
+      const ctx = await browser.newContext({
+        viewport: { width: 1280, height: 1280 },
+        deviceScaleFactor: 1,
+      });
+      const page = await ctx.newPage();
+      await page.goto(obliqueUrl, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page
+        .waitForFunction(
+          () => ((window as unknown as { __obliqueStable?: number }).__obliqueStable ?? 0) > 25,
+          null,
+          { timeout: 60_000, polling: 250 },
+        )
+        .catch(() => {});
+      await page.waitForTimeout(800);
+      await page
+        .evaluate(() => {
+          for (const el of document.querySelectorAll('nextjs-portal, [data-nextjs-toast]')) {
+            (el as HTMLElement).style.display = 'none';
+          }
+        })
+        .catch(() => {});
+      tiltedBuf = await page.screenshot({ fullPage: false });
+      await browser.close();
+    } catch (err) {
+      console.warn('[house-generator] oblique screenshot failed:', err);
+    }
   }
 
   // ── Gemini Vision analysis (TWO steps) ──
-  // Step 1: detect the building at the centre of the 3D OBLIQUE image
-  //         (Aerial View frames the property automatically).
-  // Step 2: read roof type / slope / heights from the same 3D oblique image.
+  // Step 1: detect the building under the red dot in the 3D OBLIQUE image.
+  // Step 2: read roof type / slope / heights from the same oblique image.
   const metresPerPixel =
     (156543.03392 * Math.cos((input.lat * Math.PI) / 180)) / Math.pow(2, zoom) / SCALE;
 
-  // Aerial View thumbnails are ~1280x720; sniff actual dims if we got one.
   let TW = 1280;
-  let TH = 720;
+  let TH = 1280;
   if (tiltedBuf) {
     const meta = await sharp(tiltedBuf).metadata();
     if (meta.width && meta.height) {
       TW = meta.width;
       TH = meta.height;
     }
-    // Overlay a red disc at image centre so the AI has the same "pin"
-    // reference it had with the Cesium view (Aerial View images are clean).
+    // Overlay a Google-Maps-style teardrop at image centre so the AI has a
+    // crisp visual anchor on the building. The Three.js red dot is small;
+    // this teardrop is unmistakable for the vision model.
     tiltedBuf = await overlayCenterPin(tiltedBuf, TW, TH);
   }
 
@@ -179,15 +210,16 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
     '    * blurry / melted edges and mesh artefacts',
     '    * drifting cars, trees, hedges, gardens, fences, power lines',
     '    * neighbouring houses very close to the target',
-    '- ONE small SOLID RED DISC marker (~15-20 px diameter, bright red,',
-    '  white outline) is drawn on the image roughly at the centre. It marks',
-    '  the TARGET BUILDING. The disc may sit on the roof, on a wall, on the',
-    '  pavement next to the house, or even slightly into the garden — it is',
-    '  GPS-anchored so it can be a few metres off. ALWAYS resolve it to the',
-    '  single residential building it most plausibly refers to.',
+    '- ONE Google-Maps-style RED TEARDROP PIN (red body, white outline,',
+    '  white centre dot, ~30 px tall) is drawn on the image at the centre.',
+    '  The PIN TIP (the pointy bottom of the teardrop) is the precise GPS',
+    '  anchor — that is the pixel that marks the TARGET BUILDING. The tip',
+    '  may sit on the roof, on a wall, or on the pavement immediately next',
+    '  to the house. ALWAYS resolve it to the single residential building',
+    '  whose roof or facade is directly under (or closest to) the pin tip.',
     '',
     'REASONING STEPS (think silently, do not output them)',
-    '1. Locate the red disc → its (x,y) pixel centre is `pinPx`.',
+    '1. Locate the red teardrop pin → its TIP (x,y) pixel is `pinPx`.',
     '2. Decide which single building the disc points to. Heuristics:',
     '     * prefer the building whose footprint the disc overlaps or touches',
     '     * if the disc is on a road, pick the closer house on the side the',
@@ -208,8 +240,8 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
     '- All coordinates are INTEGERS in oblique-image pixel space.',
     `- Polygon area between 8 000 and ${((TW * TH * 0.5) | 0)} px² (a single`,
     '  house typically takes 5–30% of this tightly framed view).',
-    '- Polygon must overlap or be within ~40 px of the red disc.',
-    '- If you cannot confidently find the red disc OR the target building,',
+    '- Polygon must overlap or be within ~40 px of the pin TIP.',
+    '- If you cannot confidently find the pin OR the target building,',
     '  return confidence = 0 with an empty `footprintPx` array. Do NOT guess.',
     '',
     'OUTPUT',
@@ -394,6 +426,124 @@ async function maskOutsidePolygon(
   // Flatten onto white so the saved PNG is opaque white outside the polygon.
   return await sharp(onlyHouse)
     .flatten({ background: { r: 255, g: 255, b: 255 } })
+    .png()
+    .toBuffer();
+}
+
+// ── Aerial View API helpers ──
+
+const AERIAL_RENDER = 'https://aerialview.googleapis.com/v1/videos:renderVideo';
+const AERIAL_LOOKUP = 'https://aerialview.googleapis.com/v1/videos:lookupVideo';
+const GEOCODE = 'https://maps.googleapis.com/maps/api/geocode/json';
+
+interface AerialLookupResponse {
+  state?: 'PROCESSING' | 'ACTIVE' | 'FAILED';
+  uris?: Record<string, string>;
+  metadata?: { videoId?: string };
+}
+
+/**
+ * Fetch a 3D oblique still frame for the given lat/lng using Google's
+ * Aerial View API. First call for an address can take 30-60s while Google
+ * renders the fly-around video; subsequent calls are cached and instant.
+ */
+async function fetchAerialViewStill(
+  lat: number,
+  lng: number,
+  mapsKey: string,
+): Promise<Buffer | null> {
+  // Aerial View API takes an address, so reverse-geocode lat/lng first.
+  const geo = await fetch(`${GEOCODE}?latlng=${lat},${lng}&key=${mapsKey}`);
+  const geoJson = (await geo.json()) as {
+    status: string;
+    results?: Array<{ formatted_address: string }>;
+  };
+  if (geoJson.status !== 'OK' || !geoJson.results?.[0]) {
+    console.warn('[aerial-view] reverse geocode failed:', geoJson.status);
+    return null;
+  }
+  const address = geoJson.results[0].formatted_address;
+
+  // Trigger the render (idempotent — Google caches per address).
+  await fetch(`${AERIAL_RENDER}?key=${mapsKey}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ address }),
+  }).catch(() => {});
+
+  // Poll lookupVideo until ACTIVE (or 90s timeout).
+  const deadline = Date.now() + 90_000;
+  let lookup: AerialLookupResponse | null = null;
+  while (Date.now() < deadline) {
+    const r = await fetch(
+      `${AERIAL_LOOKUP}?key=${mapsKey}&address=${encodeURIComponent(address)}`,
+    );
+    lookup = (await r.json()) as AerialLookupResponse;
+    if (lookup.state === 'ACTIVE') break;
+    if (lookup.state === 'FAILED') {
+      console.warn('[aerial-view] render failed for', address);
+      return null;
+    }
+    await new Promise((res) => setTimeout(res, 3000));
+  }
+  if (!lookup || lookup.state !== 'ACTIVE') {
+    console.warn('[aerial-view] timed out waiting for video');
+    return null;
+  }
+
+  // Pull the highest-res still image. The API returns several keys —
+  // accept whichever IMAGE_* / THUMBNAIL_* one is present.
+  const uris = lookup.uris ?? {};
+  const imgUrl =
+    uris.IMAGE_HIGH ??
+    uris.IMAGE_MEDIUM ??
+    uris.IMAGE_LOW ??
+    uris.THUMBNAIL_HIGH ??
+    uris.THUMBNAIL_MEDIUM ??
+    uris.THUMBNAIL_LOW;
+  if (!imgUrl) {
+    console.warn('[aerial-view] no image URI in response keys:', Object.keys(uris));
+    return null;
+  }
+  const ir = await fetch(imgUrl);
+  if (!ir.ok) {
+    console.warn('[aerial-view] image fetch failed:', ir.status);
+    return null;
+  }
+  return Buffer.from(await ir.arrayBuffer());
+}
+
+/** Draw a Google-Maps-style red teardrop pin at the image centre. The pin
+ *  TIP sits exactly at (cx, cy) so the AI can reliably anchor on the building
+ *  underneath it (matches the maps.google.com convention). */
+async function overlayCenterPin(buf: Buffer, w: number, h: number): Promise<Buffer> {
+  const sharp = (await import('sharp')).default;
+  const cx = Math.round(w / 2);
+  const tipY = Math.round(h / 2);
+  // Pin geometry: ~46px tall teardrop with a 14px head radius and a 4px white
+  // outline, identical proportions to Google's standard "place" marker.
+  const headR = 14;
+  const headCy = tipY - 30; // pin head sits ABOVE the tip
+  const path =
+    `M ${cx} ${tipY} ` +
+    `C ${cx - headR * 1.1} ${tipY - headR * 1.4}, ` +
+    `${cx - headR} ${headCy + headR * 0.5}, ` +
+    `${cx - headR} ${headCy} ` +
+    `A ${headR} ${headR} 0 1 1 ${cx + headR} ${headCy} ` +
+    `C ${cx + headR} ${headCy + headR * 0.5}, ` +
+    `${cx + headR * 1.1} ${tipY - headR * 1.4}, ` +
+    `${cx} ${tipY} Z`;
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">` +
+    `<g filter="url(#shadow)">` +
+    `<defs><filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">` +
+    `<feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.45"/>` +
+    `</filter></defs>` +
+    `<path d="${path}" fill="#ea4335" stroke="white" stroke-width="3"/>` +
+    `<circle cx="${cx}" cy="${headCy}" r="5" fill="white"/>` +
+    `</g></svg>`;
+  return await sharp(buf)
+    .composite([{ input: Buffer.from(svg) }])
     .png()
     .toBuffer();
 }

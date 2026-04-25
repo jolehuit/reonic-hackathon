@@ -1,18 +1,19 @@
 // Headless-screenshot target for the AI input. Renders Google Photorealistic
-// 3D Tiles via CesiumJS at a tilted angle around the lat/lng. Cesium creates
-// its WebGL context with `preserveDrawingBuffer: true` so headless Playwright
-// captures the canvas correctly (Google Maps JS does not, hence Cesium).
+// 3D Tiles via NASA-AMMOS `3d-tiles-renderer` (Three.js) at a tilted angle
+// around the lat/lng. The renderer uses `preserveDrawingBuffer: true` so
+// headless Playwright captures the canvas correctly.
 //
-// URL: /oblique?lat=...&lng=...&zoom=19&heading=0&tilt=60
+// URL: /oblique?lat=...&lng=...&heading=0&tilt=60&range=110
 
 'use client';
 
 import dynamic from 'next/dynamic';
 
-const ObliqueCesium = dynamic(() => import('./ObliqueCesium').then((m) => m.ObliqueCesium), {
-  ssr: false,
-});
+const ObliqueTiles = dynamic(
+  () => import('./ObliqueTiles').then((m) => m.ObliqueTiles),
+  { ssr: false },
+);
 
 export default function ObliquePage() {
-  return <ObliqueCesium />;
+  return <ObliqueTiles />;
 }
