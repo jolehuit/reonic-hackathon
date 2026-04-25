@@ -1,0 +1,184 @@
+○ Compiling /oblique ...
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 3.4s (next.js: 3.3s, application-code: 88ms)
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 3.4s (next.js: 3.4s, application-code: 57ms)
+[sizing] Loaded 823 projects (out of 1619 status-quo rows)
+ POST /api/design 200 in 109ms (next.js: 25ms, application-code: 84ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 15.8s (next.js: 286ms, application-code: 15.5s)
+ POST /api/trellis 502 in 16.4s (next.js: 209ms, application-code: 16.2s)
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 16.3s (next.js: 80ms, application-code: 16.2s)
+ POST /api/trellis 502 in 16.7s (next.js: 215ms, application-code: 16.5s)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ POST /api/explain 200 in 165ms (next.js: 146ms, application-code: 18ms)
+Error [AI_APICallError]: models/gemini-2-5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+    at ignore-listed frames {
+  cause: undefined,
+  url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2-5-flash:streamGenerateContent?alt=sse',
+  requestBodyValues: {
+    generationConfig: {
+      maxOutputTokens: 200,
+      temperature: undefined,
+      topK: undefined,
+      topP: undefined,
+      frequencyPenalty: undefined,
+      presencePenalty: undefined,
+      stopSequences: undefined,
+      seed: undefined,
+      responseMimeType: undefined,
+      responseSchema: undefined,
+      responseModalities: undefined,
+      thinkingConfig: undefined
+    },
+    contents: [ [Object] ],
+    systemInstruction: { parts: [Array] },
+    safetySettings: undefined,
+    tools: undefined,
+    toolConfig: undefined,
+    cachedContent: undefined,
+    labels: undefined,
+    serviceTier: undefined
+  },
+  statusCode: 404,
+  responseHeaders: {
+    'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+    'content-length': '265',
+    'content-type': 'text/event-stream',
+    date: 'Sat, 25 Apr 2026 22:29:19 GMT',
+    server: 'scaffolding on HTTPServer2',
+    'server-timing': 'gfet4t7; dur=116',
+    vary: 'Origin, X-Origin, Referer',
+    'x-content-type-options': 'nosniff',
+    'x-frame-options': 'SAMEORIGIN',
+    'x-xss-protection': '0'
+  },
+  responseBody: '{\n' +
+    '  "error": {\n' +
+    '    "code": 404,\n' +
+    '    "message": "models/gemini-2-5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.",\n' +
+    '    "status": "NOT_FOUND"\n' +
+    '  }\n' +
+    '}\n',
+  isRetryable: false,
+  data: {
+    error: {
+      code: 404,
+      message: 'models/gemini-2-5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.',
+      status: 'NOT_FOUND'
+    }
+  }
+}
+
+c quoi ces erreurs ?
+
+---
+
+et met plus gros que ça cégnère le truc 3d on voit pas bien et rends l'aniamtion d'attente encore plus stylée
+
+---
+
+et met plus gros le message qui dit que ça cégnère le truc 3d on voit pas bien et rends l'aniamtion d'attente encore plus stylée
+
+---
+
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ GET / 200 in 40ms (next.js: 2ms, application-code: 38ms)
+ GET / 200 in 30ms (next.js: 3ms, application-code: 27ms)
+ GET /design/brandenburg 200 in 279ms (next.js: 259ms, application-code: 20ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 103ms (next.js: 15ms, application-code: 88ms)
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 64ms (next.js: 3ms, application-code: 61ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+[sizing] Loaded 823 projects (out of 1619 status-quo rows)
+ POST /api/design 200 in 160ms (next.js: 41ms, application-code: 120ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 11.7s (next.js: 21ms, application-code: 11.7s)
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 12.0s (next.js: 262ms, application-code: 11.7s)
+[/api/trellis] trellis pipeline failed: Error: fal.storage.upload failed: Forbidden
+    at generateTrellisModel (src/lib/trellis.ts:40:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  38 |   } catch (err) {
+  39 |     const msg = err instanceof Error ? err.message : String(err);
+> 40 |     throw new Error(`fal.storage.upload failed: ${msg}`);
+     |           ^
+  41 |   }
+  42 |
+  43 |   // 2. Subscribe to the queue and wait for the GLB. Trellis-2 takes ~30-60s.
+ POST /api/trellis 502 in 12.4s (next.js: 90ms, application-code: 12.3s)
+[/api/trellis] trellis pipeline failed: Error: fal.storage.upload failed: Forbidden
+    at generateTrellisModel (src/lib/trellis.ts:40:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  38 |   } catch (err) {
+  39 |     const msg = err instanceof Error ? err.message : String(err);
+> 40 |     throw new Error(`fal.storage.upload failed: ${msg}`);
+     |           ^
+  41 |   }
+  42 |
+  43 |   // 2. Subscribe to the queue and wait for the GLB. Trellis-2 takes ~30-60s.
+ POST /api/trellis 502 in 12.6s (next.js: 82ms, application-code: 12.5s)
+
+et aussi
+et pour l'animation fais que c'est plutot un skeleton de maison qui tourne déjà, monte tout ça la c trop bas
+et le badge doit etre plus gros il est tout petit la
+
+---
+
+POST /api/design 200 in 13ms (next.js: 3ms, application-code: 10ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 11.9s (next.js: 5ms, application-code: 11.9s)
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 12.2s (next.js: 964µs, application-code: 12.2s)
+[/api/trellis] trellis pipeline failed: Error: fal.subscribe(trellis-2) failed: Forbidden body={"detail":"User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing."}
+    at generateTrellisModel (src/lib/trellis.ts:57:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  55 |         ? ` body=${JSON.stringify((err as { body: unknown }).body)}`
+  56 |         : '';
+> 57 |     throw new Error(`fal.subscribe(trellis-2) failed: ${msg}${detail}`);
+     |           ^
+  58 |   }
+  59 | }
+  60 |
+ POST /api/trellis 502 in 13.6s (next.js: 17ms, application-code: 13.6s)
+
+---
+
+mais mon solde n'est pas à 0 du tout
+
+---
+
+✓ Ready in 310ms
+
+ GET /design/brandenburg 200 in 645ms (next.js: 337ms, application-code: 308ms)
+ GET / 200 in 78ms (next.js: 16ms, application-code: 61ms)
+ GET /design/brandenburg 200 in 41ms (next.js: 12ms, application-code: 29ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 109ms (next.js: 15ms, application-code: 94ms)
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 68ms (next.js: 7ms, application-code: 61ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+[sizing] Loaded 823 projects (out of 1619 status-quo rows)
+ POST /api/design 200 in 155ms (next.js: 37ms, application-code: 118ms)
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 12.0s (next.js: 233ms, application-code: 11.8s)
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 12.0s (next.js: 19ms, application-code: 12.0s)
+[/api/trellis] trellis pipeline failed: Error: queue submit failed: HTTP 403 {"detail":"User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing."}
+    at generateTrellisModel (src/lib/trellis.ts:69:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  67 |   if (!submitRes.ok) {
+  68 |     const body = await submitRes.text().catch(() => '');
+> 69 |     throw new Error(`queue submit failed: HTTP ${submitRes.status} ${body}`);
+     |           ^
+  70 |   }
+  71 |   const submit = (await submitRes.json()) as QueueSubmitResponse;
+  72 |   const { request_id, status_url, response_url } = submit;
+ POST /api/trellis 502 in 13.8s (next.js: 81ms, application-code: 13.7s)
+[/api/trellis] trellis pipeline failed: Error: queue submit failed: HTTP 403 {"detail":"User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing."}
+    at generateTrellisModel (src/lib/trellis.ts:69:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  67 |   if (!submitRes.ok) {
+  68 |     const body = await submitRes.text().catch(() => '');
+> 69 |     throw new Error(`queue submit failed: HTTP ${submitRes.status} ${body}`);
+     |           ^
+  70 |   }
+  71 |   const submit = (await submitRes.json()) as QueueSubmitResponse;
+  72 |   const { request_id, status_url, response_url } = submit;
+ POST /api/trellis 502 in 13.9s (next.js: 70ms, application-code: 13.8s)
