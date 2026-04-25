@@ -1,14 +1,10 @@
 // POST /api/parse-profile — OWNED by Dev B
-// Wow-moment endpoint: user types natural-language description → structured profile.
-//
-// Strategy:
-//   1. Try Pioneer's fine-tuned GLiNER2 (deterministic, ~80ms, multi-task single pass)
-//   2. Fall back to Gemini structured output (~500ms, generative)
-//
-// Returns Partial<CustomerProfile> — UI fills the form fields that came back.
+// NL text → Partial<CustomerProfile> via Gemini structured output (zod-typed schema).
+// Wired but currently unused — Dev C's form is field-based, not NL-based. Kept for the
+// stretch wow-moment where the user types a sentence and the form auto-fills.
 
 import { NextRequest, NextResponse } from 'next/server';
-import { parseProfileFromNL } from '@/lib/pioneer';
+import { parseProfileWithGemini } from '@/lib/gemini';
 
 interface ParseRequest {
   text: string;
@@ -30,11 +26,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '`text` too long (max 2000 chars)' }, { status: 400 });
   }
 
+  const start = performance.now();
   try {
-    const result = await parseProfileFromNL(text);
-    return NextResponse.json(result);
+    const profile = await parseProfileWithGemini(text);
+    return NextResponse.json({
+      profile,
+      source: 'gemini-structured-output',
+      inferenceMs: Math.round(performance.now() - start),
+    });
   } catch (err) {
-    console.error('[parse-profile] both Pioneer and Gemini fallback failed:', err);
+    console.error('[parse-profile] Gemini extraction failed:', err);
     return NextResponse.json(
       { error: 'Profile extraction failed. Check GOOGLE_GENERATIVE_AI_API_KEY env.' },
       { status: 500 },

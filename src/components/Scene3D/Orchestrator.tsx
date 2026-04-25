@@ -40,9 +40,6 @@ const SEQUENCE: SeqStep[] = [
   { id: 'yield',           phase: 'ANALYZE', kind: 'compute',label: 'Casting shadows over 8 760 sun positions...',                 durationMs: 1800 },
   { id: 'optimal_face',    phase: 'ANALYZE', kind: 'done',   label: 'Optimal face: SSW 195° · 47 m² · 1 180 kWh/m²/yr',           durationMs: 800  },
 
-  { id: 'pioneer_call',    phase: 'ANALYZE', kind: 'fetch',  label: 'Pioneer (Reonic-native classifier) — fine-tuned on 1 620 deliveries...', durationMs: 700 },
-  { id: 'pioneer_out',     phase: 'ANALYZE', kind: 'done',   label: 'Module: JA Solar 440 W · Inverter: Sungrow SH10.0RT · HP recommended', durationMs: 700 },
-
   { id: 'knn',             phase: 'ANALYZE', kind: 'compute',label: 'k-NN over 1 620 Reonic projects (k=5, z-score features)...', durationMs: 900 },
   { id: 'knn_out',         phase: 'ANALYZE', kind: 'done',   label: 'kWp recommended: 9.2 (median similar: 8.8 ± 0.6)',           durationMs: 700 },
 

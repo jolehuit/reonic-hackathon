@@ -1,7 +1,7 @@
 // Gemini integration via Vercel AI SDK — OWNED by Dev B
 // Two roles:
 //   1. streamDesignExplanation — streaming text into the AgentTrace sidebar
-//   2. parseProfileWithGemini — structured output fallback when Pioneer endpoint is down
+//   2. parseProfileWithGemini — NL → structured CustomerProfile (used by /api/parse-profile)
 
 import { google } from '@ai-sdk/google';
 import { streamText, generateText, Output } from 'ai';
@@ -35,7 +35,7 @@ function buildExplanationPrompt(p: CustomerProfile, d: DesignResult): string {
   ].join('\n');
 }
 
-// --- 2. Structured profile extraction (fallback when Pioneer is unavailable) ---
+// --- 2. Structured profile extraction (used by /api/parse-profile) ---
 
 const HEATING_VALUES = ['oil', 'gas', 'heatpump', 'other'] as const satisfies readonly HeatingType[];
 
@@ -52,8 +52,7 @@ export type ParsedProfile = z.infer<typeof ProfileSchema>;
 
 /**
  * Extracts a structured customer profile from a natural-language description.
- * Used as the fallback when Pioneer's fine-tuned GLiNER2 endpoint is unavailable.
- * Latency typically 400-800ms.
+ * Powers /api/parse-profile. Latency typically 400-800ms.
  *
  * Uses AI SDK v6 generateText + Output.object pattern (generateObject is deprecated in v6).
  */

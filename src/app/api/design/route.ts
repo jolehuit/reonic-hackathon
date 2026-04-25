@@ -10,7 +10,6 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import { recommendSystem } from '@/lib/sizing';
-import { getDesignDecisions } from '@/lib/pioneer';
 import { computeFinancials } from '@/lib/financials';
 import type {
   CustomerProfile,
@@ -68,38 +67,19 @@ export async function POST(req: NextRequest) {
   const roofMaxKwp = southFaces.reduce((sum, f) => sum + f.area * PANEL_EFFICIENCY, 0)
     || roof.faces.reduce((sum, f) => sum + f.area * PANEL_EFFICIENCY, 0); // fallback if no south face
 
-  // 3. k-NN sizing (quantities) and Pioneer V3 (decisions) in parallel.
-  //    k-NN gives kWp/kWh on real Reonic deliveries; V3 classifier gives bucket decisions
-  //    learned from the 805 BOM patterns. We trust V3 only above a confidence threshold,
-  //    otherwise we keep the k-NN value.
-  const [reco, decisions] = await Promise.all([
-    recommendSystem(profile, roofMaxKwp),
-    getDesignDecisions(profile),
-  ]);
+  // 3. k-NN sizing on the 1620 Reonic projects
+  const reco = await recommendSystem(profile, roofMaxKwp);
 
-  // 4. Reconcile decisions: V3 overrides k-NN only when confident.
-  let batteryCapacityKwh = reco.batteryCapacityKwh;
-  if (decisions.batterySizeClass === 'none') {
-    batteryCapacityKwh = null;
-  } else if (decisions.batterySizeClass === 'small' && (batteryCapacityKwh ?? 0) > 7) {
-    batteryCapacityKwh = Math.min(batteryCapacityKwh ?? 0, 6);
-  } else if (decisions.batterySizeClass === 'large' && (batteryCapacityKwh ?? 0) < 12) {
-    batteryCapacityKwh = Math.max(batteryCapacityKwh ?? 0, 13);
-  }
-
-  // V3 wallbox decision overrides the EV-based heuristic when confident
-  const wallboxDecided = decisions.recommendWallbox ?? profile.hasEv;
-
-  // 5. Module count + inverter sizing
+  // 4. Module count + inverter sizing
   const moduleCount = Math.max(1, Math.round((reco.totalKwp * 1000) / MODULE_WATT_PEAK));
   const inverterPowerKw = Math.max(1, Math.ceil(reco.totalKwp * 0.85));
 
-  // 6. Financials
+  // 5. Financials
   const fin = computeFinancials({
     totalKwp: reco.totalKwp,
-    batteryKwh: batteryCapacityKwh,
+    batteryKwh: reco.batteryCapacityKwh,
     heatPumpKw: reco.heatPumpNominalPowerKw,
-    hasWallbox: wallboxDecided,
+    hasWallbox: profile.hasEv,                  // wallbox iff customer has an EV
     annualConsumptionKwh: profile.annualConsumptionKwh,
     hasEv: profile.hasEv,
   });
@@ -116,13 +96,13 @@ export async function POST(req: NextRequest) {
     inverterPowerKw,
     inverterLoadPercent: Math.round((reco.totalKwp / inverterPowerKw) * 100),
 
-    batteryCapacityKwh,
+    batteryCapacityKwh: reco.batteryCapacityKwh,
     batteryBrand: BATTERY_BRAND,
 
     heatPumpModel: reco.heatPumpNominalPowerKw ? HEATPUMP_MODEL : null,
     heatPumpNominalPowerKw: reco.heatPumpNominalPowerKw,
 
-    wallboxChargeSpeedKw: wallboxDecided ? 11 : null,
+    wallboxChargeSpeedKw: profile.hasEv ? 11 : null,
 
     totalPriceEur: fin.totalPriceEur,
     paybackYears: fin.paybackYears,

@@ -1,6 +1,6 @@
 // k-NN sizing engine — OWNED by Dev B
 // In-memory over the Reonic dataset (1620 status_quo rows × ~20 BOM line items each).
-// Used as primary OR as fallback if Pioneer fails.
+// Primary source of truth for kWp / kWh / heatpump / similar-projects in /api/design.
 //
 // Data convention (Reonic CSVs):
 // - All energy columns are stored in Wh (e.g. energy_demand_wh = 4_500_000 → 4500 kWh)
@@ -368,7 +368,7 @@ export async function recommendSystem(
       batteryKwh: Math.round(((batteryCapacityKwh ?? 0) - top5BattMedian) * 10) / 10,
       priceEur: 0,
     },
-    source: 'knn-fallback' as const,
+    source: 'knn' as const,
     inferenceMs: Math.round(performance.now() - start),
   };
 }

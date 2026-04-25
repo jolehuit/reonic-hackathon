@@ -32,12 +32,8 @@ curl -X POST http://localhost:3000/api/design -H 'content-type: application/json
 | B1 | **Pair sync Sat 15:30 avec Dev C** : valider/freezer `lib/types.ts` (CustomerProfile, DesignResult, SimilarProject, RoofGeometry) | 30min | tout |
 | B2 | **`lib/sizing.ts::recommendSystem` + `findSimilarProjects`** : load 4 CSVs en mémoire au boot, k-NN k=5 sur features normalisées (z-score), aggregate median pour kWp/kWh/price, return top-3 similar | 1h30 | démo |
 | B3 | **`lib/financials.ts`** (nouveau fichier) : payback, ROI 25y, CO2 saved (0.4 kg/kWh × 25y) | 30min | UI KPI |
-| B4 | **`/api/design/route.ts`** : load roof JSON `public/baked/{houseId}-roof.json` (mock Brandenburg déjà fourni), compute roofMaxKwp = sum(face.area × yieldKwhPerSqm × 0.18 / 1000), call `predictBomViaPioneer`, build `modulePositions` via `placePanelsOnFace` (D fournit), return DesignResult complet | 1h30 | démo |
-| B5 | **`lib/pioneer.ts`** : appelle Pioneer fine-tuned GLiNER2 multi-task (entities + decisions), parse JSON, fallback Gemini structured output si endpoint down. | 1h | side prize + wow |
-| B6a | **Pioneer seeds extract** : `extract-pioneer-seeds.ts` génère `data/pioneer-seeds-enriched.jsonl` (805 vrais profils Reonic + decision labels battery_size_class / system_size_bracket / recommend_wallbox depuis BOM). | 30min | side prize |
-| B6b | **Pioneer multi-task fine-tune** Sat soir : upload jsonl + prompt all-in-one dans Pioneer chat agent. Agent gère synthetic data + train + eval + deploy. | 10min setup + 30min wait | side prize |
-| B6c | **`/api/parse-profile`** : nouvel endpoint NL→profile via Pioneer + Gemini fallback. Wow moment "user types description, form fills". | 30min | wow |
-| B6d | **`/api/design` upgrade** : appelle Pioneer pour les decisions (battery yes/no, system bracket, wallbox), reconcilie avec k-NN sizing. | 30min | side prize |
+| B4 | **`/api/design/route.ts`** : load roof JSON `public/baked/{houseId}-roof.json`, compute roofMaxKwp (face.area × 0.18), call `recommendSystem` (k-NN), build full DesignResult. | 1h30 | démo |
+| B5 | **`/api/parse-profile`** : NL → Partial<CustomerProfile> via Gemini structured output (zod schema). Reuses `parseProfileWithGemini` from `lib/gemini.ts`. Optional wow-moment if Dev C wires a textarea. | 30min | optional |
 | B7 | **`/api/explain/route.ts`** : déjà câblé avec Gemini streaming. Tester avec une vraie clé Gemini et vérifier que `streamText` rend bien | 20min | wow |
 | B8 | **`/api/export/route.ts`** : jsPDF, header adresse, screenshot canvasDataUrl reçu du front, table BOM, total + ROI + CO2, footer "Approved by [date]" | 1h30 | démo |
 | B9 | **Tavily integration** : 1 fetch `tavily.search('current EnBW solar feed-in tariff 2026 Germany')` au boot du serveur, cache mémoire, expose dans `/api/design` response. 5 lignes de code | 20min | partner tech valid |
@@ -59,15 +55,15 @@ curl -X POST http://localhost:3000/api/design -H 'content-type: application/json
 
 ```
 src/lib/sizing.ts        — k-NN impl
-src/lib/pioneer.ts       — REST endpoint + fallback
-src/lib/gemini.ts        — déjà câblé, vérifier streamText
-src/lib/supabase.ts      — optionnel (in-memory CSVs suffit pour 1620 lignes)
-src/lib/financials.ts    — À CRÉER
+src/lib/gemini.ts        — streamText + parseProfileWithGemini (structured output)
+src/lib/financials.ts    — payback, ROI, CO2 (constants 2026 DE vérifiées)
+src/lib/tavily.ts        — live EnBW tariff fetch + cache
 src/app/api/design/route.ts
 src/app/api/explain/route.ts
 src/app/api/export/route.ts
+src/app/api/parse-profile/route.ts
 src/lib/types.ts         — uniquement pair sync 15:30 avec Dev C
-data/projects_status_quo_*.csv  — déjà copiés (à parser)
+data/projects_status_quo_*.csv  — parsé par sizing.ts
 data/project_options_parts_*.csv
 ```
 
@@ -76,10 +72,10 @@ data/project_options_parts_*.csv
 ## Critères d'acceptation
 
 - [ ] `POST /api/design` avec un profil Brandenburg renvoie un DesignResult cohérent en <500ms
-- [ ] Fallback `PIONEER_DISABLED=true` route tout sur k-NN sans crash
 - [ ] `/api/explain` stream du texte Gemini en real-time (visible côté front)
 - [ ] `/api/export` renvoie un PDF binaire downloadable d'1 page
-- [ ] Backtest 200 holdout : kWp dans ±10% sur ≥80% des projets test (stat à montrer dans le Loom)
+- [ ] `/api/parse-profile` renvoie un Partial<CustomerProfile> depuis du NL (Gemini structured output)
+- [ ] Backtest LOOCV : screenshot de l'accuracy@10/20% pour le pitch
 - [ ] Tavily fetch retourne un tarif EEG/EnBW chiffré (cache visible dans logs)
 
 ---
@@ -88,7 +84,6 @@ data/project_options_parts_*.csv
 
 | Cas | Plan B |
 |---|---|
-| Pioneer fine-tune foire ou pas de clé API | `PIONEER_DISABLED=true` → k-NN heuristique pour tout. On garde le mention Pioneer dans le pitch (REST endpoint mocké, fine-tune lancé mais output non-utilisé) |
 | jsPDF chiant pour la screenshot | Fallback : générer un HTML page imprimable et utiliser `window.print()` côté client |
 | Supabase trop lourd à setup | CSVs en mémoire au boot du Next server (1 619 lignes = 13 KB, trivial). Skip Supabase entièrement. |
 | Tavily rate limit ou down | Hardcoder tariff = 0.082 €/kWh feed-in, 0.39 €/kWh consumer (valeurs DE 2026 connues). Garder le `tavily.search` call mais avec try/catch silencieux |
