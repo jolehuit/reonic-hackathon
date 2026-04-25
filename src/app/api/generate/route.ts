@@ -78,8 +78,12 @@ export async function POST(req: NextRequest) {
   const glbPath = join(outDir, `${houseId}-generated-latest.glb`);
   const jsonPath = join(outDir, `${houseId}-generated-latest.json`);
   const rawPath = join(outDir, `${houseId}-generated-latest-raw.png`);
+  const tiltedPath = join(outDir, `${houseId}-generated-latest-tilted.png`);
+  const isolatedPath = join(outDir, `${houseId}-generated-latest-isolated.png`);
   await writeFile(glbPath, result.glb);
   await writeFile(rawPath, result.raw);
+  await writeFile(isolatedPath, result.isolated);
+  if (result.tilted) await writeFile(tiltedPath, result.tilted);
   await writeFile(
     jsonPath,
     JSON.stringify(
@@ -105,6 +109,8 @@ export async function POST(req: NextRequest) {
     lng,
     glbUrl: `/baked/${houseId}-generated-latest.glb?ts=${ts}`,
     rawUrl: `/baked/${houseId}-generated-latest-raw.png?ts=${ts}`,
+    isolatedUrl: `/baked/${houseId}-generated-latest-isolated.png?ts=${ts}`,
+    tiltedUrl: result.tilted ? `/baked/${houseId}-generated-latest-tilted.png?ts=${ts}` : null,
     analysis: result.analysis,
     imageSize: result.imageSize,
     metresPerPixel: result.metresPerPixel,

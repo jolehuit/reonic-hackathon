@@ -20,7 +20,9 @@ export interface RoofAnalysis {
 
 export interface GenerateResult {
   glb: Uint8Array;
-  raw: Uint8Array;
+  raw: Uint8Array;          // top-down screenshot used as primary input
+  tilted?: Uint8Array;      // optional 3D tilted screenshot (Mapbox)
+  isolated: Uint8Array;     // top-down with everything except the house masked white
   analysis: RoofAnalysis;
   imageSize: { w: number; h: number };
   metresPerPixel: number;
@@ -56,15 +58,36 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
   let W: number;
   let H: number;
 
+  // ── Top-down satellite (always — it's the polygon source of truth) ──
+  const topDownUrl =
+    `${STATIC_URL}?center=${input.lat},${input.lng}` +
+    `&zoom=${zoom}&scale=${SCALE}&size=${REQ_W}x${REQ_H}` +
+    `&maptype=satellite&format=png` +
+    `&markers=color:red%7Csize:tiny%7C${input.lat},${input.lng}` +
+    `&key=${mapsKey}`;
+  const topDownRes = await fetch(topDownUrl);
+  if (!topDownRes.ok) {
+    throw new Error(`Static Maps error ${topDownRes.status}: ${await topDownRes.text()}`);
+  }
+  W = REQ_W * SCALE;
+  H = REQ_H * SCALE - ATTRIBUTION_PX;
+  cropped = await sharp(Buffer.from(await topDownRes.arrayBuffer()))
+    .extract({ left: 0, top: 0, width: W, height: H })
+    .png()
+    .toBuffer();
+
+  // ── Optional 3D tilted view via Cesium + Google Photorealistic 3D Tiles ──
+  // Rendered headlessly by Playwright on /oblique. Cesium's WebGL context is
+  // created with preserveDrawingBuffer:true so the screenshot captures.
+  let tiltedBuf: Buffer | null = null;
   if (input.tilted) {
-    // ── Screenshot tilted Google Maps JS view via Playwright ──
     const origin = input.origin ?? 'http://localhost:3000';
     const obliqueUrl =
       `${origin}/oblique?lat=${input.lat}&lng=${input.lng}` +
       `&zoom=${zoom}&heading=0&tilt=60`;
-    const { chromium } = await import('playwright');
-    const browser = await chromium.launch({ headless: true });
     try {
+      const { chromium } = await import('playwright');
+      const browser = await chromium.launch({ headless: true });
       const ctx = await browser.newContext({
         viewport: { width: 1280, height: 1280 },
         deviceScaleFactor: 1,
@@ -73,61 +96,47 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
       await page.goto(obliqueUrl, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await page
         .waitForFunction(
-          () => (window as unknown as { __obliqueStable?: number }).__obliqueStable !== undefined &&
-                ((window as unknown as { __obliqueStable: number }).__obliqueStable ?? 0) > 25,
+          () => ((window as unknown as { __obliqueStable?: number }).__obliqueStable ?? 0) > 25,
           null,
-          { timeout: 30_000, polling: 200 },
+          { timeout: 60_000, polling: 250 },
         )
         .catch(() => {});
       await page.waitForTimeout(800);
-      const buf = await page.screenshot({ fullPage: false });
-      cropped = await sharp(buf).png().toBuffer();
-      const meta = await sharp(cropped).metadata();
-      W = meta.width ?? 1280;
-      H = meta.height ?? 1280;
-    } finally {
+      await page
+        .evaluate(() => {
+          for (const el of document.querySelectorAll('nextjs-portal, [data-nextjs-toast]')) {
+            (el as HTMLElement).style.display = 'none';
+          }
+        })
+        .catch(() => {});
+      tiltedBuf = await page.screenshot({ fullPage: false });
       await browser.close();
+    } catch (err) {
+      console.warn('[house-generator] oblique screenshot failed:', err);
     }
-  } else {
-    // ── Fetch top-down satellite tile (Static Maps API) ──
-    const url =
-      `${STATIC_URL}?center=${input.lat},${input.lng}` +
-      `&zoom=${zoom}&scale=${SCALE}&size=${REQ_W}x${REQ_H}` +
-      `&maptype=satellite&format=png` +
-      `&markers=color:red%7Csize:tiny%7C${input.lat},${input.lng}` +
-      `&key=${mapsKey}`;
-    const fullRes = await fetch(url);
-    if (!fullRes.ok) {
-      throw new Error(`Static Maps error ${fullRes.status}: ${await fullRes.text()}`);
-    }
-    const fullBuf = new Uint8Array(await fullRes.arrayBuffer());
-    W = REQ_W * SCALE;
-    H = REQ_H * SCALE - ATTRIBUTION_PX;
-    cropped = await sharp(Buffer.from(fullBuf))
-      .extract({ left: 0, top: 0, width: W, height: H })
-      .png()
-      .toBuffer();
   }
 
   // ── Gemini Vision analysis ──
   const metresPerPixel =
     (156543.03392 * Math.cos((input.lat * Math.PI) / 180)) / Math.pow(2, zoom) / SCALE;
 
-  const viewKind = input.tilted
-    ? 'a 3D OBLIQUE satellite view tilted ~60° (you can see roof slopes and ridges directly)'
-    : 'a strict TOP-DOWN satellite/photogrammetric image';
-  const prompt = [
-    `You are looking at ${viewKind} of one or two houses.`,
-    'A red MARKER PIN at the IMAGE CENTRE marks a precise GPS coordinate sitting on a SINGLE roof.',
-    `Image is ${W}x${H} pixels. Around the centre, one pixel ≈ ${metresPerPixel.toFixed(3)} m on the ground.`,
-    input.tilted
-      ? 'Because the view is tilted, infer the roof FOOTPRINT (as if seen from above) by reading the visible roof edges and ridge lines.'
-      : '',
+  const promptLines = [
+    'You are given ONE or TWO satellite views of the same building.',
+    'Image #1 is a strict TOP-DOWN satellite image, with a red MARKER PIN at the centre on the target roof.',
+  ];
+  if (tiltedBuf) {
+    promptLines.push(
+      'Image #2 is a 3D OBLIQUE view (~60° tilt) of the SAME building — use it to read roof slopes, ridges, and heights, then map them back onto the top-down outline.',
+    );
+  }
+  promptLines.push(
+    `The TOP-DOWN image is ${W}x${H} pixels. Around the centre, one pixel ≈ ${metresPerPixel.toFixed(3)} m on the ground.`,
     'Identify ONLY the roof directly under the red marker pin (ignore neighbouring roofs).',
+    'Return ALL coordinates in TOP-DOWN image pixel space (image #1).',
     'Return JSON:',
     '{',
     '  "bbox": { "x": <int>, "y": <int>, "width": <int>, "height": <int> },',
-    '  "footprintPx": [[x,y], [x,y], ...],   // 4-8 polygon vertices outlining the roof, clockwise',
+    '  "footprintPx": [[x,y], [x,y], ...],   // 4-8 polygon vertices outlining the roof, clockwise, hugging the eaves',
     '  "roofType": "flat" | "gable" | "hip" | "pyramid" | "shed",',
     '  "ridgeAzimuthDeg": <int 0-359>,       // 0 = north, 90 = east. Direction the ridge runs.',
     '  "estWallHeightM": <number>,            // 2.5-9 m typical residential',
@@ -136,7 +145,8 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
     '}',
     '',
     'Return JSON only, no markdown fence, no prose.',
-  ].join('\n');
+  );
+  const prompt = promptLines.join('\n');
 
   const callGemini = async (model: string) => {
     const r = await fetch(
@@ -156,6 +166,16 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
                     data: cropped.toString('base64'),
                   },
                 },
+                ...(tiltedBuf
+                  ? [
+                      {
+                        inline_data: {
+                          mime_type: 'image/png',
+                          data: tiltedBuf.toString('base64'),
+                        },
+                      },
+                    ]
+                  : []),
               ],
             },
           ],
@@ -226,14 +246,55 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
     ridgeAzimuth: ridgeAz,
   });
 
+  // ── Isolated image: only the building polygon, everything else white ──
+  const isolated = await maskOutsidePolygon(cropped, W, H, fp);
+
   return {
     glb,
     raw: cropped,
+    tilted: tiltedBuf ?? undefined,
+    isolated,
     analysis,
     imageSize: { w: W, h: H },
     metresPerPixel,
     zoom,
   };
+}
+
+async function maskOutsidePolygon(
+  imageBuf: Buffer,
+  w: number,
+  h: number,
+  polygon: Array<[number, number]>,
+): Promise<Buffer> {
+  const sharp = (await import('sharp')).default;
+  const points = polygon.map(([x, y]) => `${x},${y}`).join(' ');
+
+  // SVG with TRANSPARENT background and an opaque white polygon. When this
+  // PNG is composited with blend:'dest-in', only the satellite pixels under
+  // the polygon survive — everything else becomes transparent.
+  const polygonPng = await sharp(
+    Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">` +
+        `<polygon points="${points}" fill="white"/>` +
+        `</svg>`,
+    ),
+  )
+    .resize(w, h)
+    .png()
+    .toBuffer();
+
+  const onlyHouse = await sharp(imageBuf)
+    .ensureAlpha()
+    .composite([{ input: polygonPng, blend: 'dest-in' }])
+    .png()
+    .toBuffer();
+
+  // Flatten onto white so the saved PNG is opaque white outside the polygon.
+  return await sharp(onlyHouse)
+    .flatten({ background: { r: 255, g: 255, b: 255 } })
+    .png()
+    .toBuffer();
 }
 
 // ── helpers ──
