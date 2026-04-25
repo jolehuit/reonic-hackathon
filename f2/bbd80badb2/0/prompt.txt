@@ -1,0 +1,1 @@
+Analyse l'algo pour trouver les m2 exploitables et dis moi ce que je pourrais ameliorer

@@ -1,0 +1,66 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "f2bbd80badb2",
+  "session_id": "d4f6ce14-3d7a-4460-95c0-79ce7954b7e4",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-25T19:58:09.160202Z",
+  "branch": "feat/Dev-D",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".gitignore",
+    "package.json",
+    "pnpm-lock.yaml",
+    "public/baked/brandenburg-analysis.json",
+    "src/lib/ms-building-footprints.ts",
+    "src/scripts/analyze-multi.ts",
+    "src/scripts/analyze-roof.ts",
+    "src/scripts/place-panels.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "9f16cbe42f63",
+  "token_usage": {
+    "input_tokens": 22,
+    "cache_creation_tokens": 146086,
+    "cache_read_tokens": 507060,
+    "output_tokens": 11382,
+    "api_call_count": 12
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-25T19:58:09.153675Z",
+    "agent_lines": 1184,
+    "agent_removed": 240,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1184,
+    "total_lines_changed": 1424,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 19522,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "public/baked/brandenburg-analysis-A.json": 1338,
+        "public/baked/brandenburg-analysis-B.json": 1427,
+        "public/baked/brandenburg-analysis-C.json": 1338,
+        "public/baked/brandenburg-analysis-D.json": 1572,
+        "public/baked/brandenburg-analysis-E.json": 1018,
+        "public/baked/brandenburg-analysis-F.json": 2104,
+        "public/baked/brandenburg-analysis-G.json": 1143,
+        "public/baked/brandenburg-analysis-H.json": 1434,
+        "public/baked/brandenburg-analysis-I.json": 1336,
+        "public/baked/brandenburg-analysis-J.json": 1374,
+        "public/baked/brandenburg-analysis-K.json": 1144,
+        "public/baked/brandenburg-analysis-L.json": 646,
+        "public/baked/brandenburg-osm-polygon.json": 1,
+        "public/baked/brandenburg-solar-api.test.json": 3647
+      }
+    }
+  ]
+}
