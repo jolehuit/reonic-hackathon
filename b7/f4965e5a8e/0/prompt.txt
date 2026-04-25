@@ -1,0 +1,242 @@
+GET / 200 in 267ms (next.js: 101ms, application-code: 166ms)
+ GET /design/brandenburg 200 in 280ms (next.js: 262ms, application-code: 17ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 114ms (next.js: 15ms, application-code: 100ms)
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 73ms (next.js: 4ms, application-code: 70ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+[sizing] Loaded 823 projects (out of 1619 status-quo rows)
+ POST /api/design 200 in 174ms (next.js: 39ms, application-code: 134ms)
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 13.8s (next.js: 19ms, application-code: 13.7s)
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 13.9s (next.js: 174ms, application-code: 13.7s)
+[/api/trellis] trellis pipeline failed: Error: storage initiate failed: HTTP 403 {"detail":"User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing"}
+    at generateTrellisModel (src/lib/trellis.ts:73:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  71 |   if (!initRes.ok) {
+  72 |     const body = await initRes.text().catch(() => '');
+> 73 |     throw new Error(`storage initiate failed: HTTP ${initRes.status} ${body}`);
+     |           ^
+  74 |   }
+  75 |   const { file_url, upload_url } = (await initRes.json()) as StorageInitiateResponse;
+  76 |   if (!file_url || !upload_url) {
+ POST /api/trellis 502 in 14.5s (next.js: 65ms, application-code: 14.4s)
+[/api/trellis] trellis pipeline failed: Error: storage initiate failed: HTTP 403 {"detail":"User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing"}
+    at generateTrellisModel (src/lib/trellis.ts:73:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  71 |   if (!initRes.ok) {
+  72 |     const body = await initRes.text().catch(() => '');
+> 73 |     throw new Error(`storage initiate failed: HTTP ${initRes.status} ${body}`);
+     |           ^
+  74 |   }
+  75 |   const { file_url, upload_url } = (await initRes.json()) as StorageInitiateResponse;
+  76 |   if (!file_url || !upload_url) {
+ POST /api/trellis 502 in 14.5s (next.js: 69ms, application-code: 14.5s)
+
+---
+
+arrete ptn tu sais que quand tu test toi ça marche
+
+---
+
+arrete ptn tu sais que quand tu test toi ça marche les crédits n'ont pas chuté
+
+---
+
+mais c surtout que t'envoies pas une url non ? ou jsp
+
+---
+
+mais essaie avec une autre url qui n'est pas l'image de basez pour voir
+
+---
+
+toujours pas : localhost:3000
+- Network:       http://192.168.15.199:3000
+- Environments: .env.local
+✓ Ready in 223ms
+
+ GET / 200 in 273ms (next.js: 111ms, application-code: 162ms)
+ GET /design/brandenburg 200 in 276ms (next.js: 258ms, application-code: 18ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 104ms (next.js: 14ms, application-code: 91ms)
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 104ms (next.js: 46ms, application-code: 58ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+[sizing] Loaded 823 projects (out of 1619 status-quo rows)
+ POST /api/design 200 in 132ms (next.js: 40ms, application-code: 91ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 11.6s (next.js: 155ms, application-code: 11.4s)
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 11.9s (next.js: 19ms, application-code: 11.9s)
+[/api/trellis] trellis pipeline failed: Error: storage initiate failed: HTTP 403 {"detail":"User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing"}
+    at generateTrellisModel (src/lib/trellis.ts:80:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  78 |   if (!initRes.ok) {
+  79 |     const body = await initRes.text().catch(() => '');
+> 80 |     throw new Error(`storage initiate failed: HTTP ${initRes.status} ${body}`);
+     |           ^
+  81 |   }
+  82 |   const { file_url, upload_url } = (await initRes.json()) as StorageInitiateResponse;
+  83 |   if (!file_url || !upload_url) {
+ POST /api/trellis 502 in 12.2s (next.js: 106ms, application-code: 12.1s)
+[/api/trellis] trellis pipeline failed: Error: storage initiate failed: HTTP 403 {"detail":"User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing"}
+    at generateTrellisModel (src/lib/trellis.ts:80:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  78 |   if (!initRes.ok) {
+  79 |     const body = await initRes.text().catch(() => '');
+> 80 |     throw new Error(`storage initiate failed: HTTP ${initRes.status} ${body}`);
+     |           ^
+  81 |   }
+  82 |   const { file_url, upload_url } = (await initRes.json()) as StorageInitiateResponse;
+  83 |   if (!file_url || !upload_url) {
+ POST /api/trellis 502 in 12.5s (next.js: 98ms, application-code: 12.4s)
+
+---
+
+> 80 |     throw new Error(`storage initiate failed: HTTP ${initRes.status} ${body}`);
+     |           ^
+  81 |   }
+  82 |   const { file_url, upload_url } = (await initRes.json()) as StorageInitiateResponse;
+  83 |   if (!file_url || !upload_url) {
+ POST /api/trellis 502 in 12.2s (next.js: 106ms, application-code: 12.1s)
+[/api/trellis] trellis pipeline failed: Error: storage initiate failed: HTTP 403 {"detail":"User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing"}
+    at generateTrellisModel (src/lib/trellis.ts:80:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  78 |   if (!initRes.ok) {
+  79 |     const body = await initRes.text().catch(() => '');
+> 80 |     throw new Error(`storage initiate failed: HTTP ${initRes.status} ${body}`);
+     |           ^
+  81 |   }
+  82 |   const { file_url, upload_url } = (await initRes.json()) as StorageInitiateResponse;
+  83 |   if (!file_url || !upload_url) {
+ POST /api/trellis 502 in 12.5s (next.js: 98ms, application-code: 12.4s)
+ POST /api/explain 200 in 122ms (next.js: 100ms, application-code: 22ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /design/brandenburg 200 in 266ms (next.js: 8ms, application-code: 258ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 58ms (next.js: 4ms, application-code: 54ms)
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 44ms (next.js: 2ms, application-code: 42ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 9.8s (next.js: 1310µs, application-code: 9.8s)
+[trellis] FAL_KEY len=69 startsWith=915bafc4... hasColon=true hasNewline=false hasQuote=false firstByte=57 lastByte=52
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 9.8s (next.js: 830µs, application-code: 9.8s)
+[trellis] FAL_KEY len=69 startsWith=915bafc4... hasColon=true hasNewline=false hasQuote=false firstByte=57 lastByte=52
+[/api/trellis] trellis pipeline failed: Error: storage initiate failed: HTTP 403 {"detail":"User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing"}
+    at generateTrellisModel (src/lib/trellis.ts:83:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  81 |   if (!initRes.ok) {
+  82 |     const body = await initRes.text().catch(() => '');
+> 83 |     throw new Error(`storage initiate failed: HTTP ${initRes.status} ${body}`);
+     |           ^
+  84 |   }
+  85 |   const { file_url, upload_url } = (await initRes.json()) as StorageInitiateResponse;
+  86 |   if (!file_url || !upload_url) {
+ POST /api/trellis 502 in 10.3s (next.js: 10ms, application-code: 10.3s)
+[/api/trellis] trellis pipeline failed: Error: storage initiate failed: HTTP 403 {"detail":"User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing"}
+    at generateTrellisModel (src/lib/trellis.ts:83:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  81 |   if (!initRes.ok) {
+  82 |     const body = await initRes.text().catch(() => '');
+> 83 |     throw new Error(`storage initiate failed: HTTP ${initRes.status} ${body}`);
+     |           ^
+  84 |   }
+  85 |   const { file_url, upload_url } = (await initRes.json()) as StorageInitiateResponse;
+  86 |   if (!file_url || !upload_url) {
+ POST /api/trellis 502 in 10.4s (next.js: 24ms, application-code: 10.3s)
+
+---
+
+enlève moi cette merde et remet le vrai fetch nextjs
+
+---
+
+5jC [!] pnpm dev
+
+> reonic-hackathon@0.1.0 dev /Users/max/reonic-hackathon
+> next dev
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.15.199:3000
+- Environments: .env.local
+✓ Ready in 230ms
+
+ GET /design/brandenburg 200 in 631ms (next.js: 326ms, application-code: 304ms)
+ GET / 200 in 80ms (next.js: 18ms, application-code: 63ms)
+ GET /design/brandenburg 200 in 43ms (next.js: 16ms, application-code: 26ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 93ms (next.js: 14ms, application-code: 79ms)
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 55ms (next.js: 5ms, application-code: 49ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+[sizing] Loaded 823 projects (out of 1619 status-quo rows)
+ POST /api/design 200 in 84ms (next.js: 23ms, application-code: 61ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 10.3s (next.js: 19ms, application-code: 10.3s)
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 10.3s (next.js: 153ms, application-code: 10.1s)
+[/api/trellis] trellis pipeline failed: Error: storage initiate failed: HTTP 403 {"detail":"User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing"}
+    at generateTrellisModel (src/lib/trellis.ts:70:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  68 |   if (!initRes.ok) {
+  69 |     const body = await initRes.text().catch(() => '');
+> 70 |     throw new Error(`storage initiate failed: HTTP ${initRes.status} ${body}`);
+     |           ^
+  71 |   }
+  72 |   const { file_url, upload_url } = (await initRes.json()) as StorageInitiateResponse;
+  73 |   if (!file_url || !upload_url) {
+ POST /api/trellis 502 in 10.9s (next.js: 59ms, application-code: 10.8s)
+[/api/trellis] trellis pipeline failed: Error: storage initiate failed: HTTP 403 {"detail":"User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing"}
+    at generateTrellisModel (src/lib/trellis.ts:70:11)
+    at async POST (src/app/api/trellis/route.ts:47:35)
+  68 |   if (!initRes.ok) {
+  69 |     const body = await initRes.text().catch(() => '');
+> 70 |     throw new Error(`storage initiate failed: HTTP ${initRes.status} ${body}`);
+     |           ^
+  71 |   }
+  72 |   const { file_url, upload_url } = (await initRes.json()) as StorageInitiateResponse;
+  73 |   if (!file_url || !upload_url) {
+ POST /api/trellis 502 in 11.0s (next.js: 68ms, application-code: 10.9s)
+
+---
+
+on dirait que ya rien qui s'est lancé jvois rien dans mon compte : [!] pnpm dev
+
+> reonic-hackathon@0.1.0 dev /Users/max/reonic-hackathon
+> next dev
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.15.199:3000
+- Environments: .env.local
+✓ Ready in 235ms
+
+ GET / 200 in 271ms (next.js: 113ms, application-code: 158ms)
+ GET /design/brandenburg 200 in 285ms (next.js: 268ms, application-code: 17ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 102ms (next.js: 14ms, application-code: 89ms)
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=60 200 in 61ms (next.js: 4ms, application-code: 56ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+[sizing] Loaded 823 projects (out of 1619 status-quo rows)
+ POST /api/design 200 in 96ms (next.js: 24ms, application-code: 72ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 9.7s (next.js: 19ms, application-code: 9.7s)
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 10.0s (next.js: 155ms, application-code: 9.9s)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+
+---
+
+mais rien n'est lancé du côté de fal
+
+---
+
+mais rien n'est lancé du côté de fal je regarde bien le bon
+
+---
+
+envoie a trellis tout court plutôt
+
+---
+
+[Image #1]
