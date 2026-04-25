@@ -240,3 +240,15 @@ envoie a trellis tout court plutôt
 ---
 
 [Image #1]
+
+---
+
+7s)
+[trellis] using FAL_KEY from .env.local (starts eeea1156…, len 69)
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 10.0s (next.js: 151ms, application-code: 9.9s)
+
+Et je vois rien dans les requetes envoyées
+
+---
+
+pendant qu'on attend en vrai au début on peut voir le screenshot faut que ce soit dans l'animation et quand ça passe du skeleton au rendu final on doit voir une transition morph limite avec le modèle 3d
