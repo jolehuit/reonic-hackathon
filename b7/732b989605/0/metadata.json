@@ -1,0 +1,249 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "b7732b989605",
+  "session_id": "94eea312-8dde-4715-b21b-5bcb2caefea5",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-25T16:47:45.359673Z",
+  "branch": "feat/backend",
+  "checkpoints_count": 14,
+  "files_touched": [
+    ".env.local.example",
+    "data/backtest-results.csv",
+    "data/backtest-summary.json",
+    "data/pioneer-seeds-enriched.jsonl",
+    "package.json",
+    "pnpm-lock.yaml",
+    "src/app/api/design/route.ts",
+    "src/app/api/export/route.ts",
+    "src/app/api/parse-profile/route.ts",
+    "src/lib/financials.ts",
+    "src/lib/gemini.ts",
+    "src/lib/pioneer.ts",
+    "src/lib/sizing.ts",
+    "src/lib/tavily.ts",
+    "src/scripts/backtest.ts",
+    "src/scripts/extract-pioneer-seeds.ts",
+    "src/scripts/smoke-pioneer-parse.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-7[1m]",
+  "turn_id": "071e3a883d0d",
+  "token_usage": {
+    "input_tokens": 346,
+    "cache_creation_tokens": 792835,
+    "cache_read_tokens": 44362325,
+    "output_tokens": 284032,
+    "api_call_count": 167
+  },
+  "session_metrics": {
+    "turn_count": 27
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-25T16:47:45.240565Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 12498,
+    "human_modified": 2230,
+    "human_removed": 0,
+    "total_committed": 12958,
+    "total_lines_changed": 14737,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 324,
+      "user_lines_removed": 24,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "src/lib/sizing.ts": 250,
+        "src/scripts/smoke-sizing.ts": 74
+      },
+      "user_removed_per_file": {
+        "src/lib/sizing.ts": 24
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 1031,
+      "user_lines_removed": 21,
+      "agent_lines_added": 324,
+      "agent_lines_removed": 24,
+      "user_added_per_file": {
+        "data/pioneer-seeds.jsonl": 805,
+        "src/lib/sizing.ts": 142,
+        "src/scripts/extract-pioneer-seeds.ts": 84
+      },
+      "user_removed_per_file": {
+        "src/lib/sizing.ts": 21
+      }
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 889,
+      "user_lines_removed": 0,
+      "agent_lines_added": 445,
+      "agent_lines_removed": 24,
+      "user_added_per_file": {
+        "data/pioneer-seeds.jsonl": 805,
+        "src/scripts/extract-pioneer-seeds.ts": 84
+      }
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 889,
+      "user_lines_removed": 0,
+      "agent_lines_added": 716,
+      "agent_lines_removed": 59,
+      "user_added_per_file": {
+        "data/pioneer-seeds.jsonl": 805,
+        "src/scripts/extract-pioneer-seeds.ts": 84
+      }
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 889,
+      "user_lines_removed": 0,
+      "agent_lines_added": 716,
+      "agent_lines_removed": 59,
+      "user_added_per_file": {
+        "data/pioneer-seeds.jsonl": 805,
+        "src/scripts/extract-pioneer-seeds.ts": 84
+      }
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 889,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2155,
+      "agent_lines_removed": 95,
+      "user_added_per_file": {
+        "data/pioneer-seeds.jsonl": 805,
+        "src/scripts/extract-pioneer-seeds.ts": 84
+      }
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 889,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2158,
+      "agent_lines_removed": 95,
+      "user_added_per_file": {
+        "data/pioneer-seeds.jsonl": 805,
+        "src/scripts/extract-pioneer-seeds.ts": 84
+      }
+    },
+    {
+      "checkpoint_number": 8,
+      "user_lines_added": 889,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2158,
+      "agent_lines_removed": 95,
+      "user_added_per_file": {
+        "data/pioneer-seeds.jsonl": 805,
+        "src/scripts/extract-pioneer-seeds.ts": 84
+      }
+    },
+    {
+      "checkpoint_number": 9,
+      "user_lines_added": 889,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2158,
+      "agent_lines_removed": 95,
+      "user_added_per_file": {
+        "data/pioneer-seeds.jsonl": 805,
+        "src/scripts/extract-pioneer-seeds.ts": 84
+      }
+    },
+    {
+      "checkpoint_number": 10,
+      "user_lines_added": 889,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2361,
+      "agent_lines_removed": 97,
+      "user_added_per_file": {
+        "data/pioneer-seeds.jsonl": 805,
+        "src/scripts/extract-pioneer-seeds.ts": 84
+      }
+    },
+    {
+      "checkpoint_number": 11,
+      "user_lines_added": 1050,
+      "user_lines_removed": 135,
+      "agent_lines_added": 2361,
+      "agent_lines_removed": 97,
+      "user_added_per_file": {
+        "data/pioneer-seeds.jsonl": 805,
+        "src/lib/pioneer.ts": 59,
+        "src/scripts/extract-pioneer-seeds.ts": 84,
+        "src/scripts/smoke-pioneer-parse.ts": 102
+      },
+      "user_removed_per_file": {
+        "src/lib/pioneer.ts": 47,
+        "src/scripts/smoke-pioneer-parse.ts": 88
+      }
+    },
+    {
+      "checkpoint_number": 12,
+      "user_lines_added": 991,
+      "user_lines_removed": 88,
+      "agent_lines_added": 2373,
+      "agent_lines_removed": 97,
+      "user_added_per_file": {
+        "data/pioneer-seeds.jsonl": 805,
+        "src/scripts/extract-pioneer-seeds.ts": 84,
+        "src/scripts/smoke-pioneer-parse.ts": 102
+      },
+      "user_removed_per_file": {
+        "src/scripts/smoke-pioneer-parse.ts": 88
+      }
+    },
+    {
+      "checkpoint_number": 13,
+      "user_lines_added": 991,
+      "user_lines_removed": 88,
+      "agent_lines_added": 2373,
+      "agent_lines_removed": 97,
+      "user_added_per_file": {
+        "data/pioneer-seeds.jsonl": 805,
+        "src/scripts/extract-pioneer-seeds.ts": 84,
+        "src/scripts/smoke-pioneer-parse.ts": 102
+      },
+      "user_removed_per_file": {
+        "src/scripts/smoke-pioneer-parse.ts": 88
+      }
+    },
+    {
+      "checkpoint_number": 14,
+      "user_lines_added": 907,
+      "user_lines_removed": 88,
+      "agent_lines_added": 3286,
+      "agent_lines_removed": 97,
+      "user_added_per_file": {
+        "data/pioneer-seeds.jsonl": 805,
+        "src/scripts/smoke-pioneer-parse.ts": 102
+      },
+      "user_removed_per_file": {
+        "src/scripts/smoke-pioneer-parse.ts": 88
+      }
+    },
+    {
+      "checkpoint_number": 15,
+      "user_lines_added": 1712,
+      "user_lines_removed": 893,
+      "agent_lines_added": 3308,
+      "agent_lines_removed": 97,
+      "user_added_per_file": {
+        "data/pioneer-seeds-enriched.jsonl": 805,
+        "data/pioneer-seeds.jsonl": 805,
+        "src/scripts/smoke-pioneer-parse.ts": 102
+      },
+      "user_removed_per_file": {
+        "data/pioneer-seeds-enriched.jsonl": 805,
+        "src/scripts/smoke-pioneer-parse.ts": 88
+      }
+    }
+  ]
+}

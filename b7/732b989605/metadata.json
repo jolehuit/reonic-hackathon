@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "b7732b989605",
+  "strategy": "manual-commit",
+  "branch": "feat/backend",
+  "checkpoints_count": 14,
+  "files_touched": [
+    ".env.local.example",
+    "data/backtest-results.csv",
+    "data/backtest-summary.json",
+    "data/pioneer-seeds-enriched.jsonl",
+    "package.json",
+    "pnpm-lock.yaml",
+    "src/app/api/design/route.ts",
+    "src/app/api/export/route.ts",
+    "src/app/api/parse-profile/route.ts",
+    "src/lib/financials.ts",
+    "src/lib/gemini.ts",
+    "src/lib/pioneer.ts",
+    "src/lib/sizing.ts",
+    "src/lib/tavily.ts",
+    "src/scripts/backtest.ts",
+    "src/scripts/extract-pioneer-seeds.ts",
+    "src/scripts/smoke-pioneer-parse.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b7/732b989605/0/metadata.json",
+      "transcript": "/b7/732b989605/0/full.jsonl",
+      "content_hash": "/b7/732b989605/0/content_hash.txt",
+      "prompt": "/b7/732b989605/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 346,
+    "cache_creation_tokens": 792835,
+    "cache_read_tokens": 44362325,
+    "output_tokens": 284032,
+    "api_call_count": 167
+  }
+}
