@@ -1,5 +1,10 @@
 // Cockpit page — assembled by all 4 devs.
-// Layout: viewport 3D (left, full) + sidebar (right) + control panel (bottom) + modal overlay.
+//
+// Layout phases:
+//   - During `agent-running` : the AgentTrace takes a prominent left side panel
+//     (full visibility on the AI thinking + computing + rendering phases).
+//   - From `interactive` onwards : AgentTrace collapses, the user sees the clean
+//     stylized model + KPIs + sliders + evidence panel.
 
 'use client';
 
@@ -21,11 +26,14 @@ interface Props {
 
 export default function DesignPage({ params }: Props) {
   const { houseId } = use(params);
+  const phase = useStore((s) => s.phase);
   const selectHouse = useStore((s) => s.selectHouse);
 
   useEffect(() => {
     selectHouse(houseId);
   }, [houseId, selectHouse]);
+
+  const showFullTrace = phase === 'agent-running';
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-zinc-950">
@@ -36,14 +44,22 @@ export default function DesignPage({ params }: Props) {
 
       <Orchestrator />
 
-      {/* Right sidebar */}
-      <aside className="absolute right-4 top-4 flex w-80 flex-col gap-3">
-        <AgentTrace />
-        <KPISidebar />
-        <EvidencePanel />
-      </aside>
+      {/* AI agent trace — prominent during agent-running, hidden after */}
+      {showFullTrace && (
+        <aside className="absolute left-4 top-4 z-20 w-[380px]">
+          <AgentTrace />
+        </aside>
+      )}
 
-      {/* Bottom control panel */}
+      {/* Right sidebar — KPIs + Evidence are visible from interactive onwards */}
+      {phase !== 'agent-running' && phase !== 'autofilling' && phase !== 'house-selected' && phase !== 'idle' && phase !== 'ready-to-design' && (
+        <aside className="absolute right-4 top-4 flex w-80 flex-col gap-3">
+          <KPISidebar />
+          <EvidencePanel />
+        </aside>
+      )}
+
+      {/* Bottom control panel — only shown when interactive */}
       <div className="absolute bottom-4 left-4 right-4 flex justify-center">
         <ControlPanel />
       </div>

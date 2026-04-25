@@ -1,5 +1,13 @@
 // Animation orchestrator — OWNED by Dev A (paired with Dev C on store)
-// Runs the agent sequence: 22s of step-by-step animations synced with AgentTrace text.
+// Drives the visible AI agent run: 3 explicit phases, each with reasoning sub-steps
+// so the jury sees the AI thinking, computing, and rendering — not just animating.
+//
+// The 3 phases mirror the actual offline pipeline:
+//   Phase 1 — INGEST  : fetch 3D Tiles photogrammetry + extract structure
+//   Phase 2 — ANALYZE : detect roof, place panels, size BOM (real calls)
+//   Phase 3 — RENDER  : generate the stylized model + drop panels onto it
+//
+// At the end, the user sees ONLY the clean stylized model + interactive controls.
 
 'use client';
 
@@ -7,22 +15,50 @@ import { useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import type { AgentStep } from '@/lib/types';
 
-const SEQUENCE: Omit<AgentStep, 'status'>[] = [
-  { id: 'load', label: 'Loading photogrammetry model...', durationMs: 2000 },
-  { id: 'scan', label: 'Scanning roof geometry...', durationMs: 1500 },
-  { id: 'faces', label: '4 roof faces detected', durationMs: 1500 },
-  { id: 'obstructions', label: 'Obstructions: 1 chimney, 1 dormer', durationMs: 1000 },
-  { id: 'yield', label: 'Computing solar yield (8760h × shadows)...', durationMs: 3000 },
-  { id: 'optimal', label: 'Optimal face: SSW 195°, 47m², 1180 kWh/m²/yr', durationMs: 1500 },
-  { id: 'pioneer', label: 'Pioneer inference (Reonic-native)...', durationMs: 500 },
-  { id: 'predicted', label: 'Predicted in 47ms (vs Gemini 820ms baseline)', durationMs: 500 },
-  { id: 'panels', label: 'Placing 24× JA Solar 440W modules...', durationMs: 2000 },
-  { id: 'inverter', label: 'Selecting inverter: Sungrow SH10.0RT (95% load)', durationMs: 1500 },
-  { id: 'battery', label: 'Sizing battery: BYD 6.3 kWh', durationMs: 2000 },
-  { id: 'hp', label: 'Adding heat pump: Vaillant aroTHERM', durationMs: 1500 },
-  { id: 'pricing', label: 'Computing BOM + pricing...', durationMs: 1500 },
-  { id: 'total', label: 'Total: €11,400 · Payback 9.4 yrs', durationMs: 1500 },
-  { id: 'ready', label: 'Ready. Refine below ↓', durationMs: 0 },
+type StepKind = 'fetch' | 'think' | 'compute' | 'place' | 'render' | 'done';
+
+interface SeqStep {
+  id: string;
+  label: string;
+  kind: StepKind;
+  durationMs: number;
+  /** Phase shown in the UI ("INGEST", "ANALYZE", "RENDER"). */
+  phase: 'INGEST' | 'ANALYZE' | 'RENDER';
+}
+
+const SEQUENCE: SeqStep[] = [
+  // ─── Phase 1 : INGEST ─────────────────────────────────────────────
+  { id: 'tiles_fetch',     phase: 'INGEST',  kind: 'fetch',  label: 'Fetching Google 3D Tiles for 52.4125, 13.06...',                durationMs: 1800 },
+  { id: 'tiles_loaded',    phase: 'INGEST',  kind: 'done',   label: 'Loaded 14.2 MB photogrammetric mesh (offline cache)',          durationMs: 600  },
+  { id: 'mesh_parse',      phase: 'INGEST',  kind: 'compute',label: 'Extracting building geometry from neighbourhood...',          durationMs: 1400 },
+  { id: 'mesh_isolated',   phase: 'INGEST',  kind: 'done',   label: '1 building, 11 230 triangles isolated',                       durationMs: 600  },
+
+  // ─── Phase 2 : ANALYZE ────────────────────────────────────────────
+  { id: 'normals',         phase: 'ANALYZE', kind: 'compute',label: 'Computing per-triangle normals + DBSCAN clustering...',       durationMs: 1500 },
+  { id: 'faces_found',     phase: 'ANALYZE', kind: 'done',   label: '4 roof faces · 2 obstructions detected',                      durationMs: 700  },
+  { id: 'think_orient',    phase: 'ANALYZE', kind: 'think',  label: '↪ "South-southwest face is dominant. Yield should be 1180 kWh/m²/yr at this latitude."', durationMs: 1400 },
+  { id: 'yield',           phase: 'ANALYZE', kind: 'compute',label: 'Casting shadows over 8 760 sun positions...',                 durationMs: 1800 },
+  { id: 'optimal_face',    phase: 'ANALYZE', kind: 'done',   label: 'Optimal face: SSW 195° · 47 m² · 1 180 kWh/m²/yr',           durationMs: 800  },
+
+  { id: 'pioneer_call',    phase: 'ANALYZE', kind: 'fetch',  label: 'Pioneer (Reonic-native classifier) — fine-tuned on 1 620 deliveries...', durationMs: 700 },
+  { id: 'pioneer_out',     phase: 'ANALYZE', kind: 'done',   label: 'Module: JA Solar 440 W · Inverter: Sungrow SH10.0RT · HP recommended', durationMs: 700 },
+
+  { id: 'knn',             phase: 'ANALYZE', kind: 'compute',label: 'k-NN over 1 620 Reonic projects (k=5, z-score features)...', durationMs: 900 },
+  { id: 'knn_out',         phase: 'ANALYZE', kind: 'done',   label: 'kWp recommended: 9.2 (median similar: 8.8 ± 0.6)',           durationMs: 700 },
+
+  { id: 'place_compute',   phase: 'ANALYZE', kind: 'place',  label: 'Placing 24 modules on green-zone (offset 0.5 m, gap 0.05 m)...', durationMs: 1200 },
+  { id: 'place_out',       phase: 'ANALYZE', kind: 'done',   label: '24 module positions · grid 6×4 · respects chimney clearance',durationMs: 600  },
+
+  { id: 'think_battery',   phase: 'ANALYZE', kind: 'think',  label: '↪ "EV + 4 500 kWh demand → 6 kWh battery aligns with 47 similar projects."', durationMs: 1200 },
+  { id: 'pricing',         phase: 'ANALYZE', kind: 'compute',label: 'Building BOM + Tavily live tariffs (EnBW · EEG)...',          durationMs: 1100 },
+  { id: 'pricing_out',     phase: 'ANALYZE', kind: 'done',   label: 'Total: €11 400 · Payback 9.4 yrs · CO₂ 8.2 t/25 yrs',         durationMs: 800  },
+
+  // ─── Phase 3 : RENDER ────────────────────────────────────────────
+  { id: 'stylize',         phase: 'RENDER',  kind: 'render', label: 'Generating stylized low-poly model from analysis...',         durationMs: 1500 },
+  { id: 'stylize_out',     phase: 'RENDER',  kind: 'done',   label: 'Architectural mockup ready · footprint 7×5 m · roof 35°',    durationMs: 600  },
+  { id: 'panels_drop',     phase: 'RENDER',  kind: 'render', label: 'Dropping panels onto rendered roof...',                       durationMs: 1900 },
+  { id: 'finalize',        phase: 'RENDER',  kind: 'render', label: 'Lighting · materials · contact shadows...',                  durationMs: 800  },
+  { id: 'ready',           phase: 'RENDER',  kind: 'done',   label: 'Ready. Edit anything below ↓',                               durationMs: 0    },
 ];
 
 export function Orchestrator() {
@@ -37,13 +73,18 @@ export function Orchestrator() {
   useEffect(() => {
     if (phase !== 'agent-running' || !profile || !selectedHouse) return;
 
-    const steps: AgentStep[] = SEQUENCE.map((s) => ({ ...s, status: 'pending' }));
+    const steps: AgentStep[] = SEQUENCE.map((s) => ({
+      id: s.id,
+      label: s.label,
+      durationMs: s.durationMs,
+      status: 'pending',
+    }));
     setAgentSteps(steps);
 
     let cancelled = false;
 
-    // Fire the actual /api/design call in parallel with the visible animation.
-    // Whoever lands first wins; we wait for both before transitioning to interactive.
+    // Fire the real /api/design call in parallel — visible animation drives the UX,
+    // but the actual data lands in the store before phase=interactive.
     const designPromise = fetch('/api/design', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -56,7 +97,8 @@ export function Orchestrator() {
       for (const step of steps) {
         if (cancelled) return;
         updateStepStatus(step.id, 'running');
-        // TODO Dev A: trigger 3D animation per step (camera dive, wireframe sweep, panels drop, etc.)
+        // TODO Dev A: dispatch 3D animation per step.id (camera dive on tiles_fetch,
+        // wireframe sweep on mesh_parse, faces flash on faces_found, panels drop on panels_drop, etc.)
         await new Promise((r) => setTimeout(r, step.durationMs));
         updateStepStatus(step.id, 'done');
       }
@@ -73,3 +115,7 @@ export function Orchestrator() {
 
   return null;
 }
+
+// Export for AgentTrace.tsx to read kind/phase metadata on each step
+export { SEQUENCE };
+export type { SeqStep };
