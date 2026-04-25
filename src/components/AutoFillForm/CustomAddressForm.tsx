@@ -1827,10 +1827,11 @@ function EnquiryModal({
   const [isOwner, setIsOwner] = useState(false);
   const [acceptedPolicy, setAcceptedPolicy] = useState(false);
 
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const canSend =
     firstName.trim() &&
     surname.trim() &&
-    email.trim() &&
+    emailValid &&
     phone.trim() &&
     street.trim() &&
     houseNum.trim() &&
@@ -2121,13 +2122,25 @@ function ResultDashboard() {
   // System sizing & flows — for "Results in detail" Sankey
   const yieldKwh =
     m.selectedPackage === 'starter' ? 5500 : m.selectedPackage === 'comfort' ? 6640 : 9800;
-  const solarDirectToHome = Math.round(
+  let _direct = Math.round(
     m.consumptionKwh * (hasBattery ? 0.35 : selfSufficiency / 100),
   );
-  const solarToBattery = hasBattery
-    ? Math.max(0, Math.round(m.consumptionKwh * (selfSufficiency / 100) - solarDirectToHome))
+  let _bat = hasBattery
+    ? Math.max(0, Math.round(m.consumptionKwh * (selfSufficiency / 100) - _direct))
     : 0;
-  const solarToEV = hasCharger && m.hasEv ? Math.round(evKwh * 0.6) : m.hasEv ? Math.round(evKwh * 0.1) : 0;
+  let _ev = hasCharger && m.hasEv ? Math.round(evKwh * 0.6) : m.hasEv ? Math.round(evKwh * 0.1) : 0;
+  // Scale self-consumed solar down if it would exceed yield (prevents the
+  // Sankey solar node from outgrowing the "Electricity yield" headline).
+  const _solarUsed = _direct + _bat + _ev;
+  if (_solarUsed > yieldKwh && _solarUsed > 0) {
+    const scale = yieldKwh / _solarUsed;
+    _direct = Math.round(_direct * scale);
+    _bat = Math.round(_bat * scale);
+    _ev = Math.round(_ev * scale);
+  }
+  const solarDirectToHome = _direct;
+  const solarToBattery = _bat;
+  const solarToEV = _ev;
   const gridToHome = Math.max(0, m.consumptionKwh - solarDirectToHome - solarToBattery);
   const gridToEV = m.hasEv ? Math.max(0, evKwh - solarToEV) : 0;
   const solarToGrid = Math.max(

@@ -158,6 +158,7 @@ export function AddressSearch() {
         mounted = el;
         setReady(true);
       } catch (err) {
+        if (cancelled) return;
         console.error('[gmaps] failed:', err);
         setError('Could not load Google Places — check API key & domain restrictions.');
       }

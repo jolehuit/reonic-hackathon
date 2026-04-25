@@ -22,16 +22,39 @@ import type { HouseId } from '@/lib/types';
 
 interface Props {
   params: Promise<{ houseId: HouseId }>;
+  searchParams: Promise<{
+    address?: string;
+    lat?: string;
+    lng?: string;
+    placeId?: string;
+  }>;
 }
 
-export default function DesignPage({ params }: Props) {
+export default function DesignPage({ params, searchParams }: Props) {
   const { houseId } = use(params);
+  const sp = use(searchParams);
   const phase = useStore((s) => s.phase);
   const selectHouse = useStore((s) => s.selectHouse);
+  const customAddress = useStore((s) => s.customAddress);
+  const setCustomAddress = useStore((s) => s.setCustomAddress);
 
   useEffect(() => {
     selectHouse(houseId);
   }, [houseId, selectHouse]);
+
+  // Reload-resilience: rehydrate customAddress from URL params when the
+  // store is empty (e.g. user reloads /design/custom?address=...).
+  useEffect(() => {
+    if ((houseId as string) !== 'custom') return;
+    if (customAddress) return;
+    if (!sp.address || !sp.lat || !sp.lng) return;
+    setCustomAddress({
+      formatted: sp.address,
+      lat: Number(sp.lat),
+      lng: Number(sp.lng),
+      placeId: sp.placeId,
+    });
+  }, [houseId, sp, customAddress, setCustomAddress]);
 
   const showFullTrace = phase === 'agent-running' || phase === 'interactive';
 
