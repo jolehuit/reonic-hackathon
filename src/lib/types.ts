@@ -90,7 +90,7 @@ export interface DesignResult {
   };
 
   // Provenance
-  source: 'pioneer' | 'knn-fallback';
+  source: 'knn';
   inferenceMs: number;
 }
 

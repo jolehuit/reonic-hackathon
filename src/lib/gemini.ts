@@ -1,28 +1,73 @@
 // Gemini integration via Vercel AI SDK — OWNED by Dev B
-// Used for streaming agent reasoning text into the AgentTrace sidebar.
+// Two roles:
+//   1. streamDesignExplanation — streaming text into the AgentTrace sidebar
+//   2. parseProfileWithGemini — NL → structured CustomerProfile (used by /api/parse-profile)
 
 import { google } from '@ai-sdk/google';
-import { streamText } from 'ai';
-import type { DesignResult, CustomerProfile } from './types';
+import { streamText, generateText, Output } from 'ai';
+import { z } from 'zod';
+import type { CustomerProfile, DesignResult, HeatingType } from './types';
 
-const MODEL = google('gemini-3-flash-preview');
+// Model selection: gemini-2-5-flash is the cheapest+fastest reliable option.
+// Bump to gemini-3-pro-preview if you want frontier reasoning.
+const MODEL_FAST = google('gemini-2-5-flash');
+const MODEL_QUALITY = google('gemini-3-pro-preview');
 
-export function streamDesignExplanation(
-  profile: CustomerProfile,
-  design: DesignResult,
-) {
+// --- 1. Streaming explanation for AgentTrace ---
+
+export function streamDesignExplanation(profile: CustomerProfile, design: DesignResult) {
   return streamText({
-    model: MODEL,
-    system: `You are a concise solar design expert. Explain decisions briefly, citing the Reonic dataset matches when relevant.`,
-    prompt: buildPrompt(profile, design),
+    model: MODEL_FAST,
+    system:
+      'You are a concise solar design expert at Reonic. Speak in clear, friendly German with mixed English technical terms (keep brands/units in English). Cite the Reonic dataset matches when relevant.',
+    prompt: buildExplanationPrompt(profile, design),
+    maxOutputTokens: 200,
   });
 }
 
-function buildPrompt(p: CustomerProfile, d: DesignResult): string {
+function buildExplanationPrompt(p: CustomerProfile, d: DesignResult): string {
   return [
-    `Customer profile: ${p.annualConsumptionKwh} kWh/yr, ${p.inhabitants} inhabitants, EV: ${p.hasEv}, heating: ${p.heatingType}.`,
-    `Designed system: ${d.totalKwp} kWp, ${d.batteryCapacityKwh ?? 'no'} kWh battery.`,
-    `Median of ${d.similarProjects.length} similar Reonic projects: ${d.totalKwp + d.deltaVsMedian.kwp} kWp.`,
-    `Explain in <80 words why this sizing fits.`,
+    `Customer: ${p.annualConsumptionKwh} kWh/yr, ${p.inhabitants} inhabitants, EV: ${p.hasEv ? 'yes' : 'no'}, heating: ${p.heatingType}, ${p.houseSizeSqm} m².`,
+    `Designed system: ${d.totalKwp} kWp · ${d.batteryCapacityKwh ?? 'no'} kWh battery · ${d.heatPumpModel ?? 'no'} HP.`,
+    `Reference: median of ${d.similarProjects.length} similar Reonic projects = ${(d.totalKwp + d.deltaVsMedian.kwp).toFixed(1)} kWp.`,
+    `Total: €${d.totalPriceEur.toLocaleString('de-DE')}, payback ${d.paybackYears} years, ${d.co2SavedTonsPer25y}t CO₂ saved over 25y.`,
+    `Explain in <80 words why this sizing fits the customer profile, mentioning the Reonic match if relevant.`,
   ].join('\n');
 }
+
+// --- 2. Structured profile extraction (used by /api/parse-profile) ---
+
+const HEATING_VALUES = ['oil', 'gas', 'heatpump', 'other'] as const satisfies readonly HeatingType[];
+
+const ProfileSchema = z.object({
+  annualConsumptionKwh: z.number().min(500).max(50000).optional(),
+  inhabitants: z.number().int().min(1).max(8).optional(),
+  hasEv: z.boolean().optional(),
+  evAnnualKm: z.number().min(0).max(50000).optional(),
+  heatingType: z.enum(HEATING_VALUES).optional(),
+  houseSizeSqm: z.number().min(20).max(500).optional(),
+});
+
+export type ParsedProfile = z.infer<typeof ProfileSchema>;
+
+/**
+ * Extracts a structured customer profile from a natural-language description.
+ * Powers /api/parse-profile. Latency typically 400-800ms.
+ *
+ * Uses AI SDK v6 generateText + Output.object pattern (generateObject is deprecated in v6).
+ */
+export async function parseProfileWithGemini(text: string): Promise<ParsedProfile> {
+  const { output } = await generateText({
+    model: MODEL_FAST,
+    output: Output.object({ schema: ProfileSchema }),
+    system:
+      'Extract a residential customer profile from the description. ' +
+      'Languages: German, English, French. Only fill fields that are explicitly mentioned. ' +
+      'Heating types: oil (Öl, Heizöl), gas (Gas, Erdgas), heatpump (Wärmepumpe, pompe à chaleur), other. ' +
+      'Convert annual EV km if expressed monthly or weekly.',
+    prompt: text,
+  });
+  return output;
+}
+
+export { MODEL_FAST, MODEL_QUALITY };
