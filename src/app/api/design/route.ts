@@ -13,13 +13,14 @@ export async function POST(req: NextRequest) {
   };
 
   // TODO Dev B:
-  // 1. Load roof geometry from public/baked/{houseId}-roof.json
-  // 2. Compute roofMaxKwp from face areas × 0.2 kW/m²
-  // 3. Call predictBomViaPioneer(profile, roofMaxKwp)
-  // 4. findSimilarProjects(profile, k=3)
+  // 1. Load roof analysis from public/baked/{houseId}-analysis.json
+  //    (output of Dev D's analyze-roof.ts; mock for Brandenburg already committed)
+  // 2. Compute roofMaxKwp = sum(face.area × 0.18 kW/m²)
+  // 3. Call predictBomViaPioneer(profile, roofMaxKwp) for classif (HP, brand, inverter)
+  // 4. findSimilarProjects(profile, k=3) for kWp/kWh/price regression
   // 5. Compute deltas vs median
-  // 6. Build modulePositions via placePanels (from public/baked or runtime)
-  // 7. Compute financials (price, payback, CO2)
+  // 6. Use modulePositions directly from analysis.json (already placed by Dev D)
+  // 7. Compute financials (price, payback, CO2) using Tavily-fetched DE tariffs
   // 8. Return DesignResult
 
   return NextResponse.json({ error: 'Not implemented — Dev B' }, { status: 501 });

@@ -7,6 +7,22 @@
 
 Automates the 7 manual design steps Reonic installers do today (draw roof → place panels → pick inverter → size battery → recommend heat pump → build BOM → quote). User picks one of 3 demo houses (Brandenburg, Hamburg, Ruhr), watches an AI agent run a visible design sequence, refines via sliders/toggles, validates via a HITL modal, and exports a 1-page PDF quick-offer.
 
+## How the geometry pipeline works
+
+```
+OFFLINE (Dev D, build-time)
+1. fetch-3d-tiles.ts   →  Google 3D Tiles API   →  {house}-photogrammetry.glb (raw mesh)
+2. analyze-roof.ts     →  DBSCAN + obstructions →  {house}-analysis.json (faces, panels, footprint)
+3. generate-stylized.ts → low-poly procedural   →  {house}-stylized.glb  (clean architectural render)
+
+RUNTIME (Dev A)
+4. House.tsx loads stylized.glb (NEVER the raw photogrammetry)
+5. Panels.tsx places modules from analysis.modulePositions
+6. Heatmap.tsx applies vertex colors from analysis.faces[].yieldKwhPerSqm
+```
+
+The raw photogrammetric mesh is **never shown to the user** — it is used only as a data source for our custom roof analysis. The displayed model is a clean low-poly architectural mockup matching the building's real proportions.
+
 ## Stack (verified April 2026)
 
 - **Next.js 16.2** + React 19 (App Router)

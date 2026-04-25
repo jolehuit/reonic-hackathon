@@ -19,7 +19,8 @@ export function Heatmap({ houseId }: Props) {
   const [bake, setBake] = useState<YieldBake | null>(null);
 
   useEffect(() => {
-    fetch(`/baked/${houseId}-yield.json`)
+    // Yield is part of the analysis.json bake (faces[].yieldKwhPerSqm)
+    fetch(`/baked/${houseId}-analysis.json`)
       .then((r) => (r.ok ? r.json() : null))
       .then(setBake)
       .catch(() => setBake(null));

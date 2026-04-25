@@ -10,11 +10,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "bake:roofs": "tsx src/scripts/bake-roofs.ts",
-    "bake:yield": "tsx src/scripts/bake-yield.ts",
-    "bake:all": "pnpm bake:roofs && pnpm bake:yield"
+    "bake:fetch": "tsx src/scripts/fetch-3d-tiles.ts",
+    "bake:analyze": "tsx src/scripts/analyze-roof.ts",
+    "bake:stylize": "tsx src/scripts/generate-stylized.ts",
+    "bake:all": "pnpm bake:fetch && pnpm bake:analyze && pnpm bake:stylize"
   },
   "dependencies": {
+    "3d-tiles-renderer": "^0.4.24",
     "@ai-sdk/google": "^3.0.64",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.0",

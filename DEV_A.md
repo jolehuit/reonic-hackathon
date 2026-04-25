@@ -1,12 +1,18 @@
-# DEV A — 3D Engine & Animation Orchestration
+# DEV A — 3D Engine & Animation Orchestration (Stylized render)
 
 **Branch** : `feat/3d`
-**Files owned** : `src/components/Scene3D/*` + `src/components/Scene3D/Orchestrator.tsx` + `public/env/` + `public/sounds/` integration
+**Files owned** : `src/components/Scene3D/*` + `src/components/Scene3D/Orchestrator.tsx` + `public/sounds/*` integration
 **Pair sync** :
-- Sat 17:00 with Dev D — DBSCAN go/no-go checkpoint
+- Sat 17:00 with Dev D — checkpoint analysis-roof + stylized model handoff
 - Sat 22:00 with Dev C — Orchestrator ↔ store ↔ animations
 **Frozen** : `lib/types.ts` after Sat 15:30 (B+C pair)
-**Charge estimée** : ~8h utiles (kickoff Sat 15:00)
+**Charge estimée** : ~9h utiles
+
+---
+
+## Le rôle, en 1 phrase
+
+Tu rends la **scène stylée** : pas une mesh photogrammétrique brute, mais un modèle low-poly cel-shaded propre (généré par Dev D depuis l'analyse 3D Tiles), avec des panneaux qui apparaissent dessus et une caméra cinématique. **3D Tiles n'est jamais affiché.** Style cible : architectural mockup / Apple Keynote.
 
 ---
 
@@ -15,26 +21,46 @@
 ```bash
 git checkout feat/3d
 pnpm install
-pnpm dev   # boots Next 16, http://localhost:3000/design/brandenburg should show GLB house
+pnpm dev
 ```
 
-Vérifie que la maison Brandenburg charge et que la caméra tourne autour. Si oui : ready.
+`/design/brandenburg` doit afficher le **placeholder procédural** (cube blanc + toit rouge incliné) qui est dans `House.tsx`. Tu peux dev tout ton code dessus dès maintenant ; quand Dev D livre `brandenburg-stylized.glb`, le composant le détecte automatiquement et bascule.
 
-Si tu touches à un import 3D, lis avant : `node_modules/next/dist/docs/01-app/02-guides/upgrading/version-16.md` (changes Next 16).
+À lire :
+- https://github.com/pmndrs/postprocessing (Bloom, ToneMapping, OutlineEffect)
+- https://drei.docs.pmnd.rs/ (`<Outlines>`, `<Environment>`, `<MeshTransmissionMaterial>`)
 
 ---
 
 ## Tâches (chronologiques avec ETA)
 
-| # | Tâche | ETA | Bloque ? |
+| # | Tâche | ETA | Critique ? |
 |---|---|---|---|
-| A1 | **Photorealism preset** : `<Environment preset="sunset">` (déjà là) + `<EffectComposer>` + `<Bloom>` + `<ToneMapping mode={ACESFilmic}>` + soft shadows | 1h30 | démo |
-| A2 | **CameraRig.tsx** : finir GSAP timeline (aerial dive 80→30→25, lookAt 0,2,0) — squelette déjà créé | 45min | démo |
-| A3 | **Sun.tsx** : SunCalc → directionalLight position animée 12s pendant `phase=agent-running` | 1h | wow |
-| A4 | **6 composants 3D stubés à finir** (Inverter, Battery, HeatPump, Wallbox, Panels, Heatmap) — squelettes déjà créés. Animations spécifiques par step de l'Orchestrator | 2h30 | démo |
-| A5 | **Heatmap.tsx** : injecter vertex colors depuis `public/baked/{house}-yield.json` (D fournit) sur la mesh roof. Turbo gradient. Animation sweep depuis le coin SO | 1h30 | wow |
-| A6 | **Sounds Howler.js** : sourcer 6 mp3 (whoosh/scan/tick/paint/place/chime) gratuits sur freesound.org, brancher sur les steps Orchestrator | 45min | wow |
-| A7 | **FPS bench** sur MacBook moyen Sun 01:00. Si <60fps : retirer bloom ou downscale HDR | 30min | démo |
+| A1 | **Style "architectural mockup"** : `MeshToonMaterial` blanc cassé sur la maison + outline shader noir (drei `<Outlines>` ou `OutlineEffect` postprocessing). Sol = plan blanc avec contact shadow. Background gradient ciel doux. | 2h | wow |
+| A2 | **Photorealism subtle** : `<Environment preset="apartment">` (lumière douce diffuse, pas trop chaude car notre style est minimaliste, PAS sunset comme avant) + Bloom léger + `ACESFilmic` tonemapping | 45min | wow |
+| A3 | **CameraRig.tsx** : finir GSAP timeline (aerial dive 80→30→25 vers le centre du `buildingFootprint`, lookAt centré sur le toit) | 1h | wow |
+| A4 | **Sun.tsx** : SunCalc → directionalLight position animée 12s pendant `phase=agent-running` (la lumière bouge subtilement sur le modèle stylé) | 45min | wow |
+| A5 | **Composants 3D** (Inverter/Battery/HeatPump/Wallbox/Panels) en cohérence stylée — toon shaders, pas PBR. Animations spécifiques par step Orchestrator | 2h | démo |
+| A6 | **Heatmap.tsx** : injecter vertex colors depuis `{house}-analysis.json` (faces[].yieldKwhPerSqm) sur le toit du modèle stylé. Turbo gradient subtle (pas trop saturé pour respecter le style architectural) | 1h | wow |
+| A7 | **Sounds Howler.js** : sourcer 6 mp3 (whoosh/scan/tick/paint/place/chime) gratuits sur freesound.org, brancher sur les steps Orchestrator | 45min | wow |
+| A8 | **FPS bench** sur MacBook moyen Sun 01:00. Si <60fps : alléger outline shader ou bloom | 30min | démo |
+
+---
+
+## Style guide (important)
+
+Le style doit rester cohérent. Évite les pièges :
+
+| À faire | À éviter |
+|---|---|
+| 🟢 Volume blanc cassé (`#f5f1ea` ou `#fafafa`) | 🔴 Couleurs saturées photoréalistes |
+| 🟢 Outline shader noir (épaisseur 2-3px) | 🔴 Textures bumpy / photogrammétrie |
+| 🟢 Sol clair avec subtle contact shadow | 🔴 Background HDR sunset bumpy |
+| 🟢 Panneaux bleu profond `#1a3a6e` métallique | 🔴 Panneaux PBR ultra-réalistes (clash) |
+| 🟢 Animations easing cubic, GSAP | 🔴 Bounce trop cartoony |
+| 🟢 Heatmap turbo subtle (alpha bas) | 🔴 Heatmap saturé qui mange le toit |
+
+→ Style cible : **Norman Foster rendering / Apple Maps low-poly**.
 
 ---
 
@@ -42,23 +68,24 @@ Si tu touches à un import 3D, lis avant : `node_modules/next/dist/docs/01-app/0
 
 - **Bloque** : Dev C (Orchestrator drives ses composants UI)
 - **Bloqué par** :
-  - Dev D pour `public/baked/{house}-roof.json` (mock déjà committé pour Brandenburg → tu peux bosser parallèle dès Sat 15:00)
-  - Dev D pour `public/baked/{house}-yield.json` (vraie data nécessaire pour Heatmap polish — fallback : couleur uniforme verte)
+  - Dev D pour `public/baked/{house}-stylized.glb` (placeholder procédural en place → tu peux bosser parallèle dès Sat 15:00)
+  - Dev D pour `public/baked/{house}-analysis.json` (mock Brandenburg déjà committé pour les modulePositions + faces)
 
 ---
 
-## Fichiers à modifier (paths exacts)
+## Fichiers à modifier
 
 ```
-src/components/Scene3D/Scene3D.tsx        — assemble tous les enfants (déjà câblé)
+src/components/Scene3D/Scene3D.tsx        — assemble (déjà câblé, ajouter outline composer)
+src/components/Scene3D/House.tsx          — déjà câblé pour stylized.glb + procedural fallback
 src/components/Scene3D/Sun.tsx            — SunCalc useFrame
 src/components/Scene3D/CameraRig.tsx      — GSAP timeline (squelette OK)
-src/components/Scene3D/Inverter.tsx       — pop-in animation
-src/components/Scene3D/Battery.tsx        — slide-up animation
-src/components/Scene3D/HeatPump.tsx       — fade-in + scale
-src/components/Scene3D/Wallbox.tsx        — fade-in
-src/components/Scene3D/Panels.tsx         — drop + bounce per panel
-src/components/Scene3D/Heatmap.tsx        — vertex colors apply
+src/components/Scene3D/Inverter.tsx       — pop-in animation, toon material
+src/components/Scene3D/Battery.tsx        — slide-up animation, toon
+src/components/Scene3D/HeatPump.tsx       — fade-in + scale, toon
+src/components/Scene3D/Wallbox.tsx        — fade-in, toon
+src/components/Scene3D/Panels.tsx         — drop + bounce per panel, panneaux toon-bleus
+src/components/Scene3D/Heatmap.tsx        — vertex colors apply (lit analysis.json)
 src/components/Scene3D/Orchestrator.tsx   — step callbacks → animations
 public/sounds/*.mp3                       — sourcer 6 fichiers
 ```
@@ -69,10 +96,10 @@ public/sounds/*.mp3                       — sourcer 6 fichiers
 
 - [ ] La séquence agent (~22s) joue de bout en bout sans crash sur `/design/brandenburg`
 - [ ] 60 fps stable sur MacBook moyen pendant la démo
-- [ ] Pas de FOUC : `<Suspense fallback>` cache le canvas pendant le GLB load
-- [ ] Bloom + tonemapping ACES visibles (golden hour sunset)
+- [ ] Style architectural mockup cohérent (volume blanc + outline + sol clair)
 - [ ] Click sur un toggle (EV/HP/Battery/Wallbox) ajoute/retire le bon objet 3D en live
-- [ ] Sons subtle synced avec chaque step (whoosh à `load`, ticks à `faces`, paint à `yield`, place×N à `panels`, chime à `ready`)
+- [ ] Sons subtle synced avec chaque step
+- [ ] Quand Dev D livre `brandenburg-stylized.glb`, ça remplace le placeholder procédural sans toucher au code
 
 ---
 
@@ -80,17 +107,17 @@ public/sounds/*.mp3                       — sourcer 6 fichiers
 
 | Cas | Plan B |
 |---|---|
-| SunCalc trop lent ou cassé | Hardcoder position fixe `[20, 30, 10]` avec rotation lente useFrame |
-| Bloom cassé | `<EffectComposer disableNormalPass>` ou retirer post-processing entièrement (garder ACES tonemapping seul via `gl.toneMapping`) |
+| Outline shader trop lourd | drei `<Outlines>` simple sur les meshes (moins joli mais marche partout) |
+| Stylized.glb pas livré par D | Garder le procedural placeholder (déjà en place dans House.tsx). Démo continue, look légèrement moins customisé par maison. |
 | InstancedMesh + animation trop lourd | Passer en `<group>` de panneaux normaux (acceptable jusqu'à ~30 panneaux) |
-| Heatmap vertex colors plante | Skip carrément — le PRD ne le rend pas obligatoire (cosmétique) |
-| Sons impossibles à sourcer en 45min | Skip Howler entièrement, animation visuelle suffit |
+| Heatmap vertex colors plante | Skip carrément — le brief ne le rend pas obligatoire |
+| Sons impossibles à sourcer en 45min | Skip Howler, animation visuelle suffit |
 
 ---
 
 ## Hand-off
 
 - Dev C consomme tes animations via le store (`phase` + `agentSteps`)
-- Dev D te fournit `public/baked/{house}-yield.json` et `roof.json`
+- Dev D te fournit `public/baked/{house}-stylized.glb` + `analysis.json`
 
-Si tu finis tôt : aide Dev C sur le polish UI Reonic Evidence panel ou Dev D sur le bake-yield.
+Si tu finis tôt : aide Dev C sur le polish UI ou Dev D sur le `generate-stylized.ts`.

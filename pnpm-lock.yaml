@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      3d-tiles-renderer:
+        specifier: ^0.4.24
+        version: 0.4.24(@react-three/fiber@9.6.0(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(three@0.184.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(three@0.184.0)
       '@ai-sdk/google':
         specifier: ^3.0.64
         version: 3.0.64(zod@4.3.6)
@@ -104,6 +107,29 @@ importers:
         version: 5.9.3
 
 packages:
+
+  3d-tiles-renderer@0.4.24:
+    resolution: {integrity: sha512-1n21vaWoV5e+N6rTfK1nv0Bsgu9ptbY6d9ICHnT6W1llloIhUGmGzx5/JH+B7t9XggjL0aJASn0Z5sFOXXvYjw==}
+    peerDependencies:
+      '@babylonjs/core': '>=8.0.0'
+      '@babylonjs/loaders': '>=8.0.0'
+      '@react-three/fiber': ^8.17.9 || ^9.0.0
+      react: ^18.3.1 || ^19.0.0
+      react-dom: ^18.3.1 || ^19.0.0
+      three: '>=0.167.0'
+    peerDependenciesMeta:
+      '@babylonjs/core':
+        optional: true
+      '@babylonjs/loaders':
+        optional: true
+      '@react-three/fiber':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
+      three:
+        optional: true
 
   '@ai-sdk/gateway@3.0.104':
     resolution: {integrity: sha512-ZKX5n74io8VIRlhIMSLWVlvT3sXC8Z7cZ9GHuWBWZDVi96+62AIsWuLGvMfcBA1STYuSoDrp6rIziZmvrTq0TA==}
@@ -3130,6 +3156,13 @@ packages:
         optional: true
 
 snapshots:
+
+  3d-tiles-renderer@0.4.24(@react-three/fiber@9.6.0(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(three@0.184.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(three@0.184.0):
+    optionalDependencies:
+      '@react-three/fiber': 9.6.0(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(three@0.184.0)
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+      three: 0.184.0
 
   '@ai-sdk/gateway@3.0.104(zod@4.3.6)':
     dependencies:
