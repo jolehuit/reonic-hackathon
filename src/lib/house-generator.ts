@@ -116,39 +116,18 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
     }
   }
 
-  // ── Gemini Vision analysis ──
+  // ── Gemini Vision analysis (TWO steps) ──
+  // Step 1: detect the roof footprint in the top-down image only.
+  // Step 2: read roof type / slope / heights from the 3D oblique image,
+  //         given the polygon found in step 1 as ground truth.
   const metresPerPixel =
     (156543.03392 * Math.cos((input.lat * Math.PI) / 180)) / Math.pow(2, zoom) / SCALE;
 
-  const promptLines = [
-    'You are given ONE or TWO satellite views of the same building.',
-    'Image #1 is a strict TOP-DOWN satellite image, with a red MARKER PIN at the centre on the target roof.',
-  ];
-  if (tiltedBuf) {
-    promptLines.push(
-      'Image #2 is a 3D OBLIQUE view (~60° tilt) of the SAME building — use it to read roof slopes, ridges, and heights, then map them back onto the top-down outline.',
-    );
-  }
-  promptLines.push(
-    `The TOP-DOWN image is ${W}x${H} pixels. Around the centre, one pixel ≈ ${metresPerPixel.toFixed(3)} m on the ground.`,
-    'Identify ONLY the roof directly under the red marker pin (ignore neighbouring roofs).',
-    'Return ALL coordinates in TOP-DOWN image pixel space (image #1).',
-    'Return JSON:',
-    '{',
-    '  "bbox": { "x": <int>, "y": <int>, "width": <int>, "height": <int> },',
-    '  "footprintPx": [[x,y], [x,y], ...],   // 4-8 polygon vertices outlining the roof, clockwise, hugging the eaves',
-    '  "roofType": "flat" | "gable" | "hip" | "pyramid" | "shed",',
-    '  "ridgeAzimuthDeg": <int 0-359>,       // 0 = north, 90 = east. Direction the ridge runs.',
-    '  "estWallHeightM": <number>,            // 2.5-9 m typical residential',
-    '  "estRoofHeightM": <number>,            // ridge height above eaves; 0 if flat',
-    '  "confidence": <0..1>',
-    '}',
-    '',
-    'Return JSON only, no markdown fence, no prose.',
-  );
-  const prompt = promptLines.join('\n');
-
-  const callGemini = async (model: string) => {
+  const callGemini = async (
+    model: string,
+    prompt: string,
+    images: Buffer[],
+  ): Promise<{ status: number; text: string }> => {
     const r = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
       {
@@ -160,22 +139,9 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
               role: 'user',
               parts: [
                 { text: prompt },
-                {
-                  inline_data: {
-                    mime_type: 'image/png',
-                    data: cropped.toString('base64'),
-                  },
-                },
-                ...(tiltedBuf
-                  ? [
-                      {
-                        inline_data: {
-                          mime_type: 'image/png',
-                          data: tiltedBuf.toString('base64'),
-                        },
-                      },
-                    ]
-                  : []),
+                ...images.map((b) => ({
+                  inline_data: { mime_type: 'image/png', data: b.toString('base64') },
+                })),
               ],
             },
           ],
@@ -183,30 +149,61 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
         }),
       },
     );
-    return { status: r.status, json: (await r.json()) as Record<string, unknown> };
+    const json = (await r.json()) as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+    const text = json.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    return { status: r.status, text };
   };
 
-  let analysis: RoofAnalysis | null = null;
-  for (const model of ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash']) {
-    const { status, json } = await callGemini(model);
-    if (status !== 200) continue;
-    const candidates = (json as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> })
-      .candidates;
-    const text = candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  const tryParse = <T,>(s: string): T | null => {
     try {
-      analysis = JSON.parse(text.trim().replace(/^```json|```$/g, '').trim()) as RoofAnalysis;
-      break;
+      return JSON.parse(s.trim().replace(/^```json|```$/g, '').trim()) as T;
     } catch {
-      // try next model
+      return null;
+    }
+  };
+
+  const MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'];
+
+  // ── STEP 1 — roof detection (top-down only) ──
+  const detectPrompt = [
+    'You are given a strict TOP-DOWN satellite image of a residential area.',
+    `Image is ${W}x${H} pixels. A red MARKER PIN sits at the centre on the target roof.`,
+    `Around the centre, one pixel ≈ ${metresPerPixel.toFixed(3)} m on the ground.`,
+    '',
+    'TASK: detect ONLY the roof directly under the red marker pin (ignore neighbouring roofs).',
+    'Trace its outline tightly along the eaves with 4-8 vertices, clockwise.',
+    '',
+    'Return JSON only:',
+    '{',
+    '  "bbox": { "x": <int>, "y": <int>, "width": <int>, "height": <int> },',
+    '  "footprintPx": [[x,y], [x,y], ...],',
+    '  "confidence": <0..1>',
+    '}',
+  ].join('\n');
+
+  interface DetectResult {
+    bbox: RoofAnalysis['bbox'];
+    footprintPx: Array<[number, number]>;
+    confidence: number;
+  }
+
+  let detect: DetectResult | null = null;
+  for (const model of MODELS) {
+    const { status, text } = await callGemini(model, detectPrompt, [cropped]);
+    if (status !== 200) continue;
+    const parsed = tryParse<DetectResult>(text);
+    if (parsed && Array.isArray(parsed.footprintPx) && parsed.footprintPx.length >= 3) {
+      detect = parsed;
+      break;
     }
   }
 
-  if (!analysis || !Array.isArray(analysis.footprintPx) || analysis.footprintPx.length < 3) {
-    // Synthetic fallback so the pipeline still emits a GLB (rate-limited or
-    // an empty/garbage AI response).
+  if (!detect) {
     const cxImg = W / 2, cyImg = H / 2;
     const halfW = 90, halfH = 60;
-    analysis = {
+    detect = {
       bbox: { x: cxImg - halfW, y: cyImg - halfH, width: halfW * 2, height: halfH * 2 },
       footprintPx: [
         [cxImg - halfW, cyImg - halfH],
@@ -214,14 +211,71 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
         [cxImg + halfW, cyImg + halfH],
         [cxImg - halfW, cyImg + halfH],
       ],
+      confidence: 0,
+    };
+  }
+
+  // ── STEP 2 — roof shape / heights (mostly from the 3D oblique view) ──
+  interface ShapeResult {
+    roofType: RoofAnalysis['roofType'];
+    ridgeAzimuthDeg: number;
+    estWallHeightM: number;
+    estRoofHeightM: number;
+    confidence: number;
+  }
+
+  let shape: ShapeResult | null = null;
+  if (tiltedBuf) {
+    const fpStr = detect.footprintPx.map(([x, y]) => `[${Math.round(x)},${Math.round(y)}]`).join(',');
+    const shapePrompt = [
+      'You are given TWO views of the SAME building:',
+      `  Image #1 — TOP-DOWN (${W}x${H} px) with a red marker pin on the target roof.`,
+      '  Image #2 — 3D OBLIQUE view (~60° tilt) of the SAME building. PRIMARY SOURCE for shape/heights.',
+      '',
+      `The roof footprint has already been detected in image #1: ${fpStr}.`,
+      'Use the OBLIQUE view to read roof slope, ridge orientation and heights, then map back to image #1 axes.',
+      '',
+      'Return JSON only:',
+      '{',
+      '  "roofType": "flat" | "gable" | "hip" | "pyramid" | "shed",',
+      '  "ridgeAzimuthDeg": <int 0-359>,    // 0=N, 90=E, in image-#1 axes',
+      '  "estWallHeightM": <number>,         // eaves above ground, 2.5-9 typical',
+      '  "estRoofHeightM": <number>,         // ridge height ABOVE eaves; 0 if flat',
+      '  "confidence": <0..1>',
+      '}',
+    ].join('\n');
+
+    for (const model of MODELS) {
+      const { status, text } = await callGemini(model, shapePrompt, [cropped, tiltedBuf]);
+      if (status !== 200) continue;
+      const parsed = tryParse<ShapeResult>(text);
+      if (parsed && typeof parsed.roofType === 'string') {
+        shape = parsed;
+        break;
+      }
+    }
+  }
+
+  if (!shape) {
+    shape = {
       roofType: 'gable',
       ridgeAzimuthDeg: 90,
       estWallHeightM: 4.5,
       estRoofHeightM: 2.5,
       confidence: 0,
-      fallback: true,
     };
   }
+
+  const analysis: RoofAnalysis = {
+    bbox: detect.bbox,
+    footprintPx: detect.footprintPx,
+    roofType: shape.roofType,
+    ridgeAzimuthDeg: shape.ridgeAzimuthDeg,
+    estWallHeightM: shape.estWallHeightM,
+    estRoofHeightM: shape.estRoofHeightM,
+    confidence: Math.min(detect.confidence, shape.confidence),
+    fallback: detect.confidence === 0 || shape.confidence === 0,
+  };
 
   // ── Build GLB ──
   const fp = analysis.footprintPx ?? [];

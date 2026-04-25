@@ -72,11 +72,11 @@ export function ObliqueCesium() {
         }
         viewer.scene.primitives.add(tileset);
 
-        // Bird's-eye oblique: high enough to see the whole roof, ~60° down.
+        // Bird's-eye oblique: tight enough to see roof slope clearly.
         // pitch = -tiltDeg (60° below horizontal = steep oblique looking down)
-        // range = 200m gives good roof framing at zoom 19-20 equivalent.
-        const range = 200;
-        const aim = Cesium.Cartesian3.fromDegrees(lng, lat, 58);
+        // range = 110m frames a single residential roof at high detail.
+        const range = 110;
+        const aim = Cesium.Cartesian3.fromDegrees(lng, lat, 65);
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         viewer.camera.lookAt(
           aim,
