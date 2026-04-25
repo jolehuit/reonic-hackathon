@@ -8,6 +8,7 @@ import type {
   CustomerProfile,
   DesignRefinements,
   DesignResult,
+  RoofGeometry,
   AgentStep,
 } from './types';
 
@@ -105,6 +106,12 @@ interface AppState {
   design: DesignResult | null;
   setDesign: (d: DesignResult | null) => void;
 
+  // Roof geometry — usually loaded from /baked/{houseId}-analysis.json by
+  // HouseGeometryProvider. For custom addresses, /api/design synthesises one
+  // and we stash it here so the Scene3D consumes it directly.
+  customRoofGeometry: RoofGeometry | null;
+  setCustomRoofGeometry: (g: RoofGeometry | null) => void;
+
   // Agent sequence
   agentSteps: AgentStep[];
   setAgentSteps: (s: AgentStep[]) => void;
@@ -180,6 +187,9 @@ export const useStore = create<AppState>((set) => ({
   design: null,
   setDesign: (design) => set({ design }),
 
+  customRoofGeometry: null,
+  setCustomRoofGeometry: (customRoofGeometry) => set({ customRoofGeometry }),
+
   agentSteps: [],
   setAgentSteps: (agentSteps) => set({ agentSteps }),
   updateStepStatus: (id, status) =>
@@ -198,6 +208,7 @@ export const useStore = create<AppState>((set) => ({
       profile: null,
       refinements: defaultRefinements,
       design: null,
+      customRoofGeometry: null,
       agentSteps: [],
     }),
 }));

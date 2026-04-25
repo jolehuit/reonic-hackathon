@@ -569,7 +569,7 @@ function mergeTwoFaces(a: RoofFace, b: RoofFace, newId: number): RoofFace {
   const normal: [number, number, number] = [nx / len, ny / len, nz / len];
   const azimuth = Math.round(azimuthFromNormal(normal));
   const tilt = Math.round(tiltFromNormal(normal));
-  const vertices = hullXZ([...a.vertices, ...b.vertices]);
+  const vertices = hullXZ([...a.vertices, ...b.vertices] as [number, number, number][]);
   return {
     id: newId,
     normal,

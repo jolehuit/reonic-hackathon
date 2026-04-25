@@ -13,6 +13,7 @@ export const MOCK_PROFILES: Record<HouseId, CustomerProfile> = {
     evAnnualKm: 15000,
     heatingType: 'gas',
     houseSizeSqm: 140,
+    isJumelee: false,
   },
   hamburg: {
     annualConsumptionKwh: 5200,
@@ -20,6 +21,7 @@ export const MOCK_PROFILES: Record<HouseId, CustomerProfile> = {
     hasEv: false,
     heatingType: 'oil',
     houseSizeSqm: 165,
+    isJumelee: false,
   },
   ruhr: {
     annualConsumptionKwh: 6100,
@@ -27,6 +29,7 @@ export const MOCK_PROFILES: Record<HouseId, CustomerProfile> = {
     hasEv: false,
     heatingType: 'oil',
     houseSizeSqm: 190,
+    isJumelee: false,
   },
 };
 
@@ -81,6 +84,6 @@ export const MOCK_DESIGN: DesignResult = {
     priceEur: 200,
   },
 
-  source: 'knn-fallback',
+  source: 'knn',
   inferenceMs: 12,
 };

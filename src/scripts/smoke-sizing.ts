@@ -28,6 +28,7 @@ async function main() {
         evAnnualKm: 12000,
         heatingType: 'gas',
         houseSizeSqm: 140,
+        isJumelee: false,
       },
     },
     {
@@ -38,6 +39,7 @@ async function main() {
         hasEv: false,
         heatingType: 'oil',
         houseSizeSqm: 75,
+        isJumelee: false,
       },
     },
     {
@@ -49,6 +51,7 @@ async function main() {
         evAnnualKm: 18000,
         heatingType: 'heatpump',
         houseSizeSqm: 180,
+        isJumelee: false,
       },
     },
   ];

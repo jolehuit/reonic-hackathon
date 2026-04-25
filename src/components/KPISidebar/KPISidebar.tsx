@@ -31,9 +31,7 @@ export function KPISidebar() {
       <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-3.5">
         <div>
           <h3 className="text-[14px] font-bold tracking-tight text-zinc-900">Your design</h3>
-          <p className="text-[11px] text-zinc-500">
-            {design?.source === 'pioneer' ? 'Pioneer · fine-tuned classifier' : 'k-NN match · 1 620 deliveries'}
-          </p>
+          <p className="text-[11px] text-zinc-500">k-NN match · 1 620 deliveries</p>
         </div>
         <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
           Live

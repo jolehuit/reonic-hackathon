@@ -94,6 +94,14 @@ export interface DesignResult {
   // Provenance
   source: 'knn';
   inferenceMs: number;
+
+  /**
+   * Roof geometry the design was computed against. Demo houses serve their
+   * baked file via HouseGeometryProvider; for custom addresses, /api/design
+   * synthesises one and returns it here so the Scene3D can render panels
+   * without an extra fetch.
+   */
+  geometry?: RoofGeometry;
 }
 
 export interface SimilarProject {

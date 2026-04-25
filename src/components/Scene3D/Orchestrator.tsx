@@ -62,10 +62,12 @@ export function Orchestrator() {
   const phase = useStore((s) => s.phase);
   const profile = useStore((s) => s.profile);
   const selectedHouse = useStore((s) => s.selectedHouse);
+  const customAddress = useStore((s) => s.customAddress);
   const setAgentSteps = useStore((s) => s.setAgentSteps);
   const updateStepStatus = useStore((s) => s.updateStepStatus);
   const setPhase = useStore((s) => s.setPhase);
   const setDesign = useStore((s) => s.setDesign);
+  const setCustomRoofGeometry = useStore((s) => s.setCustomRoofGeometry);
 
   useEffect(() => {
     if (phase !== 'agent-running' || !profile || !selectedHouse) return;
@@ -80,12 +82,21 @@ export function Orchestrator() {
 
     let cancelled = false;
 
+    // Build the request body — custom addresses ship lat/lng so the API can
+    // synthesise a plausible RoofGeometry on the fly (cf src/lib/customRoof.ts).
+    const body: Record<string, unknown> = { profile, houseId: selectedHouse };
+    if (selectedHouse === 'custom' && customAddress) {
+      body.lat = customAddress.lat;
+      body.lng = customAddress.lng;
+      body.address = customAddress.formatted;
+    }
+
     // Fire the real /api/design call in parallel — visible animation drives the UX,
     // but the actual data lands in the store before phase=interactive.
     const designPromise = fetch('/api/design', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ profile, houseId: selectedHouse }),
+      body: JSON.stringify(body),
     })
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null);
@@ -94,21 +105,36 @@ export function Orchestrator() {
       for (const step of steps) {
         if (cancelled) return;
         updateStepStatus(step.id, 'running');
-        // TODO Dev A: dispatch 3D animation per step.id (camera dive on tiles_fetch,
-        // wireframe sweep on mesh_parse, faces flash on faces_found, panels drop on panels_drop, etc.)
         await new Promise((r) => setTimeout(r, step.durationMs));
         updateStepStatus(step.id, 'done');
       }
       const design = await designPromise;
       if (cancelled) return;
-      if (design) setDesign(design);
+      if (design) {
+        // Persist the synthesised geometry so HouseGeometryProvider can
+        // render the right footprint for custom addresses.
+        if (design.geometry) {
+          setCustomRoofGeometry(design.geometry);
+        }
+        setDesign(design);
+      }
       setPhase('interactive');
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [phase, profile, selectedHouse, setAgentSteps, updateStepStatus, setPhase, setDesign]);
+  }, [
+    phase,
+    profile,
+    selectedHouse,
+    customAddress,
+    setAgentSteps,
+    updateStepStatus,
+    setPhase,
+    setDesign,
+    setCustomRoofGeometry,
+  ]);
 
   return null;
 }

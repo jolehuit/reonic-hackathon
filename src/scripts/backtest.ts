@@ -41,6 +41,7 @@ function main() {
       evAnnualKm: target.evKm,
       heatingType: HEATING_NAMES[target.heatingType] ?? 'other',
       houseSizeSqm: target.houseSizeSqm,
+      isJumelee: false,
     };
 
     const top10 = kNearest(targetProfile, 10, pool);

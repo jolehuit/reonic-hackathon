@@ -55,6 +55,7 @@ export function CustomAddressForm({
       evAnnualKm: m.hasEv ? m.evAnnualKm : undefined,
       heatingType,
       houseSizeSqm: 140,
+      isJumelee: false,
     };
     useStore.getState().setProfile(profile);
     onGenerate();

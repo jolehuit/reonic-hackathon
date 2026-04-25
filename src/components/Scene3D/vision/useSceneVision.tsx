@@ -11,6 +11,7 @@ import type { HouseId, RoofGeometry } from '@/lib/types';
 import { HOUSE_COORDS } from './houseLatLng';
 import { analyzeBuilding, type AnalysisMode } from './sceneVisionAction';
 import type { BuildingDescription } from './buildingTypes';
+import { DEFAULT_VISION_PARAMS, type VisionParams } from './visionTypes';
 
 export type VisionStatus =
   | { kind: 'idle' }
@@ -28,7 +29,20 @@ export type VisionStatus =
 interface VisionContextValue {
   status: VisionStatus;
   building: BuildingDescription | null;
+  /** Compatibility shim for Panels.tsx (needs storeyCount to rescale Y). */
+  params: VisionParams | null;
   refresh: () => void;
+}
+
+function deriveParams(building: BuildingDescription | null): VisionParams | null {
+  if (!building) return null;
+  const main = building.volumes[0];
+  if (!main) return null;
+  return {
+    ...DEFAULT_VISION_PARAMS,
+    storeyCount: main.storeyCount,
+    wallColor: main.wallColor ?? DEFAULT_VISION_PARAMS.wallColor,
+  };
 }
 
 const Ctx = createContext<VisionContextValue | null>(null);
@@ -37,6 +51,8 @@ interface ProviderProps {
   houseId: HouseId;
   analysis: RoofGeometry | null;
   mode: AnalysisMode;
+  /** Override the hardcoded HOUSE_COORDS — used by custom-address flow. */
+  coordsOverride?: { lat: number; lng: number; address: string } | null;
   /** Auto-trigger on mount and on houseId/mode change. Default true. */
   autoRun?: boolean;
   children: ReactNode;
@@ -46,6 +62,7 @@ export function SceneVisionProvider({
   houseId,
   analysis,
   mode,
+  coordsOverride,
   autoRun = true,
   children,
 }: ProviderProps) {
@@ -57,7 +74,7 @@ export function SceneVisionProvider({
   }, [analysis]);
 
   const run = useCallback(async () => {
-    const coords = HOUSE_COORDS[houseId];
+    const coords = coordsOverride ?? HOUSE_COORDS[houseId];
     if (!coords) return;
 
     const token = Symbol(houseId);
@@ -86,7 +103,7 @@ export function SceneVisionProvider({
     } else {
       setStatus({ kind: 'error', reason: result.reason, message: result.message });
     }
-  }, [houseId, mode]);
+  }, [houseId, mode, coordsOverride]);
 
   useEffect(() => {
     if (!autoRun) return;
@@ -98,14 +115,15 @@ export function SceneVisionProvider({
     };
   }, [autoRun, run]);
 
-  const value = useMemo<VisionContextValue>(
-    () => ({
+  const value = useMemo<VisionContextValue>(() => {
+    const building = status.kind === 'ready' ? status.building : null;
+    return {
       status,
-      building: status.kind === 'ready' ? status.building : null,
+      building,
+      params: deriveParams(building),
       refresh: () => void run(),
-    }),
-    [status, run],
-  );
+    };
+  }, [status, run]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -113,7 +131,7 @@ export function SceneVisionProvider({
 export function useSceneVision(): VisionContextValue {
   const ctx = useContext(Ctx);
   if (!ctx) {
-    return { status: { kind: 'idle' }, building: null, refresh: () => {} };
+    return { status: { kind: 'idle' }, building: null, params: null, refresh: () => {} };
   }
   return ctx;
 }

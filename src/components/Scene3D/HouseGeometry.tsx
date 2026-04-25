@@ -2,6 +2,10 @@
 // Loads public/baked/{houseId}-analysis.json once and exposes the building
 // footprint, wall height, roof faces and obstructions to every Scene3D child.
 //
+// For custom addresses (`houseId === 'custom'`), the geometry comes from the
+// store (set by Orchestrator after /api/design responds with a synthetic
+// RoofGeometry — cf src/lib/customRoof.ts).
+//
 // All energy components (Inverter, Battery, HeatPump, Wallbox) read their
 // position from this context so they always sit flush against the actual
 // house walls — even when Dev D ships new analysis.json files with different
@@ -11,13 +15,14 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import { useStore } from '@/lib/store';
 import type { HouseId, Obstruction, RoofFace, RoofGeometry } from '@/lib/types';
 
 const DEFAULT_SIZE: readonly [number, number, number] = [7, 6, 5];
 const DEFAULT_WALL_HEIGHT = 3;
 
 export interface HouseGeometryValue {
-  houseId: HouseId;
+  houseId: HouseId | 'custom';
   width: number;
   depth: number;
   wallHeight: number;
@@ -38,26 +43,39 @@ export function HouseGeometryProvider({
   houseId,
   children,
 }: {
-  houseId: HouseId;
+  houseId: HouseId | 'custom';
   children: ReactNode;
 }) {
-  const [analysis, setAnalysis] = useState<RoofGeometry | null>(null);
+  const customGeometry = useStore((s) => s.customRoofGeometry);
+  const [bakedAnalysis, setBakedAnalysis] = useState<RoofGeometry | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    if (houseId === 'custom') {
+      // Drop any previous demo-house bake on the next microtask — never
+      // synchronously inside the effect body.
+      queueMicrotask(() => {
+        if (!cancelled) setBakedAnalysis(null);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
     fetch(`/baked/${houseId}-analysis.json`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data: RoofGeometry | null) => {
         if (cancelled) return;
-        setAnalysis(data);
+        setBakedAnalysis(data);
       })
       .catch(() => {
-        if (!cancelled) setAnalysis(null);
+        if (!cancelled) setBakedAnalysis(null);
       });
     return () => {
       cancelled = true;
     };
   }, [houseId]);
+
+  const analysis = houseId === 'custom' ? customGeometry : bakedAnalysis;
 
   const value = useMemo<HouseGeometryValue>(() => {
     const size = analysis?.buildingFootprint?.size ?? DEFAULT_SIZE;

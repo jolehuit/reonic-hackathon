@@ -89,7 +89,7 @@ if (!g.ImageBitmap) {
 import * as THREE from 'three';
 
 interface DemoHouse {
-  id: 'brandenburg' | 'hamburg' | 'ruhr';
+  id: string;
   lat: number;
   lng: number;
   label: string;
