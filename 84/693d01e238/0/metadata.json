@@ -1,0 +1,68 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "84693d01e238",
+  "session_id": "35dc1e3f-cbac-4798-8e65-7974ee233ddc",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-25T22:02:07.529141Z",
+  "branch": "try-claude-review",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "next.config.ts",
+    "package.json",
+    "pnpm-lock.yaml",
+    "public/baked/custom-generated-latest-isolated.png",
+    "public/baked/custom-generated-latest-raw.png",
+    "public/baked/custom-generated-latest-tilted.png",
+    "public/baked/custom-generated-latest.glb",
+    "public/baked/custom-generated-latest.json",
+    "src/app/aerial/page.tsx",
+    "src/app/api/aerial/route.ts",
+    "src/app/api/generate/route.ts",
+    "src/app/oblique/ObliqueCesium.tsx",
+    "src/app/oblique/page.tsx",
+    "src/components/GeneratedHouseViewer/GeneratedHouseViewer.tsx",
+    "src/components/GeneratedHouseViewer/index.tsx",
+    "src/lib/house-generator.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-7[1m]",
+  "turn_id": "2d2ffecc1b91",
+  "token_usage": {
+    "input_tokens": 70,
+    "cache_creation_tokens": 73637,
+    "cache_read_tokens": 3783699,
+    "output_tokens": 19917,
+    "api_call_count": 60
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-25T22:02:07.520947Z",
+    "agent_lines": 1599,
+    "agent_removed": 1,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1599,
+    "total_lines_changed": 1600,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1599,
+      "agent_lines_removed": 1
+    }
+  ]
+}

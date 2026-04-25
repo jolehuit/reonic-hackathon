@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "84693d01e238",
+  "strategy": "manual-commit",
+  "branch": "try-claude-review",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "next.config.ts",
+    "package.json",
+    "pnpm-lock.yaml",
+    "public/baked/custom-generated-latest-isolated.png",
+    "public/baked/custom-generated-latest-raw.png",
+    "public/baked/custom-generated-latest-tilted.png",
+    "public/baked/custom-generated-latest.glb",
+    "public/baked/custom-generated-latest.json",
+    "src/app/aerial/page.tsx",
+    "src/app/api/aerial/route.ts",
+    "src/app/api/generate/route.ts",
+    "src/app/oblique/ObliqueCesium.tsx",
+    "src/app/oblique/page.tsx",
+    "src/components/GeneratedHouseViewer/GeneratedHouseViewer.tsx",
+    "src/components/GeneratedHouseViewer/index.tsx",
+    "src/lib/house-generator.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/84/693d01e238/0/metadata.json",
+      "transcript": "/84/693d01e238/0/full.jsonl",
+      "content_hash": "/84/693d01e238/0/content_hash.txt",
+      "prompt": "/84/693d01e238/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 70,
+    "cache_creation_tokens": 73637,
+    "cache_read_tokens": 3783699,
+    "output_tokens": 19917,
+    "api_call_count": 60
+  }
+}
