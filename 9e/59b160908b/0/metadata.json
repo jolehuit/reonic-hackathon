@@ -1,0 +1,53 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "9e59b160908b",
+  "session_id": "99d37cd6-f62a-47b3-b063-eab7a914c156",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-25T18:21:15.488555Z",
+  "branch": "dev-C",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/app/design/[houseId]/page.tsx",
+    "src/components/AutoFillForm/AddressSearch.tsx",
+    "src/components/AutoFillForm/CustomAddressForm.tsx"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-7[1m]",
+  "turn_id": "06aeee0b591a",
+  "checkpoint_transcript_start": 1692,
+  "transcript_lines_at_start": 1692,
+  "token_usage": {
+    "input_tokens": 75,
+    "cache_creation_tokens": 37291,
+    "cache_read_tokens": 4152345,
+    "output_tokens": 17292,
+    "api_call_count": 30
+  },
+  "session_metrics": {
+    "turn_count": 53
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-25T18:21:14.803692Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 37,
+    "human_modified": 6,
+    "human_removed": 0,
+    "total_committed": 37,
+    "total_lines_changed": 43,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 30,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".claude/settings.local.json": 30
+      }
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+comment j'active ça : {
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+
+---
+
+tu peux le faire toi meme ?
+
+---
+
+<ide_opened_file>The user opened the file /Users/lionelleguier/reonic-hackathon/reonic-hackathon/.claude/settings.local.json in the IDE. This may or may not be related to the current task.</ide_opened_file>
+redemarre
+
+---
+
+active le et vérifie le code sur la branche dev c pour vérifier que tout est bon
+
+---
+
+<task-notification>
+<task-id>a92dde29ae8e12274</task-id>
+<tool-use-id>toolu_012cRzRVN7ovNrBPcAMRwPRH</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-lionelleguier-reonic-hackathon-reonic-hackathon/99d37cd6-f62a-47b3-b063-eab7a914c156/tasks/a92dde29ae8e12274.output</output-file>
+<status>completed</status>
+<summary>Agent "Build &amp; lint validator" completed</summary>
+<result>The build command is being explicitly denied by the sandbox (likely because Next.js build writes to `.next/`, which the sandbox treats as out-of-scope). I cannot run step 3, and there's no `SendMessage` tool available in this environment. Reporting findings:
+
+## Build validator report — branch dev-C
+
+**1. `npx tsc --noEmit` — PASS**
+No output, exit clean. TypeScript strict typecheck passes.
+
+**2. `pnpm lint` — PASS (with warnings)**
+`0 errors, 17 warnings` — all `@typescript-eslint/no-unused-vars`. Notable hot spots:
+- `src/app/api/design/route.ts`: `predictBomViaPioneer`, `DesignResult`, `body` unused
+- `src/app/api/export/route.ts`: `body` unused
+- `src/components/Scene3D/Panels.tsx`: `useRef` unused
+- `src/lib/pioneer.ts`: `PIONEER_API_KEY` unused (suggests Pioneer integration is stubbed)
+- `src/lib/sizing.ts`: `profile`, `roofMaxKwp`, `k` unused
+- `src/scripts/place-panels.ts`: 7 module-geometry constants and helper params unused (placement logic likely incomplete)
+- `src/scripts/fetch-3d-tiles.ts`: `fs` unused
+
+**3. `pnpm build` — BLOCKED, not run**
+The sandbox denied `pnpm build`, `npx next build`, and a Monitor-wrapped variant. No build result obtained. Recommend re-running with elevated permissions.
+
+**Messaging note:** No `SendMessage` tool is exposed in this environment (only Monitor / TaskStop are available as deferred tools). Cannot deliver to team-lead from here, nor mark idle — handoff is via this report. Branch left untouched; no files modified.</result>
+<usage><total_tokens>22416</total_tokens><tool_uses>19</tool_uses><duration_ms>56358</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>ad9884cd32d4ff408</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-lionelleguier-reonic-hackathon-reonic-hackathon/99d37cd6-f62a-47b3-b063-eab7a914c156/tasks/ad9884cd32d4ff408.output</output-file>
+<status>completed</status>
+<summary>Agent "Form &amp; dashboard logic auditor" completed</summary>
+<result>There's no SendMessage tool available. I'll provide my findings directly as my final response (per the instructions about parent agents reading text output, not files).
+
+I have read the entire 2946-line file. Here are the findings.
+
+---
+
+## Audit findings — `src/components/AutoFillForm/CustomAddressForm.tsx`
+
+### 1. Schema-form coherence (HouseDashboardIllustration call at L2153–2158)
+
+**Issue 1.1 — `hasSolar` flag double-counts existing+new solar.** L2154: `hasSolar={!!m.selectedPackage || m.hasSolar === true}`. If user said "Yes I already have solar" AND selected a new PV package, the illustration shows only one set of panels — the schema can't distinguish "existing-only" from "new-only" from "both." Why it matters: tag "Solar system" appears even when user hasn't bought new panels but already owns one — could be intentional, but it does conflate two states. Suggested fix: split into `hasExistingSolar` and `hasNewPv` props and render distinct visuals.
+
+**Issue 1.2 — `hasCharger` similarly conflates existing + new (L2157).** `!!m.selectedCharger || m.hasEvCharger === true`. Same conflation issue.
+
+**Issue 1.3 — `hasEv` ignores selectedPackage path.** L2156: `hasEv={m.hasEv === true}`. The `EvChargerSlotCard` at L988 says `m.hasEv ? evCarLabel : 'future EV'` — i.e. the system supports buying a charger for a *future* EV. But the illustration only shows the EV when `hasEv === true`. Coherent if the dashboard intentionally drops it, but the offer copy implies otherwise.
+
+### 2. Dashboard KPI math (L2083–2143)
+
+**Issue 2.1 — `solarDirectToHome` formula is internally inconsistent (L2124).** Without battery: `consumptionKwh * (selfSufficiency/100)`. With battery: `consumptionKwh * 0.35`. Then `solarToBattery = consumptionKwh*(selfSufficiency/100) - solarDirectToHome`. With battery this is `consumptionKwh*0.63 - consumptionKwh*0.35 = consumptionKwh*0.28` — fine, but if `selfSufficiency` got bumped down by `evGridPenalty` to e.g. 55% and `hasBattery=true`, the math still uses `0.35` for direct + `(0.55-0.35)*consumption` = 20% to battery, which still works but the 0.35 magic number is decoupled from selfSufficiency.
+
+**Issue 2.2 — Sankey may show solar &gt; yield (no clamp).** `solarToGrid = max(0, yieldKwh - solarDirectToHome - solarToBattery - solarToEV)`. But `solarDirectToHome + solarToBattery` could exceed `yieldKwh` for high consumption / low yield combos (e.g. consumption 8000 + selfSuff 70% = 5600 direct/battery, but starter yield is 5500). Then `solarToGrid` clamps to 0 but the *Solar* node height in the Sankey = `solarTotal = solarDirectToHome + solarToBattery + solarToEV + solarToGrid` ≠ `yieldKwh` shown in the GlanceCell — visual lies. Suggested fix: cap `solarDirectToHome + solarToBattery + solarToEV` at `yieldKwh` before deriving `solarToGrid`.
+
+**Issue 2.3 — `evCost`/`evKwh` reads `hasEv &amp;&amp; evAnnualKm` (L2091).** OK, but `submitProfile` (L55) treats `evAnnualKm` as undefined when `hasEv` false; if user toggles `hasEv` from yes→no after entering km, the km value persists in store (see Issue 5.1) — `evKwh` still reads 0 here only because of the `hasEv` guard, so safe. Note the EV section save check (L481) requires `evAnnualKm` when `hasEv=true`, so `evKwh` will be ≥0.
+
+**Issue 2.4 — `unitPrice = electricityPrice / 100` (L2089) assumes ct/kWh always.** L23 sets `GBP: 'p/kWh'`, also a /100 unit, OK. But if a user enters `0` price (input min=0), `costAfter` becomes `0`, `yieldOver20` = 0, `breakEvenYears` still shows base years — KPI grid claims "X years to break even" with zero savings. Suggested fix: gate KPIs on `electricityPrice &gt; 0`.
+
+**Issue 2.5 — `co2Tons` rounded to 0.1 ton (L2117), then `flights = round(co2Tons*3.7)` (L2119).** For tiny consumption, `co2Tons` could be 0 → `flights=0` → `Math.max(1, flights)` at L2244 forces at least one plane lit even when CO2 is zero. Misleading.
+
+**Issue 2.6 — Division by zero protection on `ownConsumption` (L2137) — good.** No issues.
+
+**Issue 2.7 — `evGridPenalty` only applied when `m.hasEv &amp;&amp; !hasCharger` (L2108).** A user with no EV but charger selected gets neither bonus nor penalty — fine. But L2107 `chargerBoost = m.hasEv &amp;&amp; hasCharger ? 7 : 0` — boost only when EV present. Coherent.
+
+### 3. Sankey (L2438–2629)
+
+**Issue 3.1 — Battery absent + EV absent: works.** `batteryTotal=0`, `evTotal=0`, only Solar→Demand and Grid→Demand flows render. OK.
+
+**Issue 3.2 — Battery absent: `solarToBattery=0` (L2127) → `batH=0` → mid-column shows only Grid. The `flowSolarToBat` band at L2502 has `h=batH=0` so SankeyFlow returns null (L2648). OK.
+
+**Issue 3.3 — EV absent: `evTotal=0`, `evH=0`. The conditional render of EV node (L2619) gates on `hasEv &amp;&amp; evTotal&gt;0`. But `solarToEV` is forced to 0 by L2130 when `!m.hasEv`. OK.
+
+**Issue 3.4 — `solarH` may become 0 when no PV picked.** Component is only rendered when `selectedPackage` truthy (gated upstream at L46), so `yieldKwh` always ≥5500. Safe.
+
+**Issue 3.5 — Mid column always at xMid=360 even when only Grid shown.** Visual centering is symmetric (cosmetic only). Fine.
+
+**Issue 3.6 — `inDemFromBat` band advances `demOff += batH` unconditionally (L2511).** When `hasBattery=false`, `batH=0`, so no-op. But `demandTotal` (L2461) uses `(hasBattery ? solarToBattery : 0)` — and `solarToBattery=0` already when `hasBattery=false`, so the conditional is redundant but harmless.
+
+### 4. EnquiryModal (L1806–2008)
+
+**Issue 4.1 — `canSend` (L1830) does NOT validate email format or phone format.** Empty-trim only. A user typing `"x"` in email passes. Suggested fix: regex-validate email.
+
+**Issue 4.2 — `parseFormattedAddress` (L1779).** EU "Lindenstraße 12" → `trailing` regex `/^(.+?)\s+(\d+\s?[a-zA-Z]?)$/` matches → streetName="Lindenstraße", houseNum="12". Good. US "12 Main St" → `leading` regex matches first... wait, `trailing` is tested first. "12 Main St" — `trailing` requires last token to be a digit-leading street number, `St` is not, so trailing fails, `leading` matches → houseNum="12", streetName="Main St". OK. But "12B Main St" → trailing fails; leading regex `/^(\d+\s?[a-zA-Z]?)\s+(.+)$/` matches `12B` then `Main St`. OK. **However** "221B Baker Street" — trailing tests last token `Street`, no digit → fails; leading matches `221B`, `Baker Street`. OK. **Edge case**: "Main Street" alone (no number) — neither matches, so `streetName` stays as full street, `houseNum=''`. The Send button then disables because `houseNum.trim()` is empty — user must manually fix. Could be intentional but no UX hint shown.
+
+**Issue 4.3 — Country-strip heuristic at L1786.** `if (parts.length &gt; 2 &amp;&amp; last &amp;&amp; !/\d/.test(last)) parts.pop();` — strips trailing country only if no digit in it. "New York 10001, USA" → parts = ["...", "10001", "USA"], country dropped. OK. But "12345 Berlin" as last part would not be stripped (has digits). Acceptable.
+
+**Issue 4.4 — `salutation` and `reachability` fields exist but aren't required, not in `canSend`.** Coherent with the "*" markers.
+
+### 5. State transitions
+
+**Issue 5.1 — Toggle `hasEv` true→false retains stale `evModel` and `evAnnualKm` in store.** L482 EvSection's saveDisabled guards entry, but once saved with hasEv=true and then user re-edits and selects "No", `evModel` and `evAnnualKm` are not cleared. CollapsedSummary at L460 shows "No" correctly because of the conditional, but the dashboard `evKwh` at L2091 is gated by `m.hasEv` — safe. **However** if user later flips back to Yes, stale values reappear — subtle UX bug. Suggested fix: clear `evModel`/`evAnnualKm` in `update('hasEv', false)`.
+
+**Issue 5.2 — Toggle `hasSolar` true→false does not clear `selectedPackage`.** Once a PV package is selected, the OurOfferSection appears (L113 gated by `allSaved`, not hasSolar). Then if user re-edits the Solar section and selects "No," `selectedPackage` persists, dashboard still renders, illustration still shows panels (L2154 `!!m.selectedPackage` evaluates true). Schema lies. Suggested fix: clearing `selectedPackage` (and battery/charger) when `hasSolar` set false, or warn.
+
+**Issue 5.3 — `selectedPackage` cleared via "Remove" (L969) but the Solar question's `hasSolar=true` answer remains.** Inverse of 5.2 — if user answered "Yes I already have solar," removed PV, OurOfferSection still shows because `allSaved=true`. The dashboard disappears (L46 `showDashboard = !!m.selectedPackage`). Final CTA (L147) flips back to "Generate design." Coherent.
+
+**Issue 5.4 — `hasEvCharger=true` (existing charger) doesn't auto-select `selectedCharger`.** Two independent flags; user can pick a new charger separately. Illustration shows only one wallbox (L2813) regardless. Same conflation as 1.2.
+
+**Issue 5.5 — `submitProfile` (L48) hard-codes `houseSizeSqm: 140` and only maps `heatingFamily` 'renewable'→'heatpump' / else→'gas'.** If `heatingFamily` is null (skipped), maps to 'gas' silently. Suggested fix: pass `null` or `'unknown'` explicitly.
+
+### Summary
+
+Most logic is internally consistent but the codebase has structural ambiguity around "existing vs newly-offered" hardware (solar/charger). The biggest concrete bugs are: Sankey can mis-scale when consumption*self-suff &gt; yield (Issue 2.2), state stale-ness on `hasEv`/`hasSolar` toggles (5.1, 5.2), `costAfter`/`yieldOver20` collapse silently with zero electricity price (2.4), and `EnquiryModal` accepts malformed emails (4.1).
+
+File reference: `/Users/lionelleguier/reonic-hackathon/reonic-hackathon/src/components/AutoFillForm/CustomAddressForm.tsx`. No files modified.</result>
+<usage><total_tokens>71262</total_tokens><tool_uses>9</tool_uses><duration_ms>101358</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>ac8d7f6f288cb2a2f</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-lionelleguier-reonic-hackathon-reonic-hackathon/99d37cd6-f62a-47b3-b063-eab7a914c156/tasks/ac8d7f6f288cb2a2f.output</output-file>
+<status>completed</status>
+<summary>Agent "Landing &amp; navigation auditor" completed</summary>
+<result>No `SendMessage` tool exists in this environment. I'll deliver the audit report directly as my final message.
+
+## Nav Audit — dev-C Branch
+
+**1. "Start now" modal flow** — `/Users/lionelleguier/reonic-hackathon/reonic-hackathon/src/app/page.tsx:208-240`
+- Modal does NOT close before `router.push` in `AddressSearch.handleStart` (`AddressSearch.tsx:172-183`). `addressOpen` state stays `true`. Since the entire page unmounts on navigation to `/design/custom`, this is harmless in practice — `&lt;AnimatePresence&gt;` is destroyed with the page. Minor: if user uses browser-back to landing, modal will reappear open. **Suggested fix**: call an `onClose` prop / `setAddressOpen(false)` in `handleStart` before `router.push` for cleanliness.
+
+**2. AddressSearch lifecycle** — `/Users/lionelleguier/reonic-hackathon/reonic-hackathon/src/components/AutoFillForm/AddressSearch.tsx:112-170`
+- Effect deps are `[]` but it reads `setCustomAddress`/`selectHouse`/`router` only via `handleStart` (outside effect), so no stale closure inside the listener. The `gmp-select` listener captures `setPicked` (stable from `useState`), fine.
+- React 19 strict-mode double-mount: the cleanup at line 166-169 sets `cancelled=true` and removes `mounted` from DOM. However there's a race — on the first mount, the async IIFE may not have set `mounted` yet when cleanup fires; the second mount creates a new element. The first invocation's `await` then resolves, sees `cancelled=true`, throws, and the catch sets `error`. **This will cause the error banner to appear in dev strict mode** even when load succeeds. file:line `AddressSearch.tsx:120-126,160-163`. **Suggested fix**: in catch, ignore errors when `cancelled` is true (e.g. `if (cancelled) return;`).
+- Also `window.__reonicGoogleMapsLoading = Promise.resolve()` at line 94 sets the flag before bootstrap completes — but `installGoogleBootstrap` is synchronous and idempotent, so this is OK.
+
+**3. Demo house seeding** — `/Users/lionelleguier/reonic-hackathon/reonic-hackathon/src/components/AutoFillForm/ProfileForm.tsx:55-81`
+- (a) `seededFor.current === selectedHouse` guard correctly prevents re-seed; resets to `null` when leaving demo houses. Clean.
+- (b) Order: ProfileForm renders CustomAddressForm in same render pass; the seed effect runs *after* CustomAddressForm's first paint, so user briefly sees default values (3500 kWh, 3 inhabitants, all `saved=false`) for one frame before the effect commits. `progressPct` will flicker 0% → 100%. **Suggested fix**: use `useLayoutEffect` or seed during render via `useStore.getState()` synchronously before returning JSX.
+- (c) Saves all 5 sections: `energy`, `solar`, `heating`, `ev`, `charger` — matches `ManualInputs.saved` keys in store.ts:140-146. Correct.
+- (d) heatingFamily mapping: `heatpump → renewable`, others → `conventional`. Demo houses use `gas` and `oil` only (both → conventional). Correct, but lossy — `district`/`pellet`/etc. would also collapse to conventional; non-issue for current demos.
+- Bug: `update('hasSolar', false)` always sets false even for demo houses with PV; `selectedPackage` is never seeded so `showDashboard` in CustomAddressForm stays false until user picks a package. May be intentional (force user to pick package).
+
+**4. Phase handling** — `ProfileForm.tsx:83-90` / `CustomAddressForm.tsx:48-61`
+- `submitProfile` calls `setProfile` then `onGenerate()` → `setPhase('agent-running')`. ProfileForm's short-circuit returns null on `agent-running`. Verified hide. Pipeline takeover OK.
+- Concern: `CustomAddressForm` is `fixed inset-0 z-40` (line 64). When ProfileForm returns null, the form unmounts — good. But in `design/[houseId]/page.tsx:68-72`, ProfileForm is inside a `pointer-events-none` overlay parent — the inner `pointer-events-auto` wrapper is sized 0×0 around `&lt;ProfileForm&gt;` which itself renders a `fixed inset-0` element. Works because fixed escapes parent flow, but the wrapper's `pointer-events-auto` is only on the empty 0×0 hitbox while CustomAddressForm relies on its own fixed positioning to receive clicks — confirm this works (it does, since `fixed` elements get pointer events from the viewport, not parent).
+
+**5. Custom address handoff** — `/Users/lionelleguier/reonic-hackathon/reonic-hackathon/src/lib/store.ts:149-203` (no `persist` middleware)
+- Zustand store has NO persistence. In-memory state survives client-side `router.push` (same React tree) — `customAddress` set at `AddressSearch.tsx:174` survives navigation to `/design/custom`. Works.
+- **Critical issue**: `design/[houseId]/page.tsx:32-34` calls `selectHouse(houseId)` on mount, which in store.ts:154 ALSO sets `phase: 'house-selected'`. This resets phase every time the design page mounts — fine on initial nav. But it overwrites any prior phase if the page remounts.
+- **Critical**: page never reads `searchParams.address`. On full reload of `/design/custom?address=...`, the store is reinitialized to `customAddress: null` and `address` falls back to `''` (`ProfileForm.tsx:94-96`), so CustomAddressForm shows "Address unavailable". **Suggested fix**: in `design/[houseId]/page.tsx`, read `searchParams` (Next 15 async API) and call `setCustomAddress({formatted, lat, lng, placeId})` when `houseId === 'custom'` and store is empty — query params already carry the data, just hydrate the store from them. AGENTS.md flags Next.js breaking changes; consult `node_modules/next/dist/docs/` for the new searchParams Promise API on page components.
+
+**Files referenced**:
+- `/Users/lionelleguier/reonic-hackathon/reonic-hackathon/src/app/page.tsx`
+- `/Users/lionelleguier/reonic-hackathon/reonic-hackathon/src/components/AutoFillForm/AddressSearch.tsx`
+- `/Users/lionelleguier/reonic-hackathon/reonic-hackathon/src/components/AutoFillForm/ProfileForm.tsx`
+- `/Users/lionelleguier/reonic-hackathon/reonic-hackathon/src/components/AutoFillForm/CustomAddressForm.tsx`
+- `/Users/lionelleguier/reonic-hackathon/reonic-hackathon/src/app/design/[houseId]/page.tsx`
+- `/Users/lionelleguier/reonic-hackathon/reonic-hackathon/src/lib/store.ts`
+
+**Top 2 to fix before demo**: (a) reload-resilience for `/design/custom` (read searchParams → hydrate store), (b) strict-mode race in `AddressSearch` cleanup that triggers spurious error banner.
+
+Note: no `SendMessage` tool was available in this environment, so the report is delivered here.</result>
+<usage><total_tokens>40728</total_tokens><tool_uses>16</tool_uses><duration_ms>95346</duration_ms></usage>
+</task-notification>
+
+---
+
+oui
