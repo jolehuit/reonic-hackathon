@@ -204,6 +204,24 @@ const VARIANTS: Variant[] = [
       VARIANT_PAVILION_MIN_POINTS: '20',
     },
   },
+  {
+    name: 'shade-tolerant',
+    suffix: '-Q',
+    description: 'permissive shading threshold (60%) — for tree-heavy suburbs where the mesh includes nearby trees',
+    env: {
+      OUTPUT_SUFFIX: '-Q',
+      VARIANT_MAX_SHADED_FRACTION: '0.60',
+    },
+  },
+  {
+    name: 'no-shade',
+    suffix: '-R',
+    description: 'shading disabled — for tree-heavy suburbs where photogrammetry vegetation triggers false-positive rejections',
+    env: {
+      OUTPUT_SUFFIX: '-R',
+      VARIANT_MAX_SHADED_FRACTION: '1.0',
+    },
+  },
 ];
 
 interface ModulePos {
@@ -351,166 +369,113 @@ async function main() {
     );
   }
 
-  // ---- Consensus voting on panel positions across variants ----
+  // ---- Per-house variant selection ----
   //
-  // Single-best-variant picking is brittle: D for Ritterstraße and F for
-  // Address 4 give the right panel count but lose to the score function.
-  // Consensus voting fixes this by trusting positions that MULTIPLE variants
-  // independently agree on. A position kept by N≥3 variants is much more
-  // likely to be a real panel slot than one only one variant ever proposes.
-  const PROX_M = 0.7; // panels closer than this in XZ are "the same slot"
-  // MIN_VOTES floor of 2 keeps slots even when only a couple of variants
-  // independently propose them — important for Reihenhäuser where the eaves
-  // are caught by only the buffer variants. The dynamic threshold below
-  // ratchets it up when the resulting coverage is unphysically high.
-  const MIN_VOTES = 2;
+  // Replaces the old consensus + ratchet + rescue stack with a simpler,
+  // more interpretable rule: pick the SINGLE variant best-suited to THIS
+  // house. Steps:
+  //   1. filter to "plausible" variants — own coverage ∈ [25 %, 65 %] and
+  //      panel count > 0. Drops variants that under-detect (over-shaded
+  //      mesh) or over-stack (multi-level phantom panels).
+  //   2. if -L's auto-multi-level filter fired, prefer -L (multi-pavilion
+  //      override — same as the old multi-pavilion rescue).
+  //   3. otherwise, pick the MEDIAN-panel-count variant among plausible.
+  //      Median is robust to outliers (a single tree-tolerant -R giving
+  //      80 panels won't shift the answer if 5 other variants give 40-50).
+  //   4. if no variant is plausible, fall back to the highest-coverage one
+  //      whose own coverage is ≤ 65 % (avoids over-stacked outputs).
 
-  // Each cluster: array of {panel, variantSuffix}
-  type Cluster = { x: number; y: number; z: number; voters: Set<string>; panels: ModulePos[] };
-  const clusters: Cluster[] = [];
+  const PLAUSIBLE_COV_MIN = 0.25;
+  const PLAUSIBLE_COV_MAX = 0.65;
+  const plausible = scored.filter(
+    (s) => s.panelCount > 0 && s.coverage >= PLAUSIBLE_COV_MIN && s.coverage <= PLAUSIBLE_COV_MAX,
+  );
 
-  for (const s of scored) {
-    const panels = s.data.modulePositions ?? [];
-    for (const p of panels) {
-      let assigned = false;
-      for (const c of clusters) {
-        if (Math.hypot(p.x - c.x, p.z - c.z) < PROX_M && Math.abs(p.y - c.y) < 1.5) {
-          c.voters.add(s.variant.suffix);
-          c.panels.push(p);
-          // Update cluster centroid (running mean)
-          const n = c.panels.length;
-          c.x = (c.x * (n - 1) + p.x) / n;
-          c.y = (c.y * (n - 1) + p.y) / n;
-          c.z = (c.z * (n - 1) + p.z) / n;
-          assigned = true;
-          break;
-        }
-      }
-      if (!assigned) {
-        clusters.push({ x: p.x, y: p.y, z: p.z, voters: new Set([s.variant.suffix]), panels: [p] });
-      }
-    }
-  }
+  let winners: ModulePos[] = [];
+  let pickedReason = '';
+  let pickedSuffix = '';
 
-  // Pre-compute the median roof area across variants — used as the reference
-  // surface for the dynamic threshold below. Median is robust to outliers
-  // (variant F sometimes catches neighbours and reports inflated roofs).
-  const sortedAreas = scored.map((s) => s.faceArea).sort((a, b) => a - b);
-  const medianRoof = sortedAreas[Math.floor(sortedAreas.length / 2)];
-
-  // Dynamic threshold: start at MIN_VOTES and ratchet up until the resulting
-  // panel count gives a physically reasonable coverage of the median roof
-  // area. For "honest" houses the floor threshold already produces ≤ 55 %
-  // coverage; for over-stacked multi-level buildings the threshold climbs
-  // until the consensus thins out the redundant stacked panels.
-  const COVERAGE_CAP = 0.55;
-  function panelsAtThreshold(threshold: number): ModulePos[] {
-    const out: ModulePos[] = [];
-    for (const c of clusters) {
-      if (c.voters.size < threshold) continue;
-      let best = c.panels[0];
-      let bestDist = Infinity;
-      for (const p of c.panels) {
-        const d = Math.hypot(p.x - c.x, p.z - c.z);
-        if (d < bestDist) { bestDist = d; best = p; }
-      }
-      out.push({ ...best, x: c.x, y: c.y, z: c.z });
-    }
-    return out;
-  }
-
-  let threshold = MIN_VOTES;
-  let winners = panelsAtThreshold(threshold);
-  for (
-    ;
-    threshold <= scored.length && (winners.length * PANEL_AREA) / Math.max(medianRoof, 1) > COVERAGE_CAP;
-    threshold++
-  ) {
-    winners = panelsAtThreshold(threshold + 1);
-    if (winners.length === 0) break;
-  }
-
-  console.log('\n=== Consensus voting ===');
-  console.log(`  unique panel slots across variants: ${clusters.length}`);
-  console.log(`  vote distribution:`);
-  const histogram = new Map<number, number>();
-  for (const c of clusters) histogram.set(c.voters.size, (histogram.get(c.voters.size) ?? 0) + 1);
-  for (const v of [...histogram.keys()].sort((a, b) => a - b)) {
-    console.log(`    ${v.toString().padStart(2)} votes: ${histogram.get(v)} slots`);
-  }
-  console.log(`  median roof area across variants: ${medianRoof.toFixed(0)} m²`);
-  console.log(`  dynamic threshold settled at ≥${threshold} votes → ${winners.length} consensus positions (coverage ${((winners.length * PANEL_AREA) / Math.max(medianRoof, 1) * 100).toFixed(0)}% of median)`);
-
-  // ---- Rescue path: under-detection on Reihenhäuser ----
-  //
-  // For row houses, OSM polygon is tight to the wall and most variants miss
-  // the eaves, so consensus drops them too. If our consensus coverage versus
-  // the LARGEST variant's roof estimate is implausibly low (< 25 %), prefer
-  // variant -O (MS Footprints) when available — it uses a more accurate
-  // building outline. Otherwise fall back to -F (max-eaves OSM expansion).
-  const maxRoof = Math.max(...scored.map((s) => s.faceArea));
-  const consensusCovOnMax = (winners.length * PANEL_AREA) / Math.max(maxRoof, 1);
-  if (consensusCovOnMax < 0.25) {
-    // First-priority: variant -O (Microsoft Footprints) — more accurate polygon
-    // than OSM in tight Reihenhaus configurations.
-    const oVariant = scored.find((s) => s.variant.suffix === '-O');
-    if (oVariant && oVariant.panelCount > winners.length * 1.5 && oVariant.coverage <= 0.65) {
-      console.log(
-        `  ⚠ consensus coverage on max roof (${maxRoof.toFixed(0)} m²) is only ${(consensusCovOnMax * 100).toFixed(0)}% — falling back to variant -O (MS Footprints) with ${oVariant.panelCount} panels at ${(oVariant.coverage * 100).toFixed(0)}% own-coverage`,
-      );
-      winners = (oVariant.data.modulePositions ?? []).map((p) => ({ ...p }));
-    } else {
-      const candidate = scored
-        .slice()
-        .sort((a, b) => b.panelCount - a.panelCount)
-        .find((s) => s.coverage <= 0.65 && s.panelCount > winners.length * 1.5);
-      if (candidate) {
-        console.log(
-          `  ⚠ consensus coverage on max roof (${maxRoof.toFixed(0)} m²) is only ${(consensusCovOnMax * 100).toFixed(0)}% — falling back to variant ${candidate.variant.suffix} (${candidate.variant.name}) with ${candidate.panelCount} panels at ${(candidate.coverage * 100).toFixed(0)}% own-coverage`,
-        );
-        winners = (candidate.data.modulePositions ?? []).map((p) => ({ ...p }));
-      }
-    }
-  }
-
-  // ---- Rescue path: multi-pavilion / campus over-detection ----
-  //
-  // Variant -L (multi-level-auto) only triggers its Y-band filter when the
-  // building's P10..P90 Y range is large (pavilion / multi-pan stack). When
-  // it triggers, its panel count drops well below the other variants' (which
-  // continue to over-place across stacked levels). If L's count is < 70 % of
-  // the consensus and < 70 % of the average non-L panel count, the building
-  // is multi-level → trust L over the others.
+  // Multi-pavilion override: if -L's auto-multi-level filter actually fired,
+  // it's the only variant that handles stacked roof topologies correctly.
   const lVariant = scored.find((s) => s.variant.suffix === '-L');
-  // Only trust -L when its auto-multi-level filter ACTUALLY fired (Y-range
-  // exceeded the trigger). Without this guard, L's identical-to-A behaviour
-  // on residential houses can falsely trip the rescue.
   if (lVariant && lVariant.panelCount > 0 && lVariant.data._autoMultiLevel?.fired) {
-    console.log(
-      `  ⚠ variant -L's auto-multi-level filter fired (P10..P90 = ${lVariant.data._autoMultiLevel.p80Range?.toFixed(1)} m > ${lVariant.data._autoMultiLevel.trigger} m) — pavilion / multi-pan building detected, trusting -L (${lVariant.panelCount}) over consensus (${winners.length})`,
-    );
     winners = (lVariant.data.modulePositions ?? []).map((p) => ({ ...p }));
+    pickedSuffix = '-L';
+    pickedReason = `auto-multi-level fired (P10..P90 = ${lVariant.data._autoMultiLevel.p80Range?.toFixed(1)} m) — pavilion building override`;
+  } else if (plausible.length > 0) {
+    // Median by panel count — robust to outliers like -R no-shade.
+    const sorted = plausible.slice().sort((a, b) => a.panelCount - b.panelCount);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    let pick = median;
+
+    // Reihenhaus override: only if the median variant looks STARVED relative to
+    // the largest variant's roof estimate (sign that OSM polygon is too tight).
+    // Threshold: median panel area covers less than 20 % of max-roof estimate.
+    // 20 % chosen so it triggers on Reihenhäuser (Address 4 = 19 %) but not on
+    // residential houses where OSM is fine (Ritterstraße = 23 %).
+    const maxRoof = Math.max(...scored.map((s) => s.faceArea));
+    const medianCovOnMaxRoof = (median.panelCount * PANEL_AREA) / Math.max(maxRoof, 1);
+    if (medianCovOnMaxRoof < 0.20) {
+      const oVariant = plausible.find((s) => s.variant.suffix === '-O');
+      if (oVariant && oVariant.panelCount > median.panelCount * 1.3) {
+        pick = oVariant;
+        pickedReason = `median starved (${(medianCovOnMaxRoof * 100).toFixed(0)}% of max roof ${maxRoof.toFixed(0)} m²) — switching to MS Footprints (-O) ${oVariant.panelCount} panels`;
+      }
+    }
+
+    if (pick === median) {
+      pickedReason = `median of ${plausible.length} plausible variants (cov ${(median.coverage * 100).toFixed(0)}%)`;
+    }
+
+    winners = (pick.data.modulePositions ?? []).map((p) => ({ ...p }));
+    pickedSuffix = pick.variant.suffix;
+  } else {
+    // No plausible variants — pick the variant with the most panels among
+    // those with coverage ≤ 65 %. This is the under-detected case (e.g.
+    // over-shaded mesh where every variant rejects most candidates).
+    const candidate = scored
+      .slice()
+      .sort((a, b) => b.panelCount - a.panelCount)
+      .find((s) => s.coverage <= 0.65 && s.panelCount > 0);
+    if (candidate) {
+      winners = (candidate.data.modulePositions ?? []).map((p) => ({ ...p }));
+      pickedSuffix = candidate.variant.suffix;
+      pickedReason = `no plausible variant — fallback to highest-panel under-detected variant (${candidate.panelCount} panels, ${(candidate.coverage * 100).toFixed(0)}%)`;
+    } else {
+      // Nothing usable. Use the score-leader as last resort.
+      const fallback = scored[0];
+      winners = (fallback.data.modulePositions ?? []).map((p) => ({ ...p }));
+      pickedSuffix = fallback.variant.suffix;
+      pickedReason = `no plausible / fallback to score leader (${fallback.panelCount} panels)`;
+    }
   }
 
-  // Build the consensus analysis.json. Use the highest-scoring variant's
-  // faces / footprint / obstructions as the geometric base — those don't
-  // change much across variants — and substitute our consensus panels.
-  const base = scored[0].data;
+  console.log('\n=== Per-house variant selection ===');
+  console.log(`  plausible variants (coverage ∈ [${(PLAUSIBLE_COV_MIN * 100).toFixed(0)}%, ${(PLAUSIBLE_COV_MAX * 100).toFixed(0)}%]): ${plausible.length}/${scored.length}`);
+  for (const p of plausible) {
+    console.log(`    ${p.variant.suffix.padEnd(3)} ${p.variant.name.padEnd(20)} ${p.panelCount.toString().padStart(3)} panels @ ${(p.coverage * 100).toFixed(0)}% cov`);
+  }
+  console.log(`  → picked ${pickedSuffix}: ${pickedReason}`);
+
+  // Build the final analysis.json. Use the picked variant's geometric base
+  // (faces / footprint / obstructions) and its panel positions.
+  const pickedScored = scored.find((s) => s.variant.suffix === pickedSuffix) ?? scored[0];
+  const base = pickedScored.data;
   const consensus = {
     ...base,
     modulePositions: winners,
-    _consensus: {
-      method: 'multi-variant voting',
+    _selection: {
+      method: 'per-house best variant',
       variantCount: scored.length,
-      minVotes: MIN_VOTES,
-      uniqueSlots: clusters.length,
-      keptSlots: winners.length,
+      plausibleCount: plausible.length,
+      pickedVariant: pickedSuffix,
+      pickedReason,
     },
   };
 
   const canonicalPath = path.join(BAKED_DIR, `${houseId}-analysis.json`);
   await fs.writeFile(canonicalPath, JSON.stringify(consensus, null, 2));
-  console.log(`\nWrote consensus → ${canonicalPath}`);
+  console.log(`\nWrote → ${canonicalPath}`);
   console.log(`Final: ${winners.length} panels (${(winners.length * PANEL_AREA).toFixed(1)} m²)`);
 }
 
