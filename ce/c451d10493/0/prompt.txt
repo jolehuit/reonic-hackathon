@@ -1,0 +1,14 @@
+ça change rien ça donc implémente bien :
+Pre-flight checklist
+
+Compiling bill of materials
+
+Rendering 3D snapshot
+
+Formatting one-page offer
+
+Generating PDF
+
+
+et pour generator ya tout ça tu peux choisir :
+/Users/max/Downloads/generator-lp.zip /Users/max/Downloads/generator_lp.glb '/Users/max/Downloads/generator_lp (1).glb' /Users/max/Downloads/generator_lp.zip /Users/max/Downloads/Generator_LP.usdz

@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "cec451d10493",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/components/ApprovalModal/ApprovalModal.tsx",
+    "src/components/Scene3D/CanvasCaptureRegistrar.tsx",
+    "src/components/Scene3D/Scene3D.tsx",
+    "src/lib/store.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/ce/c451d10493/0/metadata.json",
+      "transcript": "/ce/c451d10493/0/full.jsonl",
+      "content_hash": "/ce/c451d10493/0/content_hash.txt",
+      "prompt": "/ce/c451d10493/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 22,
+    "cache_creation_tokens": 13669,
+    "cache_read_tokens": 6600790,
+    "output_tokens": 10729,
+    "api_call_count": 17
+  }
+}
