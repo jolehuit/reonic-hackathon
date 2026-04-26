@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "ab60a33ea369",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/components/Scene3D/Battery.tsx",
+    "src/components/Scene3D/HeatPump.tsx",
+    "src/components/Scene3D/Inverter.tsx",
+    "src/components/Scene3D/Scene3D.tsx",
+    "src/lib/useEffectiveDesign.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/ab/60a33ea369/0/metadata.json",
+      "transcript": "/ab/60a33ea369/0/full.jsonl",
+      "content_hash": "/ab/60a33ea369/0/content_hash.txt",
+      "prompt": "/ab/60a33ea369/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 25,
+    "cache_creation_tokens": 21154,
+    "cache_read_tokens": 9120544,
+    "output_tokens": 16593,
+    "api_call_count": 20
+  }
+}
