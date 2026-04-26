@@ -80,7 +80,15 @@ export async function GET(req: NextRequest) {
 
   if (tilted) {
     // Render the Cesium oblique page in headless Chromium and screenshot it.
-    const origin = req.nextUrl.origin;
+    //
+    // We MUST hit the local server with `http://localhost:$PORT` rather than
+    // `req.nextUrl.origin`. On Cloud Run the proxy gives us
+    // `https://0.0.0.0:8080` (the public scheme + the internal HOSTNAME/PORT),
+    // but the container only binds plain HTTP on 8080 — Playwright then fails
+    // with `net::ERR_SSL_PROTOCOL_ERROR`. Using `http://localhost:PORT`
+    // bypasses the public hostname / TLS termination layer entirely.
+    const port = process.env.PORT ?? '3000';
+    const origin = `http://localhost:${port}`;
     // Look up the local ground elevation (in metres above WGS84 ellipsoid)
     // via Google's Elevation API. This is then forwarded to /oblique so the
     // marker can be placed AT building-roof height — without it, the dot

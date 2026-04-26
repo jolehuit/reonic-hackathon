@@ -211,7 +211,7 @@ export function Orchestrator() {
           if (cancelled) return;
           setGlbUrl(cached.glbUrl);
           setTrellisStatus('ready');
-          updateStepFields('model', { status: 'done' });
+          updateStepFields('model', { status: 'done', resultLine: 'GLB ready' });
           return;
         }
       }
@@ -285,7 +285,7 @@ export function Orchestrator() {
         }
         setGlbUrl(j.glbUrl);
         setTrellisStatus('ready');
-        updateStepFields('model', { status: 'done' });
+        updateStepFields('model', { status: 'done', resultLine: 'GLB ready' });
       } catch {
         if (cancelled) return;
         updateStepFields('model', { status: 'error' });

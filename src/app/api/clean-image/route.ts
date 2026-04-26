@@ -26,8 +26,16 @@ export async function POST(req: NextRequest) {
   }
 
   // 1. Pull the oblique screenshot from /api/aerial?tilted=1.
-  const origin = req.nextUrl.origin;
+  // Use http://localhost:$PORT instead of req.nextUrl.origin — see the same
+  // comment in /api/aerial/route.ts: Cloud Run gives us https://0.0.0.0:8080
+  // which the container itself doesn't terminate TLS on, so the loopback
+  // fetch fails with SSL_PROTOCOL_ERROR.
+  const port = process.env.PORT ?? '3000';
+  const origin = `http://localhost:${port}`;
   const aerialUrl = `${origin}/api/aerial?lat=${lat}&lng=${lng}&zoom=${body.zoom ?? 20}&tilted=1`;
+  // _ keeps `req` referenced for clarity; we intentionally don't use
+  // req.nextUrl.origin anymore.
+  void req;
   const aerialRes = await fetch(aerialUrl);
   if (!aerialRes.ok) {
     return NextResponse.json(

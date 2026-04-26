@@ -204,7 +204,9 @@ export function AddressSearch() {
         </span>
       </div>
       <p className="mb-4 text-[13px] text-zinc-500">
-        We&apos;ll use Google Solar + your roof geometry to design a system tailored to your house.
+        Our in-house engine sizes the PV / storage / heat-pump bundle and computes price, payback
+        and CO₂ savings against 1,620 real Iconic deliveries. The 3D scene on the side is just
+        the visualisation — built live from satellite imagery to make the design tangible.
       </p>
 
       <div className="flex flex-col gap-3 sm:flex-row">
