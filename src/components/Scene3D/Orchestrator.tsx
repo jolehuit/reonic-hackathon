@@ -173,6 +173,20 @@ export function Orchestrator() {
       updateStepFields('size', { status: 'done', resultLine: summary });
     };
 
+    // Demo-tempo helpers — used by both the demo-house short-circuit and
+    // the live pipeline path. `padStepDuration` is a no-op when real work
+    // already took at least `loMs`; otherwise it sleeps a randomised amount
+    // so the step lasts somewhere in [loMs, hiMs]. This keeps the trace
+    // animating realistically when caches (aerial PNG, clean PNG, design
+    // JSON, Hunyuan GLB) are warm and the live API calls return in <200ms.
+    const jitter = (lo: number, hi: number) =>
+      new Promise((r) => setTimeout(r, lo + Math.random() * (hi - lo)));
+    const padStepDuration = async (elapsed: number, loMs: number, hiMs: number) => {
+      if (elapsed >= loMs) return;
+      const target = loMs + Math.random() * (hiMs - loMs);
+      await new Promise((r) => setTimeout(r, target - elapsed));
+    };
+
     // ── Steps capture → clean → model — sequential dependency chain ────────
     const imageryPromise = (async () => {
       if (!coords) return;
@@ -185,9 +199,6 @@ export function Orchestrator() {
       if (selectedHouse && selectedHouse !== 'custom') {
         const cached = await loadCachedHouse(selectedHouse).catch(() => null);
         if (cached && !cancelled) {
-          const jitter = (lo: number, hi: number) =>
-            new Promise((r) => setTimeout(r, lo + Math.random() * (hi - lo)));
-
           updateStepStatus('capture', 'running');
           await jitter(2800, 4200);
           if (cancelled) return;
@@ -219,12 +230,12 @@ export function Orchestrator() {
       // Step 1: capture (browser fetch of /api/aerial doubles as the
       // thumbnail load — we listen to <img> onLoad to know when it's done).
       const aerialUrl = `/api/aerial?lat=${coords.lat}&lng=${coords.lng}&zoom=20&tilted=1`;
+      const captureT0 = performance.now();
       updateStepStatus('capture', 'running');
       const captureOk = await new Promise<boolean>((resolve) => {
         const img = new Image();
         img.onload = () => {
           if (cancelled) return resolve(false);
-          updateStepFields('capture', { status: 'done', artifactUrl: aerialUrl });
           resolve(true);
         };
         img.onerror = () => {
@@ -235,10 +246,16 @@ export function Orchestrator() {
         img.src = aerialUrl;
       });
       if (!captureOk || cancelled) return;
+      // Pad to the demo-house tempo so a warm cache (~30ms PNG read) still
+      // animates the trace believably (~3-4s).
+      await padStepDuration(performance.now() - captureT0, 2800, 4200);
+      if (cancelled) return;
+      updateStepFields('capture', { status: 'done', artifactUrl: aerialUrl });
 
       // Step 2: clean (GPT Image 2). Server pulls /api/aerial again — the
       // response is cache-control: public, max-age=300 so the second hit is
       // typically warm.
+      const cleanT0 = performance.now();
       updateStepStatus('clean', 'running');
       let cleanedImageUrl: string;
       try {
@@ -254,20 +271,30 @@ export function Orchestrator() {
           return;
         }
         cleanedImageUrl = j.imageUrl;
-        updateStepFields('clean', { status: 'done', artifactUrl: cleanedImageUrl });
       } catch {
         if (cancelled) return;
         updateStepFields('clean', { status: 'error' });
         return;
       }
+      // Pad to demo-house tempo (warm cache returns in ~50ms; cold call
+      // through GPT Image 2 takes ~25s and skips the pad).
+      await padStepDuration(performance.now() - cleanT0, 3400, 4800);
+      if (cancelled) return;
+      updateStepFields('clean', { status: 'done', artifactUrl: cleanedImageUrl });
 
       // Step 3: size — fold the (already in-flight) /api/design result into
       // the trace before kicking off the model step.
+      const sizeT0 = performance.now();
       await finalizeSizeStep();
+      if (cancelled) return;
+      // Pad: with designCache the call is ~5ms; cold k-NN is ~250ms. Both
+      // are below the lo bound so the trace always animates ~1.5-2.4s.
+      await padStepDuration(performance.now() - sizeT0, 1500, 2400);
       if (cancelled) return;
 
       // Step 4: model (Trellis). Pass the cleaned fal-hosted URL straight
       // through — no re-upload.
+      const modelT0 = performance.now();
       updateStepStatus('model', 'running');
       setTrellisStatus('generating');
       try {
@@ -290,6 +317,12 @@ export function Orchestrator() {
           setTrellisStatus('error');
           return;
         }
+        // Pad BEFORE setGlbUrl so the 3D viewer doesn't start loading the
+        // GLB while the trace still says MODEL is "running" — this keeps the
+        // visual sequence (trace finishes → 3D appears) intact even on a
+        // warm cache where Hunyuan was skipped (~50ms response).
+        await padStepDuration(performance.now() - modelT0, 3800, 5400);
+        if (cancelled) return;
         setGlbUrl(j.glbUrl);
         setTrellisStatus('ready');
         // Don't set a resultLine — the GLB is visible in the 3D scene
