@@ -92,7 +92,9 @@ function MorphingBuilding({
   const stableSignalledRef = useRef(false);
   const setGlbStable = useStore((s) => s.setGlbStable);
   const glbLoaded = useStore((s) => s.glbLoaded);
-  const MORPH_MS = 1500;
+  // Cross-fade window: kept short so users don't wait — the GLB IS the
+  // payoff, drag it out and the panels-drop animation feels delayed.
+  const MORPH_MS = 700;
 
   useEffect(() => {
     if (status.kind === 'ready' && transitionStartedRef.current === null) {

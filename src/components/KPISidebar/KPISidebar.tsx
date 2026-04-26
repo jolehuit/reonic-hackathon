@@ -13,7 +13,11 @@ const PANEL_AREA_M2 = 1.722 * 1.134;
 export function KPISidebar() {
   const design = useStore((s) => s.design);
   const profile = useStore((s) => s.profile);
-  const panelTargetCount = useStore((s) => s.panelTargetCount);
+  // panelTargetCount = MAX number of panels DevD's algorithm could physically
+  // fit on the roof (used for the variant cascade upper bound). The customer-
+  // facing count is DevB's `design.moduleCount` from k-NN sizing — the
+  // efficient install matched against 1 620 historical Reonic deliveries.
+  const efficientPanelCount = design?.moduleCount ?? 0;
   const glbRoofAreaM2 = useStore((s) => s.glbRoofAreaM2);
 
   const totalKwp = design?.totalKwp ?? 0;
@@ -26,7 +30,7 @@ export function KPISidebar() {
   const evKwh = Math.round(evKm * 0.18);
   const residentialKwh = Math.max(0, consumption - evKwh);
 
-  const panelArea = panelTargetCount * PANEL_AREA_M2;
+  const panelArea = efficientPanelCount * PANEL_AREA_M2;
   const roofCoveragePct =
     glbRoofAreaM2 && glbRoofAreaM2 > 0
       ? Math.min(100, Math.round((panelArea / glbRoofAreaM2) * 100))
@@ -92,11 +96,11 @@ export function KPISidebar() {
         {battery > 0 && (
           <CompactKpi icon={<BatteryIcon />} tone="emerald" label="Battery" value={battery} suffix=" kWh" decimals={1} />
         )}
-        {glbRoofAreaM2 != null && panelTargetCount > 0 && (
+        {glbRoofAreaM2 != null && efficientPanelCount > 0 && (
           <CompactKpi
             icon={<RoofIcon />}
             tone="blue"
-            label={`Roof · ${panelTargetCount} panels (${roofCoveragePct}%)`}
+            label={`Roof · ${efficientPanelCount} panels (${roofCoveragePct}%)`}
             value={panelArea}
             suffix={` / ${glbRoofAreaM2.toFixed(0)} m²`}
             decimals={1}

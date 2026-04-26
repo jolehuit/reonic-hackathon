@@ -316,8 +316,9 @@ export function Orchestrator() {
         await new Promise<void>((res) => setTimeout(res, POLL_MS));
       }
 
-      // Beat — visual breath between "roof appears" and "panels descend".
-      await new Promise<void>((res) => setTimeout(res, 450));
+      // Tiny beat — just enough so the user registers "roof done" before
+      // the first panel lands. Anything longer reads as awkward dead time.
+      await new Promise<void>((res) => setTimeout(res, 120));
       if (cancelled) return;
 
       // The actual count comes from <Panels/> (variant cascade may have
@@ -334,8 +335,10 @@ export function Orchestrator() {
         await new Promise<void>((res) => setTimeout(res, TARGET_POLL_MS));
       }
       const total = useStore.getState().panelTargetCount;
+      // Cap total animation at ~1.6 s for snappy feel; clamp per-panel to
+      // [50, 140] ms so even a single-panel layout still has a beat.
       const stepMs =
-        total > 0 ? Math.max(80, Math.min(200, Math.round(2800 / total))) : 0;
+        total > 0 ? Math.max(50, Math.min(140, Math.round(1600 / total))) : 0;
       for (let i = 1; i <= total; i++) {
         if (cancelled) return;
         await new Promise<void>((res) => setTimeout(res, stepMs));
