@@ -17,8 +17,10 @@ import type { CustomerProfile, DesignResult } from './types';
 
 // Model id is overridable via GEMINI_MODEL env var so the operator can
 // pin a specific revision without a redeploy. Default = the model the
-// product owner asked for.
-const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
+// product owner asked for, suffixed with -preview because that's the
+// real ID exposed by Google's Generative Language API (`gemini-3.1-
+// flash-lite` alone returns 404).
+const DEFAULT_MODEL = 'gemini-3.1-flash-lite-preview';
 // Hard timeout on the Gemini call. The PDF should never hang for more
 // than ~15 s waiting on the report — past that, ship without it.
 const GEMINI_TIMEOUT_MS = 15_000;
