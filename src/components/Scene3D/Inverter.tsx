@@ -27,11 +27,14 @@ export function Inverter() {
   )
     return null;
 
-  // Mounted on the right exterior wall, slightly forward of the back corner.
-  // Box rotated 90° around Y so the back face (now along +X) sits flush with the wall.
+  // Mounted on the right exterior wall, BACK CORNER — sits next to the
+  // battery (which is at z = -halfDepth + 1.5 with y = 0.4), but at a
+  // higher mount point and offset further towards the rear so they don't
+  // visually merge into one block from the camera's typical front-right
+  // viewing angle.
   const x = halfWidth + SIZE[2] / 2 + GAP_FROM_WALL;
   const y = MOUNT_HEIGHT_FROM_GROUND;
-  const z = -halfDepth + SIZE[0] * 1.2;
+  const z = -halfDepth + 0.5;
 
   return (
     <mesh position={[x, y, z]} rotation={[0, Math.PI / 2, 0]} castShadow>

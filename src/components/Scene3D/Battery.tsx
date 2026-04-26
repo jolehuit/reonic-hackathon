@@ -20,11 +20,13 @@ export function Battery() {
 
   if (!design?.batteryCapacityKwh || !refinements.includeBattery) return null;
 
-  // Wall-mount along the right exterior wall, towards the back. Rotated so
-  // the unit's depth axis sits flush with the wall.
+  // Wall-mount along the right exterior wall, near the BACK of the house —
+  // German installs typically put the battery in the utility room and the
+  // wallbox in the garage, on opposite sides of the building. Keeping them
+  // spatially separated stops them reading as one stacked block.
   const x = halfWidth + POWERWALL_DEPTH_M / 2 + GAP_FROM_WALL;
   const y = MOUNT_HEIGHT_FROM_GROUND;
-  const z = halfDepth - 0.6;
+  const z = -halfDepth + 1.5;
 
   return (
     <group position={[x, y, z]} rotation={[0, -Math.PI / 2, 0]}>
