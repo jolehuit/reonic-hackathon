@@ -76,6 +76,7 @@ export const MOCK_DESIGN: DesignResult = {
   totalPriceEur: 11400,
   paybackYears: 9.4,
   co2SavedTonsPer25y: 8.2,
+  selfConsumptionRatio: 0.65,
 
   similarProjects: MOCK_SIMILAR,
   deltaVsMedian: {

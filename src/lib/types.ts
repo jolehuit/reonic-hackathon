@@ -82,6 +82,11 @@ export interface DesignResult {
   totalPriceEur: number;
   paybackYears: number;
   co2SavedTonsPer25y: number;
+  /** Share of generated kWh consumed on-site (0–1). Depends on whether the
+   *  design includes a battery, a heat pump and/or an EV. Surfaced so the
+   *  KPI sidebar can show a real "own consumption" tile instead of a
+   *  hardcoded constant. */
+  selfConsumptionRatio: number;
 
   // Reonic Evidence
   similarProjects: SimilarProject[];

@@ -145,6 +145,7 @@ export async function POST(req: NextRequest) {
     totalPriceEur: fin.totalPriceEur,
     paybackYears: fin.paybackYears,
     co2SavedTonsPer25y: fin.co2SavedTonsPer25y,
+    selfConsumptionRatio: fin.selfConsumptionRatio,
 
     similarProjects: reco.similarProjects,
     deltaVsMedian: reco.deltaVsMedian,

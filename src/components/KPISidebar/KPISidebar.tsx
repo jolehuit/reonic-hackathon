@@ -55,7 +55,9 @@ export function KPISidebar() {
       ? Math.min(100, Math.round((panelArea / glbRoofAreaM2) * 100))
       : 0;
 
-  const ownConsumptionPct = 62;
+  // Live from /api/design's computeFinancials. Depends on system composition
+  // (battery / heat pump / EV) — not a hardcoded constant.
+  const ownConsumptionPct = Math.round((design?.selfConsumptionRatio ?? 0) * 100);
 
   return (
     <motion.div
