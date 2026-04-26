@@ -22,3 +22,1050 @@
 
 xai/grok-imagine-image/edit
 remplace gpt image 2 par ça
+
+---
+
+GPT Image 2 is now on fal
+
+Search anything
+⌘
+K
+Credits:
+$0.76
+Docs
+
+
+
+J
+
+$0.76
+Resources
+
+
+J
+Home
+Explore
+
+Generate
+Serverless
+
+Workflows
+
+Settings
+Home
+Explore
+
+Generate
+Serverless
+
+Workflows
+
+Settings
+openai/gpt-image-2/edit
+
+Edit
+GPT Image 2, OpenAI's latest image model, is capable of making fine-grained, detailed edits to images.
+Learn more about GPT Image 2
+Inference
+Commercial use
+Streaming
+Partner
+
+Schema
+LLMs
+
+Table of contents
+
+JavaScript / Node.js
+1. Calling the API
+Install the client
+Setup your API Key
+Submit a request
+Streaming
+2. Authentication
+API Key
+3. Queue
+Submit a request
+Fetch request status
+Get the result
+4. Files
+Data URI (base64)
+Hosted files (URL)
+Uploading files
+5. Schema
+Input
+Output
+Other
+About
+GPT Image 2 is OpenAI's next-generation image generation model (alpha). It supports flexible resolutions up to 4K and multiple model variants.
+
+Use it as an image-to-image (editing) API through fal!
+
+1. Calling the API
+#
+Install the client
+#
+The client provides a convenient way to interact with the model API.
+
+npm
+yarn
+pnpm
+bun
+
+npm install --save @fal-ai/client
+Migrate to @fal-ai/client
+The @fal-ai/serverless-client package has been deprecated in favor of @fal-ai/client. Please check the migration guide for more information.
+
+Setup your API Key
+#
+Set FAL_KEY as an environment variable in your runtime.
+
+
+export FAL_KEY="YOUR_API_KEY"
+Submit a request
+#
+The client API handles the API submit protocol. It will handle the request status updates and return the result when the request is completed.
+
+
+import { fal } from "@fal-ai/client";
+
+const result = await fal.subscribe("openai/gpt-image-2/edit", {
+  input: {
+    prompt: "Same workers, same beam, same lunch boxes - but they're all on their phones now. One is taking a selfie. One is on a call looking annoyed. Same danger, new priorities. A hard hat has AirPods.",
+    image_urls: ["https://v3b.fal.media/files/b/0a8691af/9Se_1_VX1wzTjjTOpWbs9_bb39c2eb-1a41-4749-b1d0-cf134abc8bbf.png"]
+  },
+  logs: true,
+  onQueueUpdate: (update) => {
+    if (update.status === "IN_PROGRESS") {
+      update.logs.map((log) => log.message).forEach(console.log);
+    }
+  },
+});
+console.log(result.data);
+console.log(result.requestId);
+Streaming
+#
+This model supports streaming requests. You can stream data directly to the model and get the result in real-time.
+
+
+import { fal } from "@fal-ai/client";
+
+const stream = await fal.stream("openai/gpt-image-2/edit", {
+  input: {
+    prompt: "Same workers, same beam, same lunch boxes - but they're all on their phones now. One is taking a selfie. One is on a call looking annoyed. Same danger, new priorities. A hard hat has AirPods.",
+    image_urls: ["https://v3b.fal.media/files/b/0a8691af/9Se_1_VX1wzTjjTOpWbs9_bb39c2eb-1a41-4749-b1d0-cf134abc8bbf.png"]
+  }
+});
+
+for await (const event of stream) {
+  console.log(event);
+}
+
+const result = await stream.done();
+2. Authentication
+#
+The API uses an API Key for authentication. It is recommended you set the FAL_KEY environment variable in your runtime when possible.
+
+API Key
+#
+In case your app is running in an environment where you cannot set environment variables, you can set the API Key manually as a client configuration.
+
+import { fal } from "@fal-ai/client";
+
+fal.config({
+  credentials: "YOUR_FAL_KEY"
+});
+Protect your API Key
+When running code on the client-side (e.g. in a browser, mobile app or GUI applications), make sure to not expose your FAL_KEY. Instead, use a server-side proxy to make requests to the API. For more information, check out our server-side integration guide.
+
+3. Queue
+#
+Long-running requests
+For long-running requests, such as training jobs or models with slower inference times, it is recommended to check the Queue status and rely on Webhooks instead of blocking while waiting for the result.
+
+Submit a request
+#
+The client API provides a convenient way to submit requests to the model.
+
+
+import { fal } from "@fal-ai/client";
+
+const { request_id } = await fal.queue.submit("openai/gpt-image-2/edit", {
+  input: {
+    prompt: "Same workers, same beam, same lunch boxes - but they're all on their phones now. One is taking a selfie. One is on a call looking annoyed. Same danger, new priorities. A hard hat has AirPods.",
+    image_urls: ["https://v3b.fal.media/files/b/0a8691af/9Se_1_VX1wzTjjTOpWbs9_bb39c2eb-1a41-4749-b1d0-cf134abc8bbf.png"]
+  },
+  webhookUrl: "https://optional.webhook.url/for/results",
+});
+Fetch request status
+#
+You can fetch the status of a request to check if it is completed or still in progress.
+
+
+import { fal } from "@fal-ai/client";
+
+const status = await fal.queue.status("openai/gpt-image-2/edit", {
+  requestId: "764cabcf-b745-4b3e-ae38-1200304cf45b",
+  logs: true,
+});
+Get the result
+#
+Once the request is completed, you can fetch the result. See the Output Schema for the expected result format.
+
+
+import { fal } from "@fal-ai/client";
+
+const result = await fal.queue.result("openai/gpt-image-2/edit", {
+  requestId: "764cabcf-b745-4b3e-ae38-1200304cf45b"
+});
+console.log(result.data);
+console.log(result.requestId);
+4. Files
+#
+Some attributes in the API accept file URLs as input. Whenever that's the case you can pass your own URL or a Base64 data URI.
+
+Data URI (base64)
+#
+You can pass a Base64 data URI as a file input. The API will handle the file decoding for you. Keep in mind that for large files, this alternative although convenient can impact the request performance.
+
+Hosted files (URL)
+#
+You can also pass your own URLs as long as they are publicly accessible. Be aware that some hosts might block cross-site requests, rate-limit, or consider the request as a bot.
+
+Uploading files
+#
+We provide a convenient file storage that allows you to upload files and use them in your requests. You can upload files using the client API and use the returned URL in your requests.
+
+
+import { fal } from "@fal-ai/client";
+
+const file = new File(["Hello, World!"], "hello.txt", { type: "text/plain" });
+const url = await fal.storage.upload(file);
+Auto uploads
+The client will auto-upload the file for you if you pass a binary object (e.g. File, Data).
+
+Read more about file handling in our file upload guide.
+
+5. Schema
+#
+Input
+#
+prompt string
+The prompt for image generation
+
+image_urls list<string>
+The URLs of the images to use as a reference for the generation.
+
+image_size ImageSize | Enum
+The size of the generated image. Use 'auto' to infer from input images. Default value: auto
+
+Possible enum values: square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9, auto
+
+Note: For custom image sizes, you can pass the width and height as an object:
+
+
+"image_size": {
+  "width": 1280,
+  "height": 720
+}
+quality QualityEnum
+Quality for the generated image Default value: "high"
+
+Possible enum values: low, medium, high
+
+num_images integer
+Number of images to generate Default value: 1
+
+output_format OutputFormatEnum
+Output format for the images Default value: "png"
+
+Possible enum values: jpeg, png, webp
+
+sync_mode boolean
+If True, the media will be returned as a data URI and the output data won't be available in the request history.
+
+mask_url string
+The URL of the mask image to use for the generation. This indicates what part of the image to edit.
+
+
+{
+  "prompt": "Same workers, same beam, same lunch boxes - but they're all on their phones now. One is taking a selfie. One is on a call looking annoyed. Same danger, new priorities. A hard hat has AirPods.",
+  "image_urls": [
+    "https://v3b.fal.media/files/b/0a8691af/9Se_1_VX1wzTjjTOpWbs9_bb39c2eb-1a41-4749-b1d0-cf134abc8bbf.png"
+  ],
+  "image_size": "auto",
+  "quality": "high",
+  "num_images": 1,
+  "output_format": "png"
+}
+Output
+#
+images list<ImageFile>
+The generated images.
+
+
+{
+  "images": [
+    {
+      "width": 1024,
+      "url": "https://v3b.fal.media/files/b/0a8691b0/yUt7tifLSbg1WzWWgfj2o.png",
+      "content_type": "image/png",
+      "height": 1024,
+      "file_name": "yUt7tifLSbg1WzWWgfj2o.png"
+    }
+  ]
+}
+Other types
+#
+ImageFile
+#
+url string
+The URL where the file can be downloaded from.
+
+content_type string
+The mime type of the file.
+
+file_name string
+The name of the file. It will be auto-generated if not provided.
+
+file_size integer
+The size of the file in bytes.
+
+width integer
+The width of the image
+
+height integer
+The height of the image
+
+BYOKEditImageRequest
+#
+prompt string
+The prompt for image generation
+
+image_urls list<string>
+The URLs of the images to use as a reference for the generation.
+
+image_size ImageSize | Enum
+The size of the generated image. Use 'auto' to infer from input images. Default value: auto
+
+Possible enum values: square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9, auto
+
+Note: For custom image sizes, you can pass the width and height as an object:
+
+
+"image_size": {
+  "width": 1280,
+  "height": 720
+}
+quality QualityEnum
+Quality for the generated image Default value: "high"
+
+Possible enum values: low, medium, high
+
+num_images integer
+Number of images to generate Default value: 1
+
+output_format OutputFormatEnum
+Output format for the images Default value: "png"
+
+Possible enum values: jpeg, png, webp
+
+sync_mode boolean
+If True, the media will be returned as a data URI and the output data won't be available in the request history.
+
+mask_url string
+The URL of the mask image to use for the generation. This indicates what part of the image to edit.
+
+openai_api_key string
+Your OpenAI API key
+
+OpenAIOutputTokenDetails
+#
+image_tokens integer
+The number of output image tokens.
+
+text_tokens integer
+The number of output text (reasoning) tokens.
+
+BYOKImageResponse
+#
+images list<ImageFile>
+The generated images.
+
+usage OpenAIUsage
+The usage of the OpenAI API.
+
+TextToImageRequest
+#
+prompt string
+The prompt for image generation
+
+image_size ImageSize | Enum
+The size of the generated image. Supports preset names or explicit {width, height}. Both dimensions must be multiples of 16, max edge 3840px, aspect ratio <= 3:1, total pixels between 655,360 and 8,294,400. Default value: landscape_4_3
+
+Possible enum values: square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9
+
+Note: For custom image sizes, you can pass the width and height as an object:
+
+
+"image_size": {
+  "width": 1280,
+  "height": 720
+}
+quality QualityEnum
+Quality for the generated image Default value: "high"
+
+Possible enum values: low, medium, high
+
+num_images integer
+Number of images to generate Default value: 1
+
+output_format OutputFormatEnum
+Output format for the images Default value: "png"
+
+Possible enum values: jpeg, png, webp
+
+sync_mode boolean
+If True, the media will be returned as a data URI and the output data won't be available in the request history.
+
+OpenAIUsage
+#
+input_tokens integer
+The number of tokens used in the input.
+
+input_tokens_details OpenAIInputTokenDetails
+The details of the input tokens.
+
+output_tokens integer
+The number of tokens used in the output.
+
+output_tokens_details OpenAIOutputTokenDetails
+The details of the output tokens.
+
+total_tokens integer
+The total number of tokens used.
+
+BYOKTextToImageRequest
+#
+prompt string
+The prompt for image generation
+
+image_size ImageSize | Enum
+The size of the generated image. Supports preset names or explicit {width, height}. Both dimensions must be multiples of 16, max edge 3840px, aspect ratio <= 3:1, total pixels between 655,360 and 8,294,400. Default value: landscape_4_3
+
+Possible enum values: square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9
+
+Note: For custom image sizes, you can pass the width and height as an object:
+
+
+"image_size": {
+  "width": 1280,
+  "height": 720
+}
+quality QualityEnum
+Quality for the generated image Default value: "high"
+
+Possible enum values: low, medium, high
+
+num_images integer
+Number of images to generate Default value: 1
+
+output_format OutputFormatEnum
+Output format for the images Default value: "png"
+
+Possible enum values: jpeg, png, webp
+
+sync_mode boolean
+If True, the media will be returned as a data URI and the output data won't be available in the request history.
+
+openai_api_key string
+Your OpenAI API key
+
+ImageResponse
+#
+images list<ImageFile>
+The generated images.
+
+ImageSize
+#
+width integer
+The width of the generated image. Default value: 512
+
+height integer
+The height of the generated image. Default value: 512
+
+OpenAIInputTokenDetails
+#
+image_tokens integer
+The number of tokens used in the images.
+
+text_tokens integer
+The number of tokens used in the prompt.
+
+Related Models
+Ready to transform your enterprise with AI?
+Contact Sales
+Learn More
+Status
+About Us
+Documentation
+Careers
+Pricing
+Blog
+Enterprise
+Get in touch
+Gen Media Report 2026
+Grants
+Events
+Learn
+Legal
+Report Content
+Models
+GPT Image 2
+Seedance 2.0
+Flux 2
+Kling 3.0
+Veo 3.1
+Nano Banana Pro
+Explore More
+Playgrounds
+Sandbox
+Workflows
+Training
+Demos
+Socials
+Discord
+GitHub
+Reddit
+Twitter
+LinkedIn
+YouTube
+Instagram
+TikTok
+features and labels, 2025. All Rights Reserved. Terms of Service and Privacy Policy
+
+et prends pas la quali maximale prends la default
+
+---
+
+GPT Image 2 is now on fal
+
+Search anything
+⌘
+K
+Credits:
+$0.76
+Docs
+
+
+
+J
+
+$0.76
+Resources
+
+
+J
+Home
+Explore
+
+Generate
+Serverless
+
+Workflows
+
+Settings
+Home
+Explore
+
+Generate
+Serverless
+
+Workflows
+
+Settings
+openai/gpt-image-2/edit
+
+Edit
+GPT Image 2, OpenAI's latest image model, is capable of making fine-grained, detailed edits to images.
+Learn more about GPT Image 2
+Inference
+Commercial use
+Streaming
+Partner
+
+Schema
+LLMs
+
+Table of contents
+
+JavaScript / Node.js
+1. Calling the API
+Install the client
+Setup your API Key
+Submit a request
+Streaming
+2. Authentication
+API Key
+3. Queue
+Submit a request
+Fetch request status
+Get the result
+4. Files
+Data URI (base64)
+Hosted files (URL)
+Uploading files
+5. Schema
+Input
+Output
+Other
+About
+GPT Image 2 is OpenAI's next-generation image generation model (alpha). It supports flexible resolutions up to 4K and multiple model variants.
+
+Use it as an image-to-image (editing) API through fal!
+
+1. Calling the API
+#
+Install the client
+#
+The client provides a convenient way to interact with the model API.
+
+npm
+yarn
+pnpm
+bun
+
+npm install --save @fal-ai/client
+Migrate to @fal-ai/client
+The @fal-ai/serverless-client package has been deprecated in favor of @fal-ai/client. Please check the migration guide for more information.
+
+Setup your API Key
+#
+Set FAL_KEY as an environment variable in your runtime.
+
+
+export FAL_KEY="YOUR_API_KEY"
+Submit a request
+#
+The client API handles the API submit protocol. It will handle the request status updates and return the result when the request is completed.
+
+
+import { fal } from "@fal-ai/client";
+
+const result = await fal.subscribe("openai/gpt-image-2/edit", {
+  input: {
+    prompt: "Same workers, same beam, same lunch boxes - but they're all on their phones now. One is taking a selfie. One is on a call looking annoyed. Same danger, new priorities. A hard hat has AirPods.",
+    image_urls: ["https://v3b.fal.media/files/b/0a8691af/9Se_1_VX1wzTjjTOpWbs9_bb39c2eb-1a41-4749-b1d0-cf134abc8bbf.png"]
+  },
+  logs: true,
+  onQueueUpdate: (update) => {
+    if (update.status === "IN_PROGRESS") {
+      update.logs.map((log) => log.message).forEach(console.log);
+    }
+  },
+});
+console.log(result.data);
+console.log(result.requestId);
+Streaming
+#
+This model supports streaming requests. You can stream data directly to the model and get the result in real-time.
+
+
+import { fal } from "@fal-ai/client";
+
+const stream = await fal.stream("openai/gpt-image-2/edit", {
+  input: {
+    prompt: "Same workers, same beam, same lunch boxes - but they're all on their phones now. One is taking a selfie. One is on a call looking annoyed. Same danger, new priorities. A hard hat has AirPods.",
+    image_urls: ["https://v3b.fal.media/files/b/0a8691af/9Se_1_VX1wzTjjTOpWbs9_bb39c2eb-1a41-4749-b1d0-cf134abc8bbf.png"]
+  }
+});
+
+for await (const event of stream) {
+  console.log(event);
+}
+
+const result = await stream.done();
+2. Authentication
+#
+The API uses an API Key for authentication. It is recommended you set the FAL_KEY environment variable in your runtime when possible.
+
+API Key
+#
+In case your app is running in an environment where you cannot set environment variables, you can set the API Key manually as a client configuration.
+
+import { fal } from "@fal-ai/client";
+
+fal.config({
+  credentials: "YOUR_FAL_KEY"
+});
+Protect your API Key
+When running code on the client-side (e.g. in a browser, mobile app or GUI applications), make sure to not expose your FAL_KEY. Instead, use a server-side proxy to make requests to the API. For more information, check out our server-side integration guide.
+
+3. Queue
+#
+Long-running requests
+For long-running requests, such as training jobs or models with slower inference times, it is recommended to check the Queue status and rely on Webhooks instead of blocking while waiting for the result.
+
+Submit a request
+#
+The client API provides a convenient way to submit requests to the model.
+
+
+import { fal } from "@fal-ai/client";
+
+const { request_id } = await fal.queue.submit("openai/gpt-image-2/edit", {
+  input: {
+    prompt: "Same workers, same beam, same lunch boxes - but they're all on their phones now. One is taking a selfie. One is on a call looking annoyed. Same danger, new priorities. A hard hat has AirPods.",
+    image_urls: ["https://v3b.fal.media/files/b/0a8691af/9Se_1_VX1wzTjjTOpWbs9_bb39c2eb-1a41-4749-b1d0-cf134abc8bbf.png"]
+  },
+  webhookUrl: "https://optional.webhook.url/for/results",
+});
+Fetch request status
+#
+You can fetch the status of a request to check if it is completed or still in progress.
+
+
+import { fal } from "@fal-ai/client";
+
+const status = await fal.queue.status("openai/gpt-image-2/edit", {
+  requestId: "764cabcf-b745-4b3e-ae38-1200304cf45b",
+  logs: true,
+});
+Get the result
+#
+Once the request is completed, you can fetch the result. See the Output Schema for the expected result format.
+
+
+import { fal } from "@fal-ai/client";
+
+const result = await fal.queue.result("openai/gpt-image-2/edit", {
+  requestId: "764cabcf-b745-4b3e-ae38-1200304cf45b"
+});
+console.log(result.data);
+console.log(result.requestId);
+4. Files
+#
+Some attributes in the API accept file URLs as input. Whenever that's the case you can pass your own URL or a Base64 data URI.
+
+Data URI (base64)
+#
+You can pass a Base64 data URI as a file input. The API will handle the file decoding for you. Keep in mind that for large files, this alternative although convenient can impact the request performance.
+
+Hosted files (URL)
+#
+You can also pass your own URLs as long as they are publicly accessible. Be aware that some hosts might block cross-site requests, rate-limit, or consider the request as a bot.
+
+Uploading files
+#
+We provide a convenient file storage that allows you to upload files and use them in your requests. You can upload files using the client API and use the returned URL in your requests.
+
+
+import { fal } from "@fal-ai/client";
+
+const file = new File(["Hello, World!"], "hello.txt", { type: "text/plain" });
+const url = await fal.storage.upload(file);
+Auto uploads
+The client will auto-upload the file for you if you pass a binary object (e.g. File, Data).
+
+Read more about file handling in our file upload guide.
+
+5. Schema
+#
+Input
+#
+prompt string
+The prompt for image generation
+
+image_urls list<string>
+The URLs of the images to use as a reference for the generation.
+
+image_size ImageSize | Enum
+The size of the generated image. Use 'auto' to infer from input images. Default value: auto
+
+Possible enum values: square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9, auto
+
+Note: For custom image sizes, you can pass the width and height as an object:
+
+
+"image_size": {
+  "width": 1280,
+  "height": 720
+}
+quality QualityEnum
+Quality for the generated image Default value: "high"
+
+Possible enum values: low, medium, high
+
+num_images integer
+Number of images to generate Default value: 1
+
+output_format OutputFormatEnum
+Output format for the images Default value: "png"
+
+Possible enum values: jpeg, png, webp
+
+sync_mode boolean
+If True, the media will be returned as a data URI and the output data won't be available in the request history.
+
+mask_url string
+The URL of the mask image to use for the generation. This indicates what part of the image to edit.
+
+
+{
+  "prompt": "Same workers, same beam, same lunch boxes - but they're all on their phones now. One is taking a selfie. One is on a call looking annoyed. Same danger, new priorities. A hard hat has AirPods.",
+  "image_urls": [
+    "https://v3b.fal.media/files/b/0a8691af/9Se_1_VX1wzTjjTOpWbs9_bb39c2eb-1a41-4749-b1d0-cf134abc8bbf.png"
+  ],
+  "image_size": "auto",
+  "quality": "high",
+  "num_images": 1,
+  "output_format": "png"
+}
+Output
+#
+images list<ImageFile>
+The generated images.
+
+
+{
+  "images": [
+    {
+      "width": 1024,
+      "url": "https://v3b.fal.media/files/b/0a8691b0/yUt7tifLSbg1WzWWgfj2o.png",
+      "content_type": "image/png",
+      "height": 1024,
+      "file_name": "yUt7tifLSbg1WzWWgfj2o.png"
+    }
+  ]
+}
+Other types
+#
+ImageFile
+#
+url string
+The URL where the file can be downloaded from.
+
+content_type string
+The mime type of the file.
+
+file_name string
+The name of the file. It will be auto-generated if not provided.
+
+file_size integer
+The size of the file in bytes.
+
+width integer
+The width of the image
+
+height integer
+The height of the image
+
+BYOKEditImageRequest
+#
+prompt string
+The prompt for image generation
+
+image_urls list<string>
+The URLs of the images to use as a reference for the generation.
+
+image_size ImageSize | Enum
+The size of the generated image. Use 'auto' to infer from input images. Default value: auto
+
+Possible enum values: square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9, auto
+
+Note: For custom image sizes, you can pass the width and height as an object:
+
+
+"image_size": {
+  "width": 1280,
+  "height": 720
+}
+quality QualityEnum
+Quality for the generated image Default value: "high"
+
+Possible enum values: low, medium, high
+
+num_images integer
+Number of images to generate Default value: 1
+
+output_format OutputFormatEnum
+Output format for the images Default value: "png"
+
+Possible enum values: jpeg, png, webp
+
+sync_mode boolean
+If True, the media will be returned as a data URI and the output data won't be available in the request history.
+
+mask_url string
+The URL of the mask image to use for the generation. This indicates what part of the image to edit.
+
+openai_api_key string
+Your OpenAI API key
+
+OpenAIOutputTokenDetails
+#
+image_tokens integer
+The number of output image tokens.
+
+text_tokens integer
+The number of output text (reasoning) tokens.
+
+BYOKImageResponse
+#
+images list<ImageFile>
+The generated images.
+
+usage OpenAIUsage
+The usage of the OpenAI API.
+
+TextToImageRequest
+#
+prompt string
+The prompt for image generation
+
+image_size ImageSize | Enum
+The size of the generated image. Supports preset names or explicit {width, height}. Both dimensions must be multiples of 16, max edge 3840px, aspect ratio <= 3:1, total pixels between 655,360 and 8,294,400. Default value: landscape_4_3
+
+Possible enum values: square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9
+
+Note: For custom image sizes, you can pass the width and height as an object:
+
+
+"image_size": {
+  "width": 1280,
+  "height": 720
+}
+quality QualityEnum
+Quality for the generated image Default value: "high"
+
+Possible enum values: low, medium, high
+
+num_images integer
+Number of images to generate Default value: 1
+
+output_format OutputFormatEnum
+Output format for the images Default value: "png"
+
+Possible enum values: jpeg, png, webp
+
+sync_mode boolean
+If True, the media will be returned as a data URI and the output data won't be available in the request history.
+
+OpenAIUsage
+#
+input_tokens integer
+The number of tokens used in the input.
+
+input_tokens_details OpenAIInputTokenDetails
+The details of the input tokens.
+
+output_tokens integer
+The number of tokens used in the output.
+
+output_tokens_details OpenAIOutputTokenDetails
+The details of the output tokens.
+
+total_tokens integer
+The total number of tokens used.
+
+BYOKTextToImageRequest
+#
+prompt string
+The prompt for image generation
+
+image_size ImageSize | Enum
+The size of the generated image. Supports preset names or explicit {width, height}. Both dimensions must be multiples of 16, max edge 3840px, aspect ratio <= 3:1, total pixels between 655,360 and 8,294,400. Default value: landscape_4_3
+
+Possible enum values: square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9
+
+Note: For custom image sizes, you can pass the width and height as an object:
+
+
+"image_size": {
+  "width": 1280,
+  "height": 720
+}
+quality QualityEnum
+Quality for the generated image Default value: "high"
+
+Possible enum values: low, medium, high
+
+num_images integer
+Number of images to generate Default value: 1
+
+output_format OutputFormatEnum
+Output format for the images Default value: "png"
+
+Possible enum values: jpeg, png, webp
+
+sync_mode boolean
+If True, the media will be returned as a data URI and the output data won't be available in the request history.
+
+openai_api_key string
+Your OpenAI API key
+
+ImageResponse
+#
+images list<ImageFile>
+The generated images.
+
+ImageSize
+#
+width integer
+The width of the generated image. Default value: 512
+
+height integer
+The height of the generated image. Default value: 512
+
+OpenAIInputTokenDetails
+#
+image_tokens integer
+The number of tokens used in the images.
+
+text_tokens integer
+The number of tokens used in the prompt.
+
+Related Models
+Ready to transform your enterprise with AI?
+Contact Sales
+Learn More
+Status
+About Us
+Documentation
+Careers
+Pricing
+Blog
+Enterprise
+Get in touch
+Gen Media Report 2026
+Grants
+Events
+Learn
+Legal
+Report Content
+Models
+GPT Image 2
+Seedance 2.0
+Flux 2
+Kling 3.0
+Veo 3.1
+Nano Banana Pro
+Explore More
+Playgrounds
+Sandbox
+Workflows
+Training
+Demos
+Socials
+Discord
+GitHub
+Reddit
+Twitter
+LinkedIn
+YouTube
+Instagram
+TikTok
+features and labels, 2025. All Rights Reserved. Terms of Service and Privacy Policy
+
+et prends pas la quali maximale prends la default
+et après push
