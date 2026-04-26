@@ -1,0 +1,4 @@
+entre les popups met un petit délai de 0.5 secondes
+et le cache doit se remplir en mode adresse aussi
+par exemple si je rentre une adresse pour la première fois ça génère normalement et ça rentre tout en cache pour une prochaine utilisation de cette adresse (je parle bien des adresses manuelles et non pas les demos).
+Et pareil pour les calculs des prix tout ça panneaux solaires etc
