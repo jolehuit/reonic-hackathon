@@ -383,13 +383,21 @@ export async function generateHouse(input: GenerateInput): Promise<GenerateResul
   // ── Isolated image: mask the OBLIQUE view with the detected polygon ──
   const isolated = await maskOutsidePolygon(tiltedBuf, TW, TH, fp);
 
-  // ── AI-isolated render — pass the OBLIQUE 3D screenshot to Gemini's image
-  //    model via OpenRouter with a "single isolated building, no environment"
-  //    prompt. Returns a clean photogrammetry-style cutout suitable as input
-  //    for downstream 3D model generation. Best-effort: if the call fails or
-  //    the key is missing, this stays null.
-  const { isolateBuildingViaAI } = await import('./openrouter');
-  const aiIsolated = await isolateBuildingViaAI(tiltedBuf).catch(() => null);
+  // ── AI-isolated render — pass the OBLIQUE 3D screenshot to GPT Image 2
+  //    via fal direct (same path the /design pipeline uses) with a "single
+  //    isolated building, no environment" prompt. Returns a hosted URL on
+  //    fal.media; we fetch the bytes back so callers get a Buffer like the
+  //    rest of this module. Best-effort: failures stay null and the route
+  //    continues without the AI cutout.
+  const { cleanBuildingImage } = await import('./fal');
+  let aiIsolated: Buffer | null = null;
+  try {
+    const { imageUrl } = await cleanBuildingImage(tiltedBuf);
+    const r = await fetch(imageUrl);
+    if (r.ok) aiIsolated = Buffer.from(await r.arrayBuffer());
+  } catch (err) {
+    console.warn('[house-generator] cleanBuildingImage failed:', err);
+  }
 
   return {
     glb,
