@@ -28,6 +28,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { recommendSystem } from '@/lib/sizing';
 import { computeFinancials } from '@/lib/financials';
 import { defaultCustomerProfile } from '@/lib/customRoof';
+import { readDesignCache, writeDesignCache } from '@/lib/designCache';
 import type {
   CustomerProfile,
   DesignResult,
@@ -271,6 +272,19 @@ export async function POST(req: NextRequest) {
   //    the client hasn't filled the manual form yet.
   const profile: CustomerProfile = body.profile ?? defaultCustomerProfile();
 
+  // 2.5. Cache lookup AFTER houseId resolution + profile (so the cache key
+  //      is stable regardless of whether the caller passed houseId or lat/lng).
+  //      Skips loadBakedGeometry + k-NN + financials when same inputs are
+  //      requested again — typical replay path drops from ~250ms to ~5ms.
+  const cached = await readDesignCache(resolvedHouseId, profile);
+  if (cached) {
+    return NextResponse.json({
+      ...cached.result,
+      inferenceMs: Math.round(performance.now() - t0),
+      cacheHit: true,
+    });
+  }
+
   // 3. Load baked geometry for the resolved house.
   let roof: RoofGeometry;
   try {
@@ -359,6 +373,9 @@ export async function POST(req: NextRequest) {
         ? { lat, lng, distanceM: matchedDistanceM }
         : undefined,
   };
+
+  // Persist for future replays (best-effort — write failures never crash).
+  await writeDesignCache(resolvedHouseId, profile, result);
 
   return NextResponse.json(result);
 }

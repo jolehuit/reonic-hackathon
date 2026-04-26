@@ -68,3 +68,7 @@ next-env.d.ts
 # Generated baked artifacts (timestamped). Keep only *-latest.*
 /public/baked/*-generated-[0-9]*
 
+# Runtime disk caches (aerial PNGs, design JSON envelopes, live photogrammetry).
+/public/cache/
+/public/baked/live-*
+

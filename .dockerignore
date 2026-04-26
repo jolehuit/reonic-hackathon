@@ -26,6 +26,7 @@ coverage
 
 # Don't ship the dev-only Cesium asset mirror or transient browser caches.
 public/cesium
+public/cache
 .cache
 
 # Memory dumps, screenshots committed for /aerial debugging only.

@@ -111,6 +111,8 @@ export interface DesignResult {
   // Provenance
   source: 'knn';
   inferenceMs: number;
+  /** True when served from the disk cache (public/cache/design/). */
+  cacheHit?: boolean;
 
   /**
    * Roof geometry the design was computed against. Demo houses serve their

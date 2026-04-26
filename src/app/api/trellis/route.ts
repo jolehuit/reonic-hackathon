@@ -58,8 +58,26 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // fal.ai's input_image_url must be HTTPS or a data URI — relative paths
+  // like /cache/houses/{key}/clean.png (returned by /api/clean-image on a
+  // cache hit) are rejected with HTTP 422. Resolve them to a base64 data
+  // URI by reading the cached PNG off disk.
+  let resolvedImageUrl = imageUrl;
+  if (imageUrl.startsWith('/cache/')) {
+    try {
+      const localPath = path.join(process.cwd(), 'public', imageUrl.replace(/^\//, ''));
+      const buf = await fs.readFile(localPath);
+      resolvedImageUrl = `data:image/png;base64,${buf.toString('base64')}`;
+    } catch (err) {
+      return NextResponse.json(
+        { ok: false, error: `cannot read cached image: ${imageUrl}`, detail: String(err) },
+        { status: 502 },
+      );
+    }
+  }
+
   try {
-    const { glbUrl: falGlbUrl, requestId } = await generateTrellisGlb(imageUrl);
+    const { glbUrl: falGlbUrl, requestId } = await generateTrellisGlb(resolvedImageUrl);
 
     // Persist if we have coords. Failure here is non-fatal — return the
     // fal URL so the scene can still load this session.
