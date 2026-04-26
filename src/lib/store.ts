@@ -196,6 +196,12 @@ interface AppState {
   panelEditMode: boolean;
   setPanelEditMode: (v: boolean) => void;
 
+  /** A function the 3D canvas registers so external callers (the approval
+   *  modal) can ask for a synchronous PNG snapshot of the current frame.
+   *  Set by <CanvasCaptureRegistrar/> mounted inside the R3F Canvas. */
+  captureSnapshot: (() => string | null) | null;
+  setCaptureSnapshot: (fn: (() => string | null) | null) => void;
+
   // Roof geometry — usually loaded from /baked/{houseId}-analysis.json by
   // HouseGeometryProvider. For custom addresses, /api/design synthesises one
   // and we stash it here so the Scene3D consumes it directly.
@@ -328,6 +334,9 @@ export const useStore = create<AppState>((set) => ({
 
   panelEditMode: false,
   setPanelEditMode: (panelEditMode) => set({ panelEditMode }),
+
+  captureSnapshot: null,
+  setCaptureSnapshot: (captureSnapshot) => set({ captureSnapshot }),
 
   customRoofGeometry: null,
   setCustomRoofGeometry: (customRoofGeometry) => set({ customRoofGeometry }),

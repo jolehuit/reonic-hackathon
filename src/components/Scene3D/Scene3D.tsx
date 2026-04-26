@@ -28,6 +28,7 @@ import { HeatPump } from './HeatPump';
 import { Wallbox } from './Wallbox';
 import { Inverter } from './Inverter';
 import { ElectricCar } from './ElectricCar';
+import { CanvasCaptureRegistrar } from './CanvasCaptureRegistrar';
 import type { HouseId } from '@/lib/types';
 
 interface Props {
@@ -72,6 +73,7 @@ function ProceduralCanvas({ houseId }: { houseId: HouseId | 'custom' }) {
           'linear-gradient(180deg, #eef3f8 0%, #f6f1ea 60%, #f0e6d6 100%)',
       }}
     >
+      <CanvasCaptureRegistrar />
       <Suspense fallback={null}>
         <Environment preset="apartment" background={false} environmentIntensity={0.2} />
         <ambientLight intensity={0.55} />

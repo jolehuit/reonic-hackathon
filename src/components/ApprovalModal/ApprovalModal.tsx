@@ -29,6 +29,7 @@ export function ApprovalModal() {
   const setPhase = useStore((s) => s.setPhase);
   const [checks, setChecks] = useState<boolean[]>(CHECKLIST.map(() => false));
   const [exporting, setExporting] = useState(false);
+  const captureSnapshot = useStore((s) => s.captureSnapshot);
 
   const open = phase === 'reviewing' && !!design;
 
@@ -36,36 +37,56 @@ export function ApprovalModal() {
     if (!design) return;
     setExporting(true);
 
-    for (let i = 0; i < CHECKLIST.length; i++) {
-      await new Promise((r) => setTimeout(r, 320));
+    // Each step ticks AFTER the corresponding work resolves. The 200 ms
+    // hold lets the eye register the green tick before the next one
+    // starts — without it instant steps (BOM compile, snapshot capture)
+    // would all flash at once.
+    const tickStep = async (i: number) => {
       setChecks((prev) => prev.map((v, idx) => (idx === i ? true : v)));
-    }
-    await new Promise((r) => setTimeout(r, 400));
-
-    const address =
-      selectedHouse && selectedHouse !== 'custom'
-        ? HOUSE_LOCATION[selectedHouse]
-        : customAddress?.formatted;
+      await new Promise((r) => setTimeout(r, 200));
+    };
 
     try {
+      // Step 1 — Compiling bill of materials. Derive the payload from the
+      // current store state (effective design + profile + address). Cheap
+      // but materially the input the PDF is built from.
+      const address =
+        selectedHouse && selectedHouse !== 'custom'
+          ? HOUSE_LOCATION[selectedHouse]
+          : customAddress?.formatted;
+      await tickStep(0);
+
+      // Step 2 — Rendering 3D snapshot. The R3F canvas is asked for a
+      // synchronous PNG of the current frame; that PNG is then embedded
+      // in the PDF on page 1. If the registrar isn't mounted yet (rare
+      // race), we ship the PDF without the snapshot.
+      const canvasDataUrl = captureSnapshot?.() ?? undefined;
+      await tickStep(1);
+
+      // Step 3 — Formatting one-page offer. /api/export composes the
+      // jsPDF document on the server. This is the longest leg.
       const res = await fetch('/api/export', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ profile, design, address }),
+        body: JSON.stringify({ profile, design, canvasDataUrl, address }),
       });
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `iconic-quick-offer-${Date.now()}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-      }
-    } catch {
-      // swallow — phase still advances
+      if (!res.ok) throw new Error(`export failed ${res.status}`);
+      await tickStep(2);
+
+      // Step 4 — Generating PDF. Read the response body and trigger the
+      // browser download.
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `iconic-quick-offer-${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      await tickStep(3);
+    } catch (err) {
+      console.error('[approve] export failed:', err);
     }
 
     setExporting(false);
