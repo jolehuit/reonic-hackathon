@@ -557,25 +557,26 @@ export function Panels() {
         return b.avgScore - a.avgScore;
       });
 
-    // Cross-face XZ guard — keeps panels on different pitches from
-    // visually overlapping near the ridge. Tight bound: panels touching
-    // at the ridge can be ~min(w,h) × cos(tilt) apart in XZ; we use
-    // PANEL_OVERLAP_FACTOR for that conservative cushion.
+    // Overlap guard — face-local AABB with 5 % slack. Neighbors on the
+    // same face have face-local distance ≥ cellW + GAP (in u) or
+    // cellH + GAP (in v), so they pass with margin. Cells whose ground-
+    // truth raycast shifted them >~5 % of panel size toward each other
+    // get rejected. This is the only correct test on tilted faces —
+    // pure XZ distance shrinks v-pitch by cos(tilt) and rejects
+    // legitimate v-neighbors on steep pitches.
+    const SAME_FACE_AABB_RELAX = 0.95;
+    const aabbHalfW = cellW * SAME_FACE_AABB_RELAX;
+    const aabbHalfH = cellH * SAME_FACE_AABB_RELAX;
+    // Cross-face XZ guard so two panels meeting at the ridge from
+    // opposite pitches don't visually stack.
     const crossFaceMinDist =
       Math.min(variant.size[0], variant.size[2]) * PANEL_OVERLAP_FACTOR;
     const crossFaceMinDistSq = crossFaceMinDist * crossFaceMinDist;
-
-    // For same-face overlap: strict axis-aligned bbox in face-local frame.
-    // Two panels overlap iff |Δu| < cellW AND |Δv| < cellH.
-    // Tiny floating-point cushion so adjacent grid cells (pitch =
-    // cell + CELL_GAP_M) never trigger.
-    const SAME_FACE_AABB_EPSILON = 1e-3;
 
     const target = design.moduleCount;
     const placed: ProjectedPanel[] = [];
     interface PlacedRecord {
       x: number;
-      y: number;
       z: number;
       faceIdx: number;
       uLocalGT: number;
@@ -587,7 +588,7 @@ export function Panels() {
       if (placed.length >= target) break;
       // Row-major within the face: low v (eave) → high v (ridge), then
       // low u → high u within each row. Disjoint by grid construction;
-      // skipping invalid cells just leaves blocky gaps, never breaks the
+      // skipping invalid cells leaves blocky gaps, never breaks the
       // contiguous-band feel.
       const rowMajor = [...faceEntry.cells].sort((a, b) => {
         if (a.vLocalGrid !== b.vLocalGrid) return a.vLocalGrid - b.vLocalGrid;
@@ -596,32 +597,22 @@ export function Panels() {
       for (const cell of rowMajor) {
         if (placed.length >= target) break;
 
-        // (c1) Same-face strict AABB — never two panels in the same plane
-        // overlapping. After ground-truth shifts, two cells at grid pitch
-        // 1.18 m in v have |Δv| ≈ 1.18 ≥ cellH 1.13, so they pass; only
-        // shifted-into-each-other neighbours get rejected.
         let overlap = false;
         for (const p of placedRecords) {
-          if (p.faceIdx !== cell.faceIdx) continue;
-          const du = Math.abs(p.uLocalGT - cell.uLocalGT);
-          const dv = Math.abs(p.vLocalGT - cell.vLocalGT);
-          if (du < cellW - SAME_FACE_AABB_EPSILON && dv < cellH - SAME_FACE_AABB_EPSILON) {
-            overlap = true;
-            break;
-          }
-        }
-        if (overlap) continue;
-
-        // (c2) Cross-face XZ guard — panels on different pitches can
-        // converge near the ridge; this stops two of them landing on top
-        // of each other in 3D.
-        for (const p of placedRecords) {
-          if (p.faceIdx === cell.faceIdx) continue;
-          const dx = cell.center.x - p.x;
-          const dz = cell.center.z - p.z;
-          if (dx * dx + dz * dz < crossFaceMinDistSq) {
-            overlap = true;
-            break;
+          if (p.faceIdx === cell.faceIdx) {
+            const du = Math.abs(p.uLocalGT - cell.uLocalGT);
+            const dv = Math.abs(p.vLocalGT - cell.vLocalGT);
+            if (du < aabbHalfW && dv < aabbHalfH) {
+              overlap = true;
+              break;
+            }
+          } else {
+            const dx = cell.center.x - p.x;
+            const dz = cell.center.z - p.z;
+            if (dx * dx + dz * dz < crossFaceMinDistSq) {
+              overlap = true;
+              break;
+            }
           }
         }
         if (overlap) continue;
@@ -636,7 +627,6 @@ export function Panels() {
         });
         placedRecords.push({
           x: cell.center.x,
-          y: cell.center.y,
           z: cell.center.z,
           faceIdx: cell.faceIdx,
           uLocalGT: cell.uLocalGT,
