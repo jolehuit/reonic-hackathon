@@ -1,0 +1,21 @@
+COMMENT S'appelle la fl key dans le env (fal key)
+
+---
+
+a t'on besoin d'une db quand on va hoster sur vercel la ? et a t'on d'autres soucis pour host ou tout est hostable en l'état ?
+
+---
+
+et si on host sur google cloud console ?
+
+---
+
+du coup supabase est necessaires ou pas ?
+
+---
+
+et avec cloud console du coup ce sera tranquille ?
+
+---
+
+oui
