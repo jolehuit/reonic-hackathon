@@ -48,6 +48,7 @@ export function HouseGeometryProvider({
 }) {
   const customGeometry = useStore((s) => s.customRoofGeometry);
   const glbHeight = useStore((s) => s.glbHeight);
+  const glbBboxXZ = useStore((s) => s.glbBboxXZ);
   const [bakedAnalysis, setBakedAnalysis] = useState<RoofGeometry | null>(null);
 
   useEffect(() => {
@@ -80,8 +81,13 @@ export function HouseGeometryProvider({
 
   const value = useMemo<HouseGeometryValue>(() => {
     const size = analysis?.buildingFootprint?.size ?? DEFAULT_SIZE;
-    const width = size[0];
-    const depth = size[2];
+    // Prefer the rendered GLB's actual XZ extent (post-scale, published by
+    // <LoadedGlb/>) over the baked footprint — the wall-mounted components
+    // (battery, inverter, wallbox) need to sit against the VISIBLE wall,
+    // not the photogrammetric mesh's wall (Trellis can shrink/grow the
+    // building by up to 10-15 % during reconstruction).
+    const width = glbBboxXZ?.width ?? size[0];
+    const depth = glbBboxXZ?.depth ?? size[2];
 
     // Photogrammetry-derived analysis files (the demo houses) carry vertices
     // and panel positions in *absolute world altitude* (Y often near 100m
@@ -146,7 +152,7 @@ export function HouseGeometryProvider({
       analysis,
       loaded: analysis !== null,
     };
-  }, [analysis, houseId, glbHeight]);
+  }, [analysis, houseId, glbHeight, glbBboxXZ]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
