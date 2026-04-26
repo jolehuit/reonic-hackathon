@@ -27,7 +27,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { recommendSystem } from '@/lib/sizing';
 import { computeFinancials } from '@/lib/financials';
-import { synthesiseRoofGeometry, inferProfileFromLocation } from '@/lib/customRoof';
+import { defaultCustomerProfile } from '@/lib/customRoof';
 import type {
   CustomerProfile,
   DesignResult,
@@ -214,13 +214,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  // 1. Resolve houseId. Three paths:
+  // 1. Resolve houseId. Two paths now (synthetic geometry has been removed):
   //    (a) demo houseId in the request → straight to baked file
-  //    (b) `'custom'` + lat/lng → try GPS lookup first, then live fetch,
-  //        then synthesise as last resort
-  //    (c) lat/lng without houseId → same as (b)
+  //    (b) lat/lng (with optional houseId='custom') → try GPS lookup first,
+  //        then run the live pipeline (3-5 min) on cache miss
   let resolvedHouseId: string;
-  let synthesised = false;
   let matchedDistanceM: number | null = null;
 
   const requestedHouseId = body.houseId;
@@ -234,32 +232,18 @@ export async function POST(req: NextRequest) {
       resolvedHouseId = match.house.houseId;
       matchedDistanceM = Math.round(match.distanceM * 10) / 10;
     } else if (process.env.DISABLE_LIVE_FETCH === '1') {
-      // Read-only mode: fall back to synthesis if 'custom' was requested.
-      if (requestedHouseId === 'custom') {
-        resolvedHouseId = 'custom';
-        synthesised = true;
-      } else {
-        return NextResponse.json(
-          { error: `No pre-baked analysis within ${MATCH_RADIUS_M}m of (${lat}, ${lng}); live fetch disabled.` },
-          { status: 404 },
-        );
-      }
+      return NextResponse.json(
+        { error: `No pre-baked analysis within ${MATCH_RADIUS_M}m of (${lat}, ${lng}); live fetch disabled.` },
+        { status: 404 },
+      );
     } else {
       try {
         resolvedHouseId = await fetchAndAnalyzeLive(lat, lng);
       } catch (err) {
-        // Live pipeline failed — fall back to synthesis if possible so the
-        // demo doesn't dead-end.
-        console.error('[live] failed, falling back to synthesis:', err);
-        if (requestedHouseId === 'custom') {
-          resolvedHouseId = 'custom';
-          synthesised = true;
-        } else {
-          return NextResponse.json(
-            { error: `Live pipeline failed for (${lat}, ${lng}): ${err instanceof Error ? err.message : String(err)}` },
-            { status: 502 },
-          );
-        }
+        return NextResponse.json(
+          { error: `Live pipeline failed for (${lat}, ${lng}): ${err instanceof Error ? err.message : String(err)}` },
+          { status: 502 },
+        );
       }
     }
   } else {
@@ -269,28 +253,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 2. Resolve profile (provided, or inferred for custom).
-  let profile: CustomerProfile | undefined = body.profile;
-  if (!profile && (resolvedHouseId === 'custom' || synthesised)) {
-    profile = inferProfileFromLocation(lat, lng);
-  }
-  if (!profile) {
-    return NextResponse.json({ error: 'Missing profile' }, { status: 400 });
-  }
+  // 2. Resolve profile. Default seeded to German residential median when
+  //    the client hasn't filled the manual form yet.
+  const profile: CustomerProfile = body.profile ?? defaultCustomerProfile();
 
-  // 3. Resolve roof geometry.
+  // 3. Load baked geometry for the resolved house.
   let roof: RoofGeometry;
-  if (synthesised) {
-    roof = synthesiseRoofGeometry(lat ?? 0, lng ?? 0, profile.houseSizeSqm);
-  } else {
-    try {
-      roof = await loadBakedGeometry(resolvedHouseId);
-    } catch {
-      return NextResponse.json(
-        { error: `No analysis.json for house "${resolvedHouseId}"` },
-        { status: 404 },
-      );
-    }
+  try {
+    roof = await loadBakedGeometry(resolvedHouseId);
+  } catch {
+    return NextResponse.json(
+      { error: `No analysis.json for house "${resolvedHouseId}"` },
+      { status: 404 },
+    );
   }
 
   // 4. Roof capacity → k-NN cap.
@@ -360,7 +335,11 @@ export async function POST(req: NextRequest) {
     source: reco.source,
     inferenceMs: Math.round(performance.now() - t0),
 
-    geometry: synthesised || resolvedHouseId.startsWith('live-') ? roof : undefined,
+    // For live-baked addresses (= addresses we just fetched + analysed
+    // on demand), ship the geometry inline so the client can drive
+    // HouseGeometryProvider without a second fetch on a freshly created
+    // file. Demo houses load via /baked/{id}-analysis.json directly.
+    geometry: resolvedHouseId.startsWith('live-') ? roof : undefined,
     matchedFromCoords:
       matchedDistanceM !== null && typeof lat === 'number' && typeof lng === 'number'
         ? { lat, lng, distanceM: matchedDistanceM }

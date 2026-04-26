@@ -100,12 +100,12 @@ export default function DesignPage({ params }: Props) {
     if (useStore.getState().profile) return;
     let cancelled = false;
     void (async () => {
-      const heuristic = await import('@/lib/customRoof').then((m) =>
-        m.inferProfileFromLocation(customAddress.lat, customAddress.lng),
+      const fallback = await import('@/lib/customRoof').then((m) =>
+        m.defaultCustomerProfile(),
       );
       if (cancelled) return;
       if (!useStore.getState().profile) {
-        useStore.getState().setProfile(heuristic);
+        useStore.getState().setProfile(fallback);
       }
     })();
     return () => {
