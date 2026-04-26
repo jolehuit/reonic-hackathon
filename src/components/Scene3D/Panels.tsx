@@ -123,9 +123,60 @@ interface ProjectedPanel {
   quaternion: Quaternion;
 }
 
+interface GridSlot {
+  id: string;
+  center: [number, number, number];
+  normal: [number, number, number];
+}
+
+// Closest free grid slot to (x, z) — used by edit-mode add/drag so manual
+// placements snap to the same grid the auto layout used. A slot is "free"
+// when no existing panel sits within `occupiedRadius` of it. Returns null
+// if no slot is reachable (e.g. clicked far off the roof).
+function findNearestFreeSlot(
+  x: number,
+  z: number,
+  slots: GridSlot[],
+  others: EditablePanel[],
+  occupiedRadius: number,
+  ignoreId?: string,
+): GridSlot | null {
+  if (slots.length === 0) return null;
+  const occRSq = occupiedRadius * occupiedRadius;
+  let best: { distSq: number; slot: GridSlot } | null = null;
+  for (const slot of slots) {
+    let occupied = false;
+    for (const p of others) {
+      if (ignoreId && p.id === ignoreId) continue;
+      const dx = p.x - slot.center[0];
+      const dz = p.z - slot.center[2];
+      if (dx * dx + dz * dz < occRSq) {
+        occupied = true;
+        break;
+      }
+    }
+    if (occupied) continue;
+    const dx = x - slot.center[0];
+    const dz = z - slot.center[2];
+    const d = dx * dx + dz * dz;
+    if (!best || d < best.distSq) best = { distSq: d, slot };
+  }
+  return best ? best.slot : null;
+}
+
 interface PanelLayout {
   panels: ProjectedPanel[];
   variant: PanelVariant;
+  /** Every valid cell discovered on the rendered GLB — placed AND empty.
+   *  Used by edit mode so manual add/drag snap to grid slots and stay
+   *  aligned with the auto layout. */
+  gridSlots: GridSlot[];
+  /** Centre of mass of placed panels + dominant face normal. CameraRig
+   *  uses this to pivot the view toward the populated face. */
+  focus: {
+    center: [number, number, number];
+    normal: [number, number, number];
+  } | null;
 }
 
 export function Panels() {
@@ -594,7 +645,34 @@ export function Panels() {
       }
     }
 
-    return { panels: placed, variant };
+    // Flatten all valid cells (occupied or not) into gridSlots — exposed
+    // so edit-mode add/drag can snap to a slot rather than free-positioning.
+    const gridSlots: GridSlot[] = [];
+    for (const [faceIdx, cells] of validByFace) {
+      cells.forEach((c, idx) => {
+        gridSlots.push({
+          id: `f${faceIdx}_${idx}`,
+          center: [c.center.x, c.center.y, c.center.z],
+          normal: [c.normal.x, c.normal.y, c.normal.z],
+        });
+      });
+    }
+
+    // Focus = centroid of placed panels + dominant face normal.
+    let focus: PanelLayout['focus'] = null;
+    if (placed.length > 0) {
+      let sx = 0, sy = 0, sz = 0;
+      for (const p of placed) { sx += p.x; sy += p.y; sz += p.z; }
+      const cx = sx / placed.length;
+      const cy = sy / placed.length;
+      const cz = sz / placed.length;
+      // Dominant normal = face of the first placed panel (highest priority
+      // face in our ranking). Already normalised by the raycaster.
+      const n = placed[0].normal;
+      focus = { center: [cx, cy, cz], normal: [n[0], n[1], n[2]] };
+    }
+
+    return { panels: placed, variant, gridSlots, focus };
   }, [glbStable, glbHeight, design, obstructions, sceneRoot, variant]);
 
   const projectedPositions = layout?.panels ?? null;
@@ -608,6 +686,15 @@ export function Panels() {
   useEffect(() => {
     setPanelTargetCount(projectedPositions?.length ?? 0);
   }, [projectedPositions, setPanelTargetCount]);
+
+  // Publish camera focus + edit-mode grid slots to the store as soon as
+  // the layout settles.
+  const setPanelFocus = useStore((s) => s.setPanelFocus);
+  const setRoofGridSlots = useStore((s) => s.setRoofGridSlots);
+  useEffect(() => {
+    setPanelFocus(layout?.focus ?? null);
+    setRoofGridSlots(layout?.gridSlots ?? []);
+  }, [layout, setPanelFocus, setRoofGridSlots]);
 
   // Edit-mode state. Once the drop animation completes we hydrate
   // `editedPanels` from the auto layout and switch to the interactive renderer
@@ -972,19 +1059,43 @@ function PlacedPanel({ panel, size, editMode, others }: PlacedPanelProps) {
         .transformDirection(hit.object.matrixWorld)
         .normalize();
       if (worldNormal.y < ROOF_NORMAL_Y_MIN) return;
-      const pt = hit.point.clone();
-      const ok = validateAt(pt, worldNormal, others, panel.id);
+      // Snap to the nearest free grid slot — keeps drags aligned with the
+      // auto layout, no off-grid panels possible.
+      const slots = useStore.getState().roofGridSlots;
+      const occupiedR = Math.min(size[0], size[2]) * 0.5;
+      const snap = findNearestFreeSlot(
+        hit.point.x,
+        hit.point.z,
+        slots,
+        others,
+        occupiedR,
+        panel.id,
+      );
+      let pt: Vector3;
+      let nrm: Vector3;
+      let ok: boolean;
+      if (snap) {
+        pt = new Vector3(snap.center[0], snap.center[1], snap.center[2]);
+        nrm = new Vector3(snap.normal[0], snap.normal[1], snap.normal[2]);
+        ok = validateAt(pt, nrm, others, panel.id);
+      } else {
+        // No grid slot available near pointer — fall back to free placement
+        // so the user gets feedback instead of a frozen panel.
+        pt = hit.point.clone();
+        nrm = worldNormal;
+        ok = false;
+      }
       drag.moved = true;
       drag.lastValid = ok;
       setInvalid(!ok);
       // Move the rendered group directly each frame (no re-render). We commit
       // to the store on pointer-up so a drag is a single state transition.
-      const lx = pt.x + worldNormal.x * PANEL_LIFT_M;
-      const ly = pt.y + worldNormal.y * PANEL_LIFT_M;
-      const lz = pt.z + worldNormal.z * PANEL_LIFT_M;
+      const lx = pt.x + nrm.x * PANEL_LIFT_M;
+      const ly = pt.y + nrm.y * PANEL_LIFT_M;
+      const lz = pt.z + nrm.z * PANEL_LIFT_M;
       if (groupRef.current) {
         groupRef.current.position.set(lx, ly, lz);
-        groupRef.current.quaternion.setFromUnitVectors(UP, worldNormal);
+        groupRef.current.quaternion.setFromUnitVectors(UP, nrm);
       }
     };
     const onUp = (e: PointerEvent) => {
@@ -1157,8 +1268,27 @@ function RoofPickAdder({ size, others }: RoofPickAdderProps) {
         .transformDirection(hit.object.matrixWorld)
         .normalize();
       if (worldNormal.y < ROOF_NORMAL_Y_MIN) return;
-      const point = hit.point.clone();
-      if (!validateAt(point, worldNormal, others)) return;
+      // Snap the click to the nearest free grid slot so manual panels
+      // align with the auto layout. If no slot is available near the
+      // click, the add is silently rejected (better than a free-form
+      // panel that breaks the array's grid).
+      const slots = useStore.getState().roofGridSlots;
+      const occupiedR = Math.min(size[0], size[2]) * 0.5;
+      const snap = findNearestFreeSlot(
+        hit.point.x,
+        hit.point.z,
+        slots,
+        others,
+        occupiedR,
+      );
+      if (!snap) return;
+      const point = new Vector3(snap.center[0], snap.center[1], snap.center[2]);
+      const snappedNormal = new Vector3(
+        snap.normal[0],
+        snap.normal[1],
+        snap.normal[2],
+      );
+      if (!validateAt(point, snappedNormal, others)) return;
       addEditedPanel({
         id: `manual_${Date.now().toString(36)}_${Math.random()
           .toString(36)
@@ -1166,7 +1296,7 @@ function RoofPickAdder({ size, others }: RoofPickAdderProps) {
         x: point.x,
         y: point.y,
         z: point.z,
-        normal: [worldNormal.x, worldNormal.y, worldNormal.z],
+        normal: [snappedNormal.x, snappedNormal.y, snappedNormal.z],
       });
     };
     dom.addEventListener('pointerdown', onDown);

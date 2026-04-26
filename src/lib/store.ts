@@ -135,6 +135,35 @@ interface AppState {
   glbBboxXZ: { width: number; depth: number } | null;
   setGlbBboxXZ: (v: { width: number; depth: number } | null) => void;
 
+  /** Where the auto-placed panels actually landed on the GLB. Set by
+   *  <Panels/> once the runtime packer settles. CameraRig reads this to
+   *  pivot the view toward the populated face so the user sees the panels
+   *  head-on. `null` until the layout is computed. */
+  panelFocus: {
+    center: [number, number, number];
+    normal: [number, number, number];
+  } | null;
+  setPanelFocus: (
+    f: { center: [number, number, number]; normal: [number, number, number] } | null,
+  ) => void;
+
+  /** Every grid slot the runtime packer found valid on the rendered GLB —
+   *  whether currently occupied or not. Edit-mode add / drag snap to the
+   *  closest one of these so manual placements stay aligned with the
+   *  auto-generated array (no off-grid panels). Set by <Panels/>. */
+  roofGridSlots: {
+    id: string;            // ex. "f0_42" — face index + cell index
+    center: [number, number, number];
+    normal: [number, number, number];
+  }[];
+  setRoofGridSlots: (
+    slots: {
+      id: string;
+      center: [number, number, number];
+      normal: [number, number, number];
+    }[],
+  ) => void;
+
   // House selection — either a demo HouseId or 'custom' for an arbitrary address.
   selectedHouse: HouseId | 'custom' | null;
   selectHouse: (id: HouseId | 'custom') => void;
@@ -280,6 +309,12 @@ export const useStore = create<AppState>((set) => ({
   glbBboxXZ: null,
   setGlbBboxXZ: (glbBboxXZ) => set({ glbBboxXZ }),
 
+  panelFocus: null,
+  setPanelFocus: (panelFocus) => set({ panelFocus }),
+
+  roofGridSlots: [],
+  setRoofGridSlots: (roofGridSlots) => set({ roofGridSlots }),
+
   selectedHouse: null,
   selectHouse: (id) =>
     set({ selectedHouse: id, phase: 'house-selected', trellisStatus: 'idle', glbUrl: null }),
@@ -376,6 +411,8 @@ export const useStore = create<AppState>((set) => ({
       panelTargetCount: 0,
       glbRoofAreaM2: null,
       glbBboxXZ: null,
+      panelFocus: null,
+      roofGridSlots: [],
       editedPanels: null,
       panelEditMode: false,
     }),
