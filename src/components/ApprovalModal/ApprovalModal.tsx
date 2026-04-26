@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@/lib/store';
 
@@ -16,6 +17,8 @@ export function ApprovalModal() {
   const design = useStore((s) => s.design);
   const profile = useStore((s) => s.profile);
   const setPhase = useStore((s) => s.setPhase);
+  const reset = useStore((s) => s.reset);
+  const router = useRouter();
   const [checks, setChecks] = useState<boolean[]>(CHECKLIST.map(() => false));
   const [exporting, setExporting] = useState(false);
 
@@ -54,6 +57,13 @@ export function ApprovalModal() {
 
     setExporting(false);
     setPhase('approved');
+
+    // Brief pause so the user sees the "approved" state, then back to landing
+    // with a clean store so the next demo run starts from scratch.
+    setTimeout(() => {
+      reset();
+      router.push('/');
+    }, 600);
   };
 
   return (
