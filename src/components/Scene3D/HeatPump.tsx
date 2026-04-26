@@ -1,17 +1,18 @@
 // Heat pump outdoor unit — OWNED by Dev A
-// Vaillant aroTHERM-style monobloc on a small concrete pad, against the left wall.
-// Real-world dimensions: 110 cm × 85 cm × 45 cm.
+// Panasonic WC05H3E5 monobloc on a small concrete pad against the left
+// exterior wall. Real dimensions roughly 0.62 × 0.92 × 0.36 m (W×H×D).
 'use client';
 
 import { Edges } from '@react-three/drei';
 import { useStore } from '@/lib/store';
 import { useHouseGeometry } from './HouseGeometry';
 import { EDGE_COLOR, EDGE_THRESHOLD } from './House';
+import { GltfAsset } from './GltfAsset';
 
-const SIZE: [number, number, number] = [1.1, 0.85, 0.45];
+const TARGET_LONGEST_M = 0.92;
 const PAD_THICKNESS = 0.08;
-const PAD_MARGIN = 0.15;
-const GAP_FROM_WALL = 0.4;
+const PAD_FOOTPRINT = 1.4;
+const GAP_FROM_WALL = 0.45;
 
 export function HeatPump() {
   const design = useStore((s) => s.design);
@@ -20,27 +21,20 @@ export function HeatPump() {
 
   if (!design?.heatPumpModel || !refinements.includeHeatPump) return null;
 
-  // Outdoor unit sits to the left of the house with a small concrete pad below.
-  // Rotated 90° around Y so the long side faces the wall.
-  const padX = -halfWidth - GAP_FROM_WALL - SIZE[2] / 2;
-  const unitY = PAD_THICKNESS + SIZE[1] / 2;
+  const padX = -halfWidth - GAP_FROM_WALL - PAD_FOOTPRINT / 2;
 
   return (
     <group>
       {/* Concrete pad */}
       <mesh position={[padX, PAD_THICKNESS / 2, 0]} receiveShadow castShadow>
-        <boxGeometry
-          args={[SIZE[2] + PAD_MARGIN * 2, PAD_THICKNESS, SIZE[0] + PAD_MARGIN * 2]}
-        />
+        <boxGeometry args={[PAD_FOOTPRINT, PAD_THICKNESS, PAD_FOOTPRINT]} />
         <meshToonMaterial color="#9ea3aa" />
         <Edges threshold={EDGE_THRESHOLD} color={EDGE_COLOR} lineWidth={1.5} />
       </mesh>
-      {/* Outdoor unit */}
-      <mesh position={[padX, unitY, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
-        <boxGeometry args={SIZE} />
-        <meshToonMaterial color="#5b6470" />
-        <Edges threshold={EDGE_THRESHOLD} color={EDGE_COLOR} lineWidth={1.5} />
-      </mesh>
+      {/* Outdoor unit on top of the pad */}
+      <group position={[padX, PAD_THICKNESS, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <GltfAsset url="/models/panasonic-heatpump.glb" targetSize={TARGET_LONGEST_M} />
+      </group>
     </group>
   );
 }

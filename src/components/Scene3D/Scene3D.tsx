@@ -27,6 +27,7 @@ import { Battery } from './Battery';
 import { HeatPump } from './HeatPump';
 import { Wallbox } from './Wallbox';
 import { Inverter } from './Inverter';
+import { ElectricCar } from './ElectricCar';
 import type { HouseId } from '@/lib/types';
 
 interface Props {
@@ -84,6 +85,7 @@ function ProceduralCanvas({ houseId }: { houseId: HouseId | 'custom' }) {
             {refinements.includeHeatPump && design.heatPumpModel && <HeatPump />}
             {refinements.includeWallbox && design.wallboxChargeSpeedKw && <Wallbox />}
             <Inverter />
+            <ElectricCar />
           </>
         )}
 

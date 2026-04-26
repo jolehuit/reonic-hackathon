@@ -1,15 +1,16 @@
 // Battery 3D model — OWNED by Dev A
-// BYD HVS-style cabinet, tangent to the right exterior wall, next to the inverter.
-// Real-world dimensions: 60 cm × 130 cm × 30 cm.
+// Tesla Powerwall 2 (real dimensions 1.15 × 0.755 × 0.155 m), wall-mounted
+// against the right exterior wall, next to the inverter.
 'use client';
 
-import { Edges } from '@react-three/drei';
 import { useStore } from '@/lib/store';
 import { useHouseGeometry } from './HouseGeometry';
-import { EDGE_COLOR, EDGE_THRESHOLD } from './House';
+import { GltfAsset } from './GltfAsset';
 
-const SIZE: [number, number, number] = [0.6, 1.3, 0.3];
+const TARGET_HEIGHT_M = 1.15;
+const POWERWALL_DEPTH_M = 0.155;
 const GAP_FROM_WALL = 0.005;
+const MOUNT_HEIGHT_FROM_GROUND = 0.4;
 
 export function Battery() {
   const design = useStore((s) => s.design);
@@ -18,16 +19,15 @@ export function Battery() {
 
   if (!design?.batteryCapacityKwh || !refinements.includeBattery) return null;
 
-  // Stands on the ground against the right exterior wall, towards the back.
-  const x = halfWidth + SIZE[2] / 2 + GAP_FROM_WALL;
-  const y = SIZE[1] / 2;
-  const z = halfDepth - SIZE[0] * 0.8;
+  // Wall-mount along the right exterior wall, towards the back. Rotated so
+  // the unit's depth axis sits flush with the wall.
+  const x = halfWidth + POWERWALL_DEPTH_M / 2 + GAP_FROM_WALL;
+  const y = MOUNT_HEIGHT_FROM_GROUND;
+  const z = halfDepth - 0.6;
 
   return (
-    <mesh position={[x, y, z]} rotation={[0, Math.PI / 2, 0]} castShadow>
-      <boxGeometry args={SIZE} />
-      <meshToonMaterial color="#262626" />
-      <Edges threshold={EDGE_THRESHOLD} color={EDGE_COLOR} lineWidth={1.5} />
-    </mesh>
+    <group position={[x, y, z]} rotation={[0, -Math.PI / 2, 0]}>
+      <GltfAsset url="/models/tesla-powerwall.glb" targetSize={TARGET_HEIGHT_M} />
+    </group>
   );
 }

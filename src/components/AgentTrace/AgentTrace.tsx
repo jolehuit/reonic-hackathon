@@ -11,8 +11,13 @@ import { useStore } from '@/lib/store';
 import type { AgentStep } from '@/lib/types';
 
 // How long the centre-screen popup stays visible before morphing into the
-// step's slot. Long enough to read but still snappy on cached runs.
-const POPUP_HOLD_MS = 1300;
+// step's slot. The progress bar at the top of the popup fills in sync —
+// 3 s gives the user time to actually read what just happened.
+const POPUP_HOLD_MS = 3000;
+// Once every step is done, fade the panel out after a short hold so the
+// 3D viewer takes the full attention (the customer doesn't need to keep
+// staring at "✓ ✓ ✓ 100%" while they explore the model).
+const PIPELINE_DISMISS_DELAY_MS = 1500;
 
 export function AgentTrace() {
   const steps = useStore((s) => s.agentSteps);
@@ -70,17 +75,45 @@ export function AgentTrace() {
     return () => clearTimeout(t);
   }, [activePopupId]);
 
-  if (steps.length === 0) return null;
-
   const totalDone = steps.filter((s) => s.status === 'done').length;
   const totalErr = steps.filter((s) => s.status === 'error').length;
-  const progressPct = Math.round((totalDone / steps.length) * 100);
+  const progressPct = steps.length > 0
+    ? Math.round((totalDone / steps.length) * 100)
+    : 0;
+  const allValidated =
+    steps.length > 0 &&
+    totalErr === 0 &&
+    totalDone === steps.length &&
+    steps.every((s) => !s.artifactUrl && !s.resultLine ? true : shownIds.has(s.id));
+
+  // Auto-dismiss the panel once every step is done AND its popup has shown.
+  // Local state tracks whether we're allowed to render — once the timer
+  // fires, the AnimatePresence below plays the exit animation and unmounts.
+  const [dismissed, setDismissed] = useState(false);
+  useEffect(() => {
+    if (!allValidated) return;
+    const t = setTimeout(() => setDismissed(true), PIPELINE_DISMISS_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [allValidated]);
+
+  // Re-arm if the pipeline restarts (steps cleared / re-running).
+  useEffect(() => {
+    if (steps.length === 0 || steps.some((s) => s.status !== 'done')) {
+      setDismissed(false);
+    }
+  }, [steps]);
+
+  if (steps.length === 0) return null;
 
   return (
+    <AnimatePresence>
+      {!dismissed && (
     <motion.div
+      key="ai-pipeline-panel"
       initial={{ opacity: 0, x: -16 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.35 }}
+      exit={{ opacity: 0, x: -16, scale: 0.96 }}
+      transition={{ duration: 0.45 }}
       className="flex w-[380px] flex-col overflow-hidden rounded-3xl border border-zinc-200/70 bg-white shadow-[0_8px_28px_-12px_rgba(0,0,0,0.18)]"
     >
       {/* Header */}
@@ -134,6 +167,8 @@ export function AgentTrace() {
         ))}
       </ol>
     </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -287,20 +322,65 @@ function ResultPopup({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.18 }}
+          transition={{ duration: 0.22 }}
           className="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center"
         >
+          {/* Soft radial bloom behind the card so the surrounding scene
+              dims and the eye locks onto the popup. */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                'radial-gradient(ellipse 60% 60% at 50% 50%, rgba(16,185,129,0.18) 0%, rgba(15,23,42,0.45) 50%, rgba(15,23,42,0.6) 100%)',
+            }}
+          />
+
           <motion.div
-            initial={{ scale: 0.85, opacity: 0, y: 16 }}
+            initial={{ scale: 0.88, opacity: 0, y: 24 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 280, damping: 24 }}
-            className="flex flex-col items-center gap-4 rounded-[28px] bg-white/95 p-8 shadow-[0_40px_100px_-20px_rgba(15,23,42,0.5)] ring-1 ring-emerald-300/60 backdrop-blur"
+            exit={{ scale: 0.96, opacity: 0, y: -8 }}
+            transition={{ type: 'spring', stiffness: 240, damping: 22 }}
+            className="relative flex flex-col items-center gap-5 overflow-hidden rounded-[32px] border border-emerald-200/60 bg-gradient-to-br from-white via-white to-emerald-50/70 p-9 shadow-[0_60px_140px_-30px_rgba(15,23,42,0.6)] backdrop-blur"
           >
-            <span className="font-mono text-[12px] font-bold uppercase tracking-[0.22em] text-emerald-600">
-              Step complete
-            </span>
-            <span className="max-w-[420px] text-center text-[18px] font-semibold text-zinc-800">
+            {/* Top progress bar — fills 0 → 100 % over POPUP_HOLD_MS so the
+                user has a visible cue for how much time is left. */}
+            <motion.div
+              key="progress-bar"
+              initial={{ width: '0%' }}
+              animate={{ width: '100%' }}
+              transition={{ duration: POPUP_HOLD_MS / 1000, ease: 'linear' }}
+              className="absolute left-0 top-0 h-[3px] bg-gradient-to-r from-emerald-400 via-emerald-500 to-cyan-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]"
+            />
+
+            {/* Subtle animated glow ring */}
+            <motion.div
+              className="pointer-events-none absolute -inset-px rounded-[32px]"
+              animate={{
+                boxShadow: [
+                  '0 0 0 0 rgba(16,185,129,0.0)',
+                  '0 0 0 6px rgba(16,185,129,0.16)',
+                  '0 0 0 0 rgba(16,185,129,0.0)',
+                ],
+              }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+            />
+
+            <div className="flex items-center gap-2">
+              <motion.span
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.4)]"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 18, delay: 0.1 }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </motion.span>
+              <span className="font-mono text-[12px] font-bold uppercase tracking-[0.22em] text-emerald-700">
+                Step complete
+              </span>
+            </div>
+            <span className="max-w-[440px] text-center text-[19px] font-semibold leading-tight text-zinc-900">
               {label}
             </span>
             {artifactUrl && (
@@ -308,13 +388,13 @@ function ResultPopup({
                 layoutId={imgLayoutId}
                 src={artifactUrl}
                 alt={label}
-                className="h-[420px] w-[420px] rounded-3xl object-cover ring-1 ring-zinc-200"
+                className="h-[420px] w-[420px] rounded-3xl object-cover shadow-[0_20px_60px_-15px_rgba(15,23,42,0.45)] ring-1 ring-emerald-200/60"
               />
             )}
             {!artifactUrl && resultLine && (
               <motion.div
                 layoutId={pillLayoutId}
-                className="rounded-xl bg-white px-6 py-3 font-mono text-[26px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
+                className="rounded-2xl bg-gradient-to-br from-emerald-50 to-white px-7 py-4 font-mono text-[28px] font-bold text-emerald-700 shadow-[0_8px_24px_-8px_rgba(16,185,129,0.4)] ring-1 ring-emerald-200"
               >
                 {resultLine}
               </motion.div>
