@@ -1,0 +1,44 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "19444a403ecc",
+  "session_id": "74d1e193-f7b0-4a73-84eb-1daf77f7e760",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T07:08:00.70016Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/scripts/analyze-multi.ts",
+    "src/scripts/analyze-roof.ts",
+    "src/scripts/fetch-3d-tiles.ts",
+    "package.json",
+    "src/lib/types.ts",
+    "src/app/api/design/route.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-7[1m]",
+  "turn_id": "097b79c6fc48",
+  "checkpoint_transcript_start": 549,
+  "transcript_lines_at_start": 549,
+  "token_usage": {
+    "input_tokens": 24,
+    "cache_creation_tokens": 25417,
+    "cache_read_tokens": 5780428,
+    "output_tokens": 15215,
+    "api_call_count": 24
+  },
+  "session_metrics": {
+    "turn_count": 12
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T07:08:00.672447Z",
+    "agent_lines": 324,
+    "agent_removed": 66,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 324,
+    "total_lines_changed": 390,
+    "agent_percentage": 100,
+    "metric_version": 2
+  }
+}
