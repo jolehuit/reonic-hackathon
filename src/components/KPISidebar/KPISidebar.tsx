@@ -3,6 +3,7 @@
 import { motion, useSpring, useTransform } from 'framer-motion';
 import { useEffect } from 'react';
 import { useStore } from '@/lib/store';
+import { useEffectiveDesign } from '@/lib/useEffectiveDesign';
 import type { HouseId } from '@/lib/types';
 
 // Real-world panel surface area, used to translate the placed panel count
@@ -18,16 +19,12 @@ const HOUSE_LOCATION: Record<HouseId, string> = {
 };
 
 export function KPISidebar() {
-  const design = useStore((s) => s.design);
+  // Reactive design — recomputed live from `useEffectiveDesign` whenever the
+  // user toggles a refinement, drags the consumption slider, or edits the
+  // panel layout. All KPIs below read from this single source of truth so
+  // the sidebar can never disagree with the 3D scene.
+  const design = useEffectiveDesign();
   const profile = useStore((s) => s.profile);
-  // panelTargetCount = MAX number of panels DevD's algorithm could physically
-  // fit on the roof (variant cascade upper bound). DevB's `design.moduleCount`
-  // is the k-NN-sized count (matched against 1 620 historical Reonic
-  // deliveries) — the customer-facing default. Once the user enters
-  // edit-layout mode, `editedPanels.length` overrides both.
-  const editedPanels = useStore((s) => s.editedPanels);
-  const efficientPanelCount = design?.moduleCount ?? 0;
-  const liveCount = editedPanels?.length ?? efficientPanelCount;
   const setPanelEditMode = useStore((s) => s.setPanelEditMode);
   const phase = useStore((s) => s.phase);
   const canEdit = phase === 'interactive';
@@ -39,6 +36,7 @@ export function KPISidebar() {
       ? HOUSE_LOCATION[selectedHouse]
       : customAddress?.formatted ?? null;
 
+  const liveCount = design?.moduleCount ?? 0;
   const totalKwp = design?.totalKwp ?? 0;
   const battery = design?.batteryCapacityKwh ?? 0;
   const price = design?.totalPriceEur ?? 0;
@@ -55,8 +53,6 @@ export function KPISidebar() {
       ? Math.min(100, Math.round((panelArea / glbRoofAreaM2) * 100))
       : 0;
 
-  // Live from /api/design's computeFinancials. Depends on system composition
-  // (battery / heat pump / EV) — not a hardcoded constant.
   const ownConsumptionPct = Math.round((design?.selfConsumptionRatio ?? 0) * 100);
 
   return (

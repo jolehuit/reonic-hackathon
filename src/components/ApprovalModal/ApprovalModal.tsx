@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@/lib/store';
+import { useEffectiveDesign } from '@/lib/useEffectiveDesign';
 import type { HouseId } from '@/lib/types';
 
 const CHECKLIST = [
@@ -20,7 +21,9 @@ const HOUSE_LOCATION: Record<HouseId, string> = {
 
 export function ApprovalModal() {
   const phase = useStore((s) => s.phase);
-  const design = useStore((s) => s.design);
+  // Effective design — reflects refinement toggles + slider + manual panel
+  // edits — so the modal and the PDF that ships always match the sidebar.
+  const design = useEffectiveDesign();
   const profile = useStore((s) => s.profile);
   const selectedHouse = useStore((s) => s.selectedHouse);
   const customAddress = useStore((s) => s.customAddress);
