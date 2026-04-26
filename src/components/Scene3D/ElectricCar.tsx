@@ -1,11 +1,9 @@
 // Tesla Model 3 — OWNED by Dev A
-// Parked in front of the wallbox (garage side of the house) when the
-// customer profile has hasEv === true. Visible as soon as the autofill
-// confirms the EV; toggling the EV off in the ControlPanel removes it.
-//
-// Real Model 3 length ~4.69 m. We park it parallel to the front wall,
-// nose pointing right, so the charge port (driver-rear-left in real life)
-// faces the house's right wall where the wallbox is mounted.
+// Parked alongside the right exterior wall, parallel to it, at the same
+// z as the wallbox. Real Model 3 length is ~4.69 m. Rotation aligns the
+// Tesla's body length with the wall so it reads as parallel parking
+// against the house, with the charge port (driver-rear-left in real life)
+// facing the wallbox.
 
 'use client';
 
@@ -25,15 +23,16 @@ export function ElectricCar() {
   if (!profile?.hasEv) return null;
   if (!PHASE_SHOWS_VEHICLE.includes(phase as ShowPhase)) return null;
 
-  // Park on a driveway to the right of the house, in front of the
-  // wallbox/garage. The Tesla GLB's longest axis is its length, so we
-  // ask GltfAsset to size that axis to CAR_LENGTH_M.
-  const x = halfWidth + 2.6;
+  // Park alongside the right exterior wall: x = clearance from wall,
+  // z = same as the wallbox (halfDepth - 1.5). Rotation [0, Math.PI/2, 0]
+  // aligns the GLB's nose-along-X axis to nose-along-Z so the body sits
+  // parallel to the wall — like parallel parking, not nose-in.
+  const x = halfWidth + 2.8;
   const y = 0;
-  const z = halfDepth + 0.5;
+  const z = halfDepth - 1.5;
 
   return (
-    <group position={[x, y, z]} rotation={[0, Math.PI, 0]}>
+    <group position={[x, y, z]} rotation={[0, Math.PI / 2, 0]}>
       <GltfAsset url="/models/tesla-model-3.glb" targetSize={CAR_LENGTH_M} />
     </group>
   );

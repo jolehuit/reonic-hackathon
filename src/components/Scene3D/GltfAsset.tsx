@@ -67,5 +67,4 @@ export function GltfAsset({
 // stall on a fresh fetch — drei caches the parsed scene by URL.
 useGLTF.preload('/models/tesla-powerwall.glb');
 useGLTF.preload('/models/panasonic-heatpump.glb');
-useGLTF.preload('/models/wallbox.glb');
 useGLTF.preload('/models/tesla-model-3.glb');
