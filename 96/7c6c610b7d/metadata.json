@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "967c6c610b7d",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "DEPLOY.md",
+    "package.json",
+    "src/app/api/export/route.ts",
+    "src/app/design/[houseId]/page.tsx",
+    "src/app/layout.tsx",
+    "src/app/page.tsx",
+    "src/components/ApprovalModal/ApprovalModal.tsx",
+    "src/components/Scene3D/Orchestrator.tsx",
+    "src/lib/gemini.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/96/7c6c610b7d/0/metadata.json",
+      "transcript": "/96/7c6c610b7d/0/full.jsonl",
+      "content_hash": "/96/7c6c610b7d/0/content_hash.txt",
+      "prompt": "/96/7c6c610b7d/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 837,
+    "cache_creation_tokens": 2220260,
+    "cache_read_tokens": 168611338,
+    "output_tokens": 305588,
+    "api_call_count": 544
+  }
+}
