@@ -4,6 +4,7 @@
 'use client';
 
 import { useStore } from '@/lib/store';
+import { useEffectiveDesign } from '@/lib/useEffectiveDesign';
 import { useHouseGeometry } from './HouseGeometry';
 import { GltfAsset } from './GltfAsset';
 
@@ -13,7 +14,7 @@ const GAP_FROM_WALL = 0.005;
 const MOUNT_HEIGHT_FROM_GROUND = 0.4;
 
 export function Battery() {
-  const design = useStore((s) => s.design);
+  const design = useEffectiveDesign();
   const refinements = useStore((s) => s.refinements);
   const { halfWidth, halfDepth } = useHouseGeometry();
 

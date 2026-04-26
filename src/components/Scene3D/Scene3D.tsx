@@ -17,6 +17,7 @@ import { ToneMappingMode } from 'postprocessing';
 import { NoToneMapping } from 'three';
 import { Suspense, useEffect } from 'react';
 import { useStore } from '@/lib/store';
+import { useEffectiveDesign } from '@/lib/useEffectiveDesign';
 import { Sun } from './Sun';
 import { CameraRig } from './CameraRig';
 import { DevMockProvider } from './DevMockProvider';
@@ -56,7 +57,12 @@ export function Scene3D({ houseId }: Props) {
 
 function ProceduralCanvas({ houseId }: { houseId: HouseId | 'custom' }) {
   const refinements = useStore((s) => s.refinements);
-  const design = useStore((s) => s.design);
+  // Effective design — reflects the user's refinement toggles in real time
+  // so the 3D scene shows/hides components in lockstep with the
+  // ControlPanel. Reading the raw store value here meant the wallbox
+  // never appeared if the user enabled it after the initial /api/design
+  // call (the API set wallboxChargeSpeedKw=null when hasEv was false).
+  const design = useEffectiveDesign();
   const phase = useStore((s) => s.phase);
   const panelEditMode = useStore((s) => s.panelEditMode);
   const showComponents =

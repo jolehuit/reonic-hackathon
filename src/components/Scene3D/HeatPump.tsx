@@ -5,6 +5,7 @@
 
 import { Edges } from '@react-three/drei';
 import { useStore } from '@/lib/store';
+import { useEffectiveDesign } from '@/lib/useEffectiveDesign';
 import { useHouseGeometry } from './HouseGeometry';
 import { EDGE_COLOR, EDGE_THRESHOLD } from './House';
 import { GltfAsset } from './GltfAsset';
@@ -15,7 +16,7 @@ const PAD_FOOTPRINT = 1.4;
 const GAP_FROM_WALL = 0.45;
 
 export function HeatPump() {
-  const design = useStore((s) => s.design);
+  const design = useEffectiveDesign();
   const refinements = useStore((s) => s.refinements);
   const { halfWidth } = useHouseGeometry();
 

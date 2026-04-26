@@ -5,6 +5,7 @@
 
 import { Edges } from '@react-three/drei';
 import { useStore } from '@/lib/store';
+import { useEffectiveDesign } from '@/lib/useEffectiveDesign';
 import { useHouseGeometry } from './HouseGeometry';
 import { EDGE_COLOR, EDGE_THRESHOLD } from './House';
 
@@ -14,7 +15,7 @@ const GAP_FROM_WALL = 0.005;
 
 export function Inverter() {
   const phase = useStore((s) => s.phase);
-  const design = useStore((s) => s.design);
+  const design = useEffectiveDesign();
   const { halfWidth, halfDepth } = useHouseGeometry();
 
   if (

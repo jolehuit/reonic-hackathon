@@ -18,14 +18,22 @@
 // computeFinancials() with the new effective inputs. It is pure / cheap
 // (sub-millisecond) so we don't bother debouncing.
 //
-// Battery / HeatPump come from k-NN; the toggles can only DISABLE them
-// (set to null), not invent new sizings — k-NN is the only authority on
-// what a similar customer would buy.
+// When the user enables a component (Battery / HeatPump / Wallbox), the
+// hook honours the toggle even if k-NN didn't recommend it for this
+// profile — falling back to a sensible default size — so the toggle
+// always feels alive (3D model appears, price line item appears). When
+// the user disables, the value goes to null.
 
 import { useMemo } from 'react';
 import { computeFinancials } from './financials';
 import type { DesignResult } from './types';
 import { useStore } from './store';
+
+// Defaults used when the user toggles a component on but k-NN didn't
+// recommend it. Picked from the median residential offer.
+const DEFAULT_BATTERY_KWH = 5;
+const DEFAULT_HEATPUMP_KW = 8;
+const DEFAULT_HEATPUMP_MODEL = 'Viessmann Vitocal 250-A';
 
 export function useEffectiveDesign(): DesignResult | null {
   const design = useStore((s) => s.design);
@@ -45,14 +53,18 @@ export function useEffectiveDesign(): DesignResult | null {
     const effectiveTotalKwp =
       Math.round((effectiveModuleCount * design.moduleWattPeak) / 1000 * 100) / 100;
 
-    // 2. Composition toggles: user can disable battery / HP / wallbox.
-    //    Battery and HP sizings still come from k-NN — toggles are purely
-    //    on/off (you can't silently resize a heat pump).
+    // 2. Composition toggles. Toggle ON → use k-NN's size if k-NN
+    //    recommended one, otherwise fall back to a sensible default so
+    //    the 3D component + price line item still appear. Toggle OFF
+    //    → null.
     const effectiveBatteryKwh = refinements.includeBattery
-      ? design.batteryCapacityKwh
+      ? design.batteryCapacityKwh ?? DEFAULT_BATTERY_KWH
       : null;
     const effectiveHeatPumpKw = refinements.includeHeatPump
-      ? design.heatPumpNominalPowerKw
+      ? design.heatPumpNominalPowerKw ?? DEFAULT_HEATPUMP_KW
+      : null;
+    const effectiveHeatPumpModel = effectiveHeatPumpKw
+      ? design.heatPumpModel ?? DEFAULT_HEATPUMP_MODEL
       : null;
     const effectiveHasWallbox = refinements.includeWallbox;
 
@@ -89,7 +101,7 @@ export function useEffectiveDesign(): DesignResult | null {
       totalKwp: effectiveTotalKwp,
       batteryCapacityKwh: effectiveBatteryKwh,
       heatPumpNominalPowerKw: effectiveHeatPumpKw,
-      heatPumpModel: effectiveHeatPumpKw ? design.heatPumpModel : null,
+      heatPumpModel: effectiveHeatPumpModel,
       wallboxChargeSpeedKw: effectiveHasWallbox ? 11 : null,
       inverterPowerKw,
       inverterLoadPercent,
