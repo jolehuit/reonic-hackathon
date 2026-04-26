@@ -1,0 +1,5 @@
+du coup j'aimerais qu'on puisse avoir des données cachées cohérentes avec le nouveau pipeline comme ça pour les démos on attend pas
+
+---
+
+commment ça dérivable ? je veux pareil que le vrai pipeline
