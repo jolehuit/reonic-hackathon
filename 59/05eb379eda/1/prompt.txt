@@ -320,3 +320,7 @@ et le premier form automatique se génere deux fois
 ---
 
 pourquoi l'étape 3 commence avant l'étape 2 fait que ce soit l'inverse
+
+---
+
+push
