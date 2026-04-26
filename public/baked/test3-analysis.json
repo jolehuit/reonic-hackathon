@@ -1039,7 +1039,7 @@
   },
   "_selection": {
     "method": "per-house best variant",
-    "variantCount": 22,
+    "variantCount": 24,
     "plausibleCount": 5,
     "pickedVariant": "-M",
     "pickedReason": "median of 5 plausible variants (cov 41%)",

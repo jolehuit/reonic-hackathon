@@ -733,7 +733,16 @@ export async function fetchLOD2Building(lat: number, lng: number, houseId?: stri
 
   let building: LOD2Building | null = null;
   if (land === 'NRW') {
+    // Progressive bbox widening: 30m matches geocoding precision but misses
+    // when the address point is just outside the building footprint (e.g. on
+    // a driveway or shared cadastral boundary — meerbusch case). Try 60m as
+    // a fallback. Cap at 60m: 100m+ starts capturing neighbours on dense
+    // streets and produces multi-pavilion confusion (e.g. koeln2).
     building = await fetchNRW(lat, lng);
+    if (!building) {
+      console.log('[lod2-nrw] retry with 60 m bbox…');
+      building = await fetchNRW(lat, lng, 60);
+    }
   } else if (land === 'Berlin') {
     building = await fetchBerlin(lat, lng);
   } else if (land === 'Brandenburg') {
