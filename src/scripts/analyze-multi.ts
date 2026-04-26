@@ -686,10 +686,20 @@ async function main() {
     }
   }
 
+  // Top-level summary fields — read by /api/design without parsing arrays.
+  const roofTotalAreaSqm = Math.round(baseFaces.reduce((s, f) => s + f.area, 0) * 10) / 10;
+  const roofUsableAreaSqm = Math.round(baseFaces.reduce((s, f) => s + (f.usableArea ?? f.area), 0) * 10) / 10;
+  const modulesMax = winners.length;
+  const modulesMaxAreaSqm = Math.round(modulesMax * PANEL_AREA * 10) / 10;
+
   const consensus = {
     ...base,
     faces: baseFaces,
     modulePositions: winners,
+    modulesMax,
+    modulesMaxAreaSqm,
+    roofTotalAreaSqm,
+    roofUsableAreaSqm,
     _selection: {
       method: 'per-house best variant',
       variantCount: scored.length,

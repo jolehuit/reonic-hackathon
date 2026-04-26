@@ -13,6 +13,7 @@
     "bake:houses": "tsx src/scripts/bake-houses.ts",
     "bake:fetch": "tsx src/scripts/fetch-3d-tiles.ts",
     "bake:analyze": "tsx src/scripts/analyze-roof.ts",
+    "bake:analyze:multi": "tsx src/scripts/analyze-multi.ts",
     "bake:all": "pnpm bake:fetch && pnpm bake:analyze"
   },
   "dependencies": {

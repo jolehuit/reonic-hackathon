@@ -51,6 +51,13 @@ export interface RoofGeometry {
     center: [number, number, number];
     size: [number, number, number];
   };
+  // Top-level summary fields written by analyze-roof.ts / analyze-multi.ts
+  // so /api/design can read them without iterating arrays. modulesMax is
+  // the post-variant-selection physical capacity of the roof.
+  modulesMax?: number;
+  modulesMaxAreaSqm?: number;
+  roofTotalAreaSqm?: number;
+  roofUsableAreaSqm?: number;
 }
 
 // AI design output

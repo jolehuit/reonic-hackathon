@@ -1318,12 +1318,23 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
   }
   console.log(`[${houseId}] panels: ${rawPanels.length} raw → ${modulePositions.length} after dedup`);
 
+  // Top-level summary fields — consumed by /api/design without parsing arrays.
+  const PANEL_AREA_M2 = 1.045 * 1.879;
+  const roofTotalAreaSqm = Math.round(faces.reduce((s, f) => s + f.area, 0) * 10) / 10;
+  const roofUsableAreaSqm = Math.round(faces.reduce((s, f) => s + f.usableArea, 0) * 10) / 10;
+  const modulesMax = modulePositions.length;
+  const modulesMaxAreaSqm = Math.round(modulesMax * PANEL_AREA_M2 * 10) / 10;
+
   return {
     houseId: houseId as RoofGeometry['houseId'],
     faces,
     obstructions,
     modulePositions,
     buildingFootprint,
+    modulesMax,
+    modulesMaxAreaSqm,
+    roofTotalAreaSqm,
+    roofUsableAreaSqm,
     _autoMultiLevel: {
       fired: autoMultiLevelFired,
       p80Range: autoMultiLevelP80Range,
@@ -1336,10 +1347,18 @@ async function main() {
   await fs.mkdir(BAKED_DIR, { recursive: true });
 
   const onlyId = process.argv[2];
-  const queue = onlyId ? HOUSES.filter((h) => h === onlyId) : HOUSES;
-  if (onlyId && queue.length === 0) {
-    console.error(`Unknown house "${onlyId}". Known: ${HOUSES.join(', ')}`);
-    process.exit(1);
+  // Accept ad-hoc IDs prefixed with "live-" (used by /api/design when GPS
+  // coords miss the cache and we fetch+analyze on demand).
+  const isLiveId = onlyId?.startsWith('live-');
+  let queue: readonly string[];
+  if (isLiveId) {
+    queue = [onlyId!];
+  } else {
+    queue = onlyId ? HOUSES.filter((h) => h === onlyId) : HOUSES;
+    if (onlyId && queue.length === 0) {
+      console.error(`Unknown house "${onlyId}". Known: ${HOUSES.join(', ')}`);
+      process.exit(1);
+    }
   }
 
   for (const house of queue) {
