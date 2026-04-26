@@ -1,0 +1,499 @@
+l'analyse du nombre de panneaux sur les propriétés démo est elle mockée ?
+si oui que faudrait il faire pour brancher au vrai pipeline et quel est le vrai pipeline
+
+---
+
+Ce qui devrait normalement se passer, c'est que les données provenant du dev B qui lui a fait le compute financier et du DEF D qui lui a fait l'analyse du rougeof et qui donne tous les deux des données sur le nombre de panneaux solaires qu'il devrait y avoir sur un toit, devrait être calculé à chaque fois et utilisé. Il ne doit pas y avoir de données cachées sur un to surit. ces informations-là. Et donc ce que tu appelles cache est en réalité un mock ici. La seule chose qu'on veut de cacher est évidemment le modèle 3D et l'image. qu'on ne veut pas régénérer à chaque fois. Donc qu'est-ce qui se passe ici et pourquoi nous avons des données qui paraissent aberrantes par rapport aux calculs commun du DEV B et du DEV D?
+
+---
+
+Ce qui devrait normalement se passer, c'est que les données provenant du dev B qui lui a fait le compute financier et du DEF D qui lui a fait l'analyse du rougeof et qui donne tous les deux des données sur le nombre de panneaux solaires qu'il devrait y avoir sur un toit, devrait être calculé à chaque fois et utilisé. Il ne doit pas y avoir de données cachées sur un to surit. ces informations-là. Et donc ce que tu appelles cache est en réalité un mock ici. La seule chose qu'on veut de cacher est évidemment le modèle 3D et l'image. qu'on ne veut pas régénérer à chaque fois. Donc qu'est-ce qui se passe ici et pourquoi nous avons des données qui paraissent aberrantes par rapport aux calculs commun du DEV B et du DEV D?
+
+Ou alors on peut cacher le résultat, mais il faut s'assurer qu'il soit cohérent par rapport aux deux algos, donc je t'invite à faire des tests.
+
+---
+
+Ce qui devrait normalement se passer, c'est que les données provenant du dev B qui lui a fait le compute financier et du DEF D qui lui a fait l'analyse du roof  et qui donne tous les deux des données sur le nombre de panneaux solaires qu'il devrait y avoir sur un toit, devrait être calculé à chaque fois et utilisé. Il ne doit pas y avoir de données cachées incohérentes mockés. ces informations-là. Et donc ce que tu appelles cache est en réalité un mock ici. La seule chose qu'on veut de cacher est évidemment le modèle 3D et l'image. qu'on ne veut pas régénérer à chaque fois. Donc qu'est-ce qui se passe ici et pourquoi nous avons des données qui paraissent aberrantes par rapport aux calculs commun du DEV B et du DEV D?
+
+Ou alors on peut cacher le résultat, mais il faut s'assurer qu'il soit cohérent par rapport aux deux algos, donc je t'invite à faire des tests.
+
+Pull d'abord tout
+
+---
+
+Le comportement attendu, c'est que les données du Dev B (compute financier) et du Dev D (analyse du toit) — qui produisent tous les deux le nombre de panneaux solaires possibles — soient recalculées à chaque fois et utilisées telles quelles. Il ne devrait y avoir aucune donnée mockée en dur derrière.
+Ce que vous appelez "cache" ici est en réalité un mock. La seule chose qu'on veut vraiment cacher, c'est le modèle 3D et l'image, pour ne pas avoir à les régénérer à chaque fois.
+Du coup, qu'est-ce qui se passe exactement ? Pourquoi on retrouve des valeurs qui semblent aberrantes par rapport aux calculs croisés du Dev B et du Dev D ?
+Sinon, on peut tout à fait cacher le résultat final, mais à condition de garantir sa cohérence avec les deux algos — donc je t'invite à écrire des tests pour le valider.
+Avant toute chose, pull bien tout.
+
+---
+
+c'est bon c'est fixé mtn pull
+
+---
+
+c'est bon c'est fixé mtn pull
+
+---
+
+refarde et dis moi pour résoudre les conflits
+
+---
+
+pull
+
+---
+
+Tout. Et je veux tout comprendre. Que se passe t'il, le process exact, qu'est ce qui est mocké caché. Expliqué clairement sans franglais à outrance et citation de code imbuvable
+
+---
+
+pull
+
+---
+
+oui normlement mtn il a mis live
+
+---
+
+J'ai l'impression que c'est un sac de noeud il faut que tu fasses une analyse effort max avec des agents opus 4.7 pour comprendre clairement ce qu'il faut faire pour déméler tout ça et analyser d'autres mock fallback aussi qui pourraient causer des difficultés
+
+---
+
+<task-notification>
+<task-id>a8d787e4d023d4bcc</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-max-reonic-hackathon/74d1e193-f7b0-4a73-84eb-1daf77f7e760/tasks/a8d787e4d023d4bcc.output</output-file>
+<status>completed</status>
+<summary>Agent "Trace complète pipeline panneaux sur main" completed</summary>
+<result>J'ai assez d'informations pour produire le rapport. Voici les éléments clés que j'ai trouvés :
+
+- 3 sources de comptage divergentes (k-NN, baked, raycast live)
+- 2 sources de profil pour les démos qui divergent : `house-profiles.json` (jamais lu par le code !) et `HOUSE_PROFILES` codé en dur dans `ProfileForm.tsx`
+- KPISidebar lit `design.moduleCount` mais pas `panelTargetCount`
+- ControlPanel lit `panelTargetCount` ou `editedPanels`
+- `ownConsumptionPct = 62` est figé dans KPISidebar
+- `synthesiseRoofGeometry` retourne `houseId: 'brandenburg'` même pour custom
+
+# Rapport : tracé end-to-end du compte de panneaux et des dérivés financiers
+
+## 1. Flux pour les 3 maisons démo
+
+### Trigger et parcours
+
+L'utilisateur clique sur une carte démo dans `src/app/page.tsx:215` → navigation vers `/design/[houseId]`. La page (`src/app/design/[houseId]/page.tsx:79`) appelle `selectHouse(houseId)`. Un `useEffect` flippe la phase à `autofilling` (page.tsx:88), ce qui monte `&lt;ProfileForm/&gt;`. Celle-ci lit le profil **en dur** depuis `HOUSE_PROFILES` (`src/components/AutoFillForm/ProfileForm.tsx:9-35`), le typewriter le révèle, l'utilisateur clique « Generate », phase passe à `agent-running`.
+
+Le `&lt;Orchestrator/&gt;` (`src/components/Scene3D/Orchestrator.tsx:139`) déclenche **une seule** requête `POST /api/design` avec `{ profile, houseId }`. Pour les démos, l'imagerie passe par le cache (`/cache/houses/manifest.json`, `Orchestrator.tsx:185-216`) : aerial.png, clean.png, model.glb préenregistrés. Pour custom, il y a en plus un **pré-warm** depuis la page (`page.tsx:119-148`) qui appelle `/api/design` une 2e fois — son résultat est jeté sauf le `customRoofGeometry`.
+
+### Numéro de panneaux à chaque étape
+
+| Étape | Source | Lecture |
+|---|---|---|
+| `/api/design` réponse | `min(k-NN ÷ 475 W, baked.modulePositions.length)` | `route.ts:106-127` |
+| Store `design.moduleCount` | identique | `setDesign` |
+| `&lt;KPISidebar/&gt;` | `design.moduleCount` (puis `editedPanels.length` après édition) | `KPISidebar.tsx:29-30` |
+| `&lt;ControlPanel/&gt;` Edit | `panelTargetCount` (placement live raycast) ou `editedPanels.length` | `ControlPanel.tsx:29` |
+| Scène 3D | placement raycast live de `&lt;Panels/&gt;` ; baked `modulePositions` **ignoré** | `Panels.tsx:202-580` |
+| PDF export | `design.moduleCount` | `export/route.ts:105` |
+
+### Valeurs financières dérivées
+
+Toutes calculées dans `src/lib/financials.ts:51` à partir du **seul** `reco.totalKwp` k-NN, jamais du compte réellement placé :
+
+- **kWp** : `totalKwp` k-NN, plafonné par `roofMaxKwp = south_usable × 0.18 / jumeleeDivisor` (`route.ts:96-100`).
+- **Prix** : `totalKwp × 1100 €/kWp + battery × 700 + heatpump 12000 + wallbox 1500` (`financials.ts:77-82`).
+- **Payback** : `prix / annualSavings`, où `annualSavings` repose sur `annualGenerationKwh = totalKwp × 1000 kWh/kWp` et un ratio d'auto-conso codé en dur (0.30 / 0.65 / 0.72 / 0.75) (`financials.ts:18-21`, `financials.ts:55-67`).
+- **CO2** : `totalKwp × 1000 × 0.363 × 25 / 1000` (`financials.ts:88`).
+- **Surface couverte** : `liveCount × 1.722 × 1.134` divisé par `glbRoofAreaM2` (`KPISidebar.tsx:12, 52-56`). Calcul live, donc cohérent avec ce qui est affiché en 3D.
+- **Auto-conso affichée** : `62 %` **codé en dur** (`KPISidebar.tsx:58`) — ne tient compte ni de la batterie ni de la PAC ni de l'EV. Diverge silencieusement de `selfConsumptionRatio` calculé dans financials.ts.
+
+**Toutes les valeurs €/payback/CO2 sont calculées sur `reco.totalKwp` k-NN**, jamais sur le nombre de panneaux réellement placé en 3D, ni sur celui édité par l'utilisateur. Si l'utilisateur retire 5 panneaux dans la barre Edit, le KPI « System power » reste à `design.totalKwp`, le prix reste identique, le payback aussi.
+
+## 2. Flux adresse custom
+
+### Pipeline custom
+
+`selectedHouse === 'custom'` change trois choses :
+1. `synthesiseRoofGeometry` est appelé au lieu de charger `public/baked/...` (`route.ts:79-81`). La géométrie synthétisée est renvoyée au client via `result.geometry` et mise dans le store via `setCustomRoofGeometry`.
+2. Pas de cache `/cache/houses/manifest.json` — l'Orchestrator fait le vrai pipeline `/api/aerial` → `/api/clean-image` → `/api/trellis` (`Orchestrator.tsx:218-294`). Le GLB est généré en live par fal-ai.
+3. La page démarre `inferProfileFromLocation` immédiatement en local (`page.tsx:98-114`) pour ne pas bloquer le formulaire.
+
+### `synthesiseRoofGeometry`
+
+Inputs : `(lat, lng, houseSizeSqm)`. **Lat/lng ne sont jamais lus** : la géométrie est strictement fonction de `houseSizeSqm`. Outputs (`customRoof.ts:17-97`) :
+
+- Empreinte = `houseSizeSqm × 0.6`, clampée [50, 220].
+- Aspect 1.4, ridge fixe le long de X.
+- Pente fixe à 35°, azimut sud fixe à **195°**.
+- 2 faces (sud + nord). Sud `usableArea = faceArea × 0.85`, nord `× 0.85 × 0.6`.
+- `modulePositions` synthétiques : grille naïve 1.7 × 1.0 m + gap 0.05 m, sur la face sud uniquement. Aucune obstruction.
+- `houseId` retourné est codé en dur à `'brandenburg'` (`customRoof.ts:88`) — sémantiquement faux mais inoffensif côté serveur, peut être trompeur pour qui logguerait la réponse.
+
+Ces positions synthétiques ne reflètent évidemment pas la maison réelle. Elles sont également **inutilisées** pour le rendu, puisque `&lt;Panels/&gt;` raycaste sur le GLB Trellis. Elles servent uniquement à fournir un `modulePositions.length` à `/api/design` pour plafonner `moduleCount`.
+
+### `inferProfileFromLocation`
+
+Heuristique triviale (`customRoof.ts:104-116`) : retourne **toujours la même chose**, indépendamment de lat/lng — `4500 kWh, 3 hab, gas, 140 m², no EV`. Les paramètres `_lat/_lng` ont un underscore, ils ne sont jamais consultés.
+
+### GLB pour custom
+
+Généré live par Trellis via `/api/trellis`, à partir de la photo aérienne nettoyée. `&lt;Panels/&gt;` raycaste dessus exactement comme pour les démos. Si Trellis échoue, `setTrellisStatus('error')`, le GLB n'est jamais set, et `&lt;Panels/&gt;` reste en attente de `glbStable === true` qui ne vient jamais → aucun panneau rendu, mais le KPISidebar continue d'afficher `design.moduleCount`.
+
+## 3. Points de figeage / fallback
+
+### Données figées sur disque
+
+| Fichier | Contenu | Plafonne / remplace |
+|---|---|---|
+| `public/baked/brandenburg-analysis.json` | 40 modulePositions, 162.5 m² usable total, 43.9 m² south-usable, 10 faces, 3 obstructions | Plafond `moduleCount` côté API |
+| `public/baked/hamburg-analysis.json` | 10 modulePositions, 60.6 m² usable, 29.6 m² south, 2 faces, 1 obstruction | Plafond `moduleCount` |
+| `public/baked/ruhr-analysis.json` | 7 modulePositions, 34.1 m² usable, 16.1 m² south, 2 faces, 2 obstructions | Plafond `moduleCount` (très restrictif) |
+| `public/baked/house-profiles.json` | Profils alternatifs Brandenburg/Hamburg/Ruhr | **Jamais lu** par aucun fichier sous `src/` — fichier orphelin |
+| `public/cache/houses/manifest.json` | URLs aerial/clean/glb précachées par maison | Court-circuite tout le pipeline live |
+
+### Profils de démo dupliqués
+
+- `public/baked/house-profiles.json` contient `{4200, 3, gas, 140, hasEv:false}` pour Brandenburg, `{5100, 4, heatpump, 165, EV}` pour Hamburg, `{3600, 2, oil, 110, isJumelee:true}` pour Ruhr.
+- `src/components/AutoFillForm/ProfileForm.tsx:9-35` contient `{4500, 3, gas, 140, EV}` pour Brandenburg, `{5200, 4, oil, 165, no EV}` pour Hamburg, `{6100, 5, oil, 190, no jumelee}` pour Ruhr.
+- `src/components/Scene3D/dev-mocks.ts:10` contient une 3e version (4500/5200/6100).
+
+**Aucun de ces trois jeux ne s'accorde**. Le fichier `public/baked/house-profiles.json` n'est référencé nulle part dans le code (vérifié par grep). C'est `HOUSE_PROFILES` du composant qui sert de source effective.
+
+Conséquences directes :
+- Hamburg passe d'oil à heatpump selon la source — donc `heatPumpKw` recommandé peut différer.
+- Ruhr a un `isJumelee:true` dans le JSON orphelin, mais `false` dans le composant. `isJumelee` divise `roofMaxKwp` par 2 dans `route.ts:95` → impact direct sur `totalKwp` plafonné. Comme c'est `false` dans la source utilisée, le plafond n'est jamais réduit pour Ruhr.
+
+### Constantes magiques disséminées
+
+- `MODULE_WATT_PEAK = 475` (`route.ts:28`) → divise `totalKwp` pour donner `moduleCount`.
+- `PANEL_EFFICIENCY = 0.18` (`route.ts:33`) → seul facteur entre m² usable et kWp ; ignore l'orientation, l'ombrage, le rendement réel des panneaux.
+- `isSouthish = 90 &lt; azimuth &lt; 270` (`route.ts:43-45`) → classification binaire grossière. Si toutes les faces sont rejetées, le `||` de `route.ts:99` repart sur **toutes** les faces, y compris nord — silencieux fallback.
+- `PANEL_LIFT_M = 0.13`, `OBSTACLE_Y_DELTA_M = 0.03`, `PANEL_OVERLAP_FACTOR = 0.88`, `PACKING_EFFICIENCY = 0.45`, `RAY_ORIGIN_Y = 60`, `ROOF_NORMAL_Y_MIN = 0.3` — tous codés en dur dans `Panels.tsx`. La variant cascade choisit une taille selon `glbRoofAreaM2 × 0.45`, donc si Trellis sort un GLB avec une mauvaise échelle, le packer choisira mal.
+- `PANEL_AREA_M2 = 1.722 × 1.134` codé en dur dans `KPISidebar.tsx:12`, ne suit pas la cascade (compact / mini auraient une autre surface).
+- `ANNUAL_GENERATION_PER_KWP = 1000`, `RETAIL_PRICE = 0.33`, `FEED_IN_TARIFF = 0.0786`, `PRICE_PER_KWP_INSTALLED = 1100`, `CO2_FACTOR = 0.363`, ratios d'auto-conso fixes — tout dans `financials.ts:6-21`.
+- `ownConsumptionPct = 62` codé en dur dans `KPISidebar.tsx:58`. Aucune cohérence avec `selfRatio` calculé serveur.
+- `evKwh = evKm × 0.18` (`KPISidebar.tsx:49`) — autre 0.18 magique sans rapport avec `PANEL_EFFICIENCY`.
+- Slider de consommation : range `[2000, 10000]` codé en dur (`ControlPanel.tsx:142-143`).
+
+### Fallbacks dangereux
+
+- `route.ts:99` : si aucune face `isSouthish`, on prend toutes les faces. Pas un message, juste un `||`. Une analyse roof qui mettrait tous les azimuts à `45°` ou `355°` activerait silencieusement ce fallback.
+- `route.ts:106` : `Math.max(1, Math.round(...))` garantit au moins 1 panneau même si k-NN renvoie 0 kWp.
+- `route.ts:127` : `modulePositions.length || moduleCount` — si la slice est vide, on retombe sur `moduleCount` mais `modulePositions: []` à côté → la 3D n'aurait rien à raycaster (mais elle ne s'en sert pas).
+- `KPISidebar.tsx:29` : `design?.moduleCount ?? 0` — masque un design absent.
+- `ControlPanel.tsx:29` : `editedPanels?.length ?? panelTargetCount` — l'utilisateur voit `panelTargetCount` (raycast live), qui peut être ≥ ou &lt; `design.moduleCount`.
+- `loadCachedHouse` (Orchestrator.tsx:82) : `.catch(() =&gt; null)` — silencieux, déclenche le pipeline live coûteux si le manifeste est cassé.
+
+## 4. Cohérence Dev B ↔ Dev D ↔ Dev A par démo
+
+Pour chaque démo, le profil utilisé est celui du composant. `roofMaxKwp = south_usable × 0.18 / divisor`. Le k-NN voisin médian sur le dataset Reonic n'est pas reproductible sans exécuter le code, mais on peut estimer l'ordre de grandeur (la médiane des 10 plus proches voisins selon `annualConsumptionKwh`).
+
+| Maison | Profil utilisé | South-usable m² | roofMax kWp (×0.18) | Baked module count | Borne k-NN attendue |
+|---|---|---|---|---|---|
+| Brandenburg | 4500 kWh, 3 hab, gas, 140 m², EV | 43.9 | ~7.9 | 40 (≈ 19 kWp à 475 W) | k-NN ~6-9 kWp → moduleCount ~13-19 ; baked 40 jamais limitant |
+| Hamburg | 5200 kWh, 4 hab, oil, 165 m², no EV | 29.6 | ~5.3 | 10 (≈ 4.75 kWp) | k-NN ~7-10 kWp serait plafonné par roofMax 5.3 → moduleCount ≈ 11 ; baked 10 → final **10** |
+| Ruhr | 6100 kWh, 5 hab, oil, 190 m², no jumelee | 16.1 | ~2.9 | 7 (≈ 3.3 kWp) | k-NN ~8-12 kWp plafonné à 2.9 → moduleCount ≈ 6 ; baked 7 → final **6** |
+
+### Incohérences attendues à l'écran
+
+- **Brandenburg** : KPISidebar montre `moduleCount` ~14-19 ; la barre Edit montre `panelTargetCount` (live raycast sur GLB Trellis du cache, qui est un toit de petite maison berlinoise). Selon que le packer choisit AIKO 475 ou compact 220, on peut avoir 14 ↔ 30+ panneaux affichés sous la barre Edit. Diff possible avec sidebar : **plusieurs unités**. Prix/payback resteront sur la base k-NN, donc immuables.
+- **Hamburg** : sidebar 10, barre Edit dépend du GLB. Le baked `usableArea` de 60.6 m² est supérieur au real raycast probable (toit petit à Potsdam) — risque que le packer ne loge pas 10 panneaux full-size, fasse cascade vers compact, et publie 18-25.
+- **Ruhr** : sidebar 6-7, mais le toit baked n'a que 34 m² total. Le GLB Trellis pourrait être très différent (Trellis hallucine souvent une géométrie). Cas où sidebar 7 et 3D affiche 2-3 panneaux est très plausible.
+
+### Cohérence prix / payback
+
+Le prix utilise **uniquement** `reco.totalKwp` k-NN (déjà plafonné par roofMax), pas le compte 3D. Donc :
+- L'utilisateur voit ex. 7 panneaux dans la 3D de Ruhr et un prix calculé sur 2.9 kWp = **3 190 €** (avant batterie/PAC).
+- Si k-NN avait suggéré 9.5 kWp et que le toit limite à 2.9, le prix reflète bien 2.9.
+- Mais : si le packer Dev A choisit compact 220 W et place 20 panneaux pour atteindre les 2.9 kWp visuels, l'utilisateur voit « 7 panneaux » dans le sidebar et 20 sur le toit — incohérence visuelle directe.
+
+## 5. Couplages cachés dangereux
+
+1. **`analyze-roof.ts` → `/api/design` → financials**. Si Dev D rebake avec moins de `modulePositions`, le `min(...)` de `route.ts:121` plafonne `moduleCount` à la baisse, **mais** `totalKwp` k-NN reste inchangé (calculé avant), donc prix/payback/CO2 ne bougent pas — sidebar montrera N panneaux à 475 W, soit `N × 0.475 kWp`, qui peut être très inférieur à `totalKwp` affiché juste à côté. Apparence : « 7 modules · 9.2 kWp » → impossible.
+
+2. **`PANEL_EFFICIENCY = 0.18` × `usableArea`** vs. **k-NN totalKwp**. Si bake produit un `usableArea` gonflé (Brandenburg 162 m² total, dont seulement 43 m² south), mais le k-NN tape médian à 12 kWp et que south × 0.18 = 7.9, `totalKwp` est plafonné à 7.9 — le sidebar montre 7.9 kWp. Si Dev D corrige les normales et baisse south_usable à 20 m², on plafonne d'un coup à 3.6 kWp et le prix s'effondre, sans aucun signal applicatif.
+
+3. **Profils dupliqués `HOUSE_PROFILES` (composant) vs `house-profiles.json` (orphelin) vs `dev-mocks.ts`**. Toute modification du JSON est sans effet ; toute modification du composant casse le typewriter sans déclencher de typecheck sur le JSON. Risque de divergence permanent.
+
+4. **`isJumelee` dans le profil → `roofMaxKwp / 2`**. Si quelqu'un coche `isJumelee` au runtime (le formulaire le permet pour custom), `totalKwp` est divisé par 2 mais `moduleCount` aussi. Aucune indication UI. Et si l'orphelin `house-profiles.json` était réactivé, Ruhr passerait à `isJumelee:true` et son design se diviserait silencieusement par deux.
+
+5. **`ownConsumptionPct = 62` figé dans KPISidebar** vs `selfRatio` calculé dans financials.ts. Quand l'utilisateur toggle « Battery » dans `&lt;ControlPanel/&gt;`, ni le prix ni l'auto-conso ne changent (les refinements ne re-déclenchent pas `/api/design`). 62 % reste affiché peu importe la composition.
+
+6. **`&lt;Panels/&gt;` ignore `modulePositions` baked et utilise raycast live**. Si Trellis renvoie un GLB de mauvaise échelle, la cascade prend la mauvaise variante de panneau ; `panelTargetCount` peut diverger de `design.moduleCount` d'un facteur 2-4. La barre Edit et le sidebar montrent alors des chiffres différents. Si Trellis échoue complètement, `&lt;Panels/&gt;` rend 0 panneau, mais le sidebar continue d'afficher `design.moduleCount`.
+
+7. **Pré-warm `/api/design` en custom**. La page (`page.tsx:119-148`) appelle `/api/design` une fois ; l'Orchestrator l'appelle une seconde fois avec le même body. Le profil n'est pas garanti identique entre les deux appels — si le user édite `annualConsumptionKwh` entre la 1re et la 2e, deux résultats différents seront produits ; le second écrase le premier. C'est ok, mais le `geometry` du 1er appel reste dans `customRoofGeometry` et n'est pas recalculé tant que le 2e appel n'aboutit pas — fenêtre de désynchronisation profil ↔ géométrie.
+
+8. **`MODULE_WATT_PEAK = 475` dans `/api/design`** vs **wattages cascadés dans `&lt;Panels/&gt;`** (475/220/120). Le compte côté serveur suppose toujours 475 W ; côté 3D la cascade peut basculer sur 220 W et placer ~2× plus de panneaux pour la même cible kWp. Le sidebar montre 14 modules, la 3D 28 panneaux, le PDF (qui lit `design.moduleCount`) dit 14 — contradiction visible si l'utilisateur compare.
+
+Fichiers de référence clés : `/Users/max/reonic-hackathon/src/app/api/design/route.ts:96-127`, `/Users/max/reonic-hackathon/src/lib/sizing.ts:329-374`, `/Users/max/reonic-hackathon/src/lib/customRoof.ts:17-116`, `/Users/max/reonic-hackathon/src/lib/financials.ts:51-100`, `/Users/max/reonic-hackathon/src/components/Scene3D/Panels.tsx:180-580`, `/Users/max/reonic-hackathon/src/components/AutoFillForm/ProfileForm.tsx:9-35`, `/Users/max/reonic-hackathon/src/components/KPISidebar/KPISidebar.tsx:29-58`, `/Users/max/reonic-hackathon/public/baked/house-profiles.json` (orphelin).</result>
+<usage><total_tokens>116521</total_tokens><tool_uses>25</tool_uses><duration_ms>181329</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a1d08a0043011a04b</task-id>
+<tool-use-id>toolu_01QfFQWZ1KF7XTXo244mBg5F</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-max-reonic-hackathon/74d1e193-f7b0-4a73-84eb-1daf77f7e760/tasks/a1d08a0043011a04b.output</output-file>
+<status>completed</status>
+<summary>Agent "Plan de réconciliation feat/Dev-D" completed</summary>
+<result>J'ai maintenant tout. Voici le rapport.
+
+---
+
+# Plan de réconciliation `feat/Dev-D` → `main`
+
+## Constat critique préalable
+
+Le **merge-base réel** entre `main` et `origin/feat/Dev-D` est **`f5d1f53`** (LOD2 cadastral). Cela signifie que **6 des 10 commits listés** dans la mission (`799acef`, `a6bad72`, `59dab11`, `0402809`, `d25a156`, `f5d1f53`) sont **déjà sur `main`**, intégrés via le merge `14c8886` ("merge: feat/Dev-D"). Seuls **4 commits** de Dev-D sont véritablement en avance sur `main`. Les ~16 000 lignes supprimées dans le diff `main..feat/Dev-D` ne viennent donc **pas** de ces 4 commits — elles viennent du fait que `feat/Dev-D` n'a jamais reçu les 62 commits que `main` a engrangés (Dev B sizing/Pioneer, Dev C store, Dev A Trellis/Plan Solar UI, etc.).
+
+## 1. Inventaire commit-par-commit
+
+| SHA | Message | Catégorie | Zone de conflit |
+|-----|---------|-----------|-----------------|
+| `799acef` | Pipeline 3D Tiles → OSM polygon → kWp + isJumelee | **Déjà sur main** (≤ merge-base, via `14c8886`) | aucune |
+| `a6bad72` | Multi-variant + consensus voting | **Déjà sur main** | aucune |
+| `59dab11` | Précision (flux + concave + obstructions + MS) | **Déjà sur main** | aucune |
+| `0402809` | Sélection per-house best variant | **Déjà sur main** | aucune |
+| `d25a156` | Override -J pour toits arborés | **Déjà sur main** | aucune |
+| `f5d1f53` | LOD2 cadastral (NRW + Berlin + Brandenburg) | **Déjà sur main** (= merge-base) | aucune |
+| `4f430ee` | Overnight algo + GPS API + b4 benchmark | **Obsolète** (annulé par `bb28db6`) | n/a |
+| `bb28db6` | **Revert** de `4f430ee` | Neutre — annule juste l'expérimentation overnight, signe que Dev D a jugé l'overnight tuning trop fragile (overfit b4) | n/a |
+| `09829c2` | API accepte `{lat,lng}` + `modulesMax` dans schéma JSON | **Précieux** (contenu utile) **mais dangereux** (le diff sur `route.ts` écrase tout le travail Dev B/Pioneer) | `src/app/api/design/route.ts`, `src/scripts/analyze-multi.ts`, `src/scripts/analyze-roof.ts` |
+| `1095b63` | Live fetch+analyze sur cache miss | **Précieux** (mode live = vraie démo "tape n'importe quelle adresse") **mais à réimplémenter** | `src/app/api/design/route.ts`, `src/scripts/analyze-roof.ts`, `src/scripts/fetch-3d-tiles.ts` |
+
+À retenir : **2 commits seulement** apportent de la valeur nouvelle (`09829c2` + `1095b63`). Les 6 anciens sont déjà en place. Le couple `4f430ee`/`bb28db6` s'annule.
+
+## 2. Fichiers en conflit majeur
+
+| Fichier | État sur `main` | État sur `feat/Dev-D` | Arbitrage |
+|---------|-----------------|------------------------|-----------|
+| `src/app/api/design/route.ts` | 393 lignes — orchestre k-NN + financials + customRoof + isJumelee | 257 lignes — **stub** qui retourne `_partial:true, _todo:'Dev B: BOM + sizing + financials'` | **Garder main**, greffer la logique GPS-lookup + live fetch |
+| `src/lib/sizing.ts` | 392 lignes (k-NN complet) | 45 lignes (squelette `throw 'Not implemented'`) | **Garder main** strict |
+| `src/lib/financials.ts` | 100 lignes | **supprimé** | **Garder main** |
+| `src/lib/customRoof.ts` | 116 lignes | **supprimé** | **Garder main** |
+| `src/lib/store.ts` | ~370 lignes (Zustand complet, ManualInputs, custom address) | ~80 lignes (squelette d'origine) | **Garder main** strict |
+| `src/lib/types.ts` | `source:'knn'`, `geometry?`, `AgentStep` enrichi | `source:'pioneer'\|'knn-fallback'`, `geometry` retiré, `AgentStep` minimal | **Garder main** ; main a déjà supprimé Pioneer (commit `3e61dc5`) |
+| `src/components/Scene3D/Panels.tsx` | 1170 lignes (placement runtime, instancing PBR, drop animation) | 31 lignes (TODO Dev A) | **Garder main** strict |
+| `src/components/Scene3D/{House,Orchestrator,BuildingRenderer,TrellisModel,vision/*}.tsx` | Toute la chaîne Trellis + vision Gemini en place | Versions scaffold ou supprimées | **Garder main** strict |
+| `src/scripts/analyze-multi.ts` | Identique merge-base | +11 lignes : émet `modulesMax`, `modulesMaxAreaSqm`, `roofTotalAreaSqm`, `roofUsableAreaSqm` | **Picker l'addition** (purement additive, sans risque) |
+| `src/scripts/analyze-roof.ts` | Identique merge-base | +29 lignes : mêmes 4 champs au top-level + accepte `live-*` IDs | **Picker** |
+| `src/scripts/fetch-3d-tiles.ts` | Identique merge-base | +18 lignes : lit `LIVE_HOUSE_ID`/`LAT`/`LNG` env vars | **Picker** |
+| `public/baked/bench-berlin1-analysis.json` | Variante consensus | +4 champs `modulesMax/...` | **Régénerer** sur main avec le nouvel `analyze-multi` |
+
+Tous les autres fichiers `public/baked/*-analysis.json` sont identiques sur les deux branches (sauf bench-berlin1 qui a été re-baké sur Dev-D).
+
+## 3. Schéma `types.ts` : divergences sémantiques
+
+Le diff est petit mais conflictuel sur la **provenance** :
+
+- `DesignResult.source` : `main` = `'knn'`, Dev-D = `'pioneer' | 'knn-fallback'`. **Main est plus à jour** (Pioneer a été retiré dans `3e61dc5`).
+- `DesignResult.geometry?: RoofGeometry` : présent sur main, supprimé sur Dev-D. Main en a besoin pour les adresses custom (`customRoof.ts`).
+- `AgentStep` : main ajoute `sublabel`, `artifactUrl`, `resultLine` — utilisés par l'Orchestrator vivant.
+
+**Aucune divergence ne sort de `types.ts`** côté Dev-D qui doive remonter dans `main`. Le schéma de `main` est strictement supérieur. Les nouveaux champs `modulesMax/...` du JSON baked **n'ont pas besoin** d'apparaître dans `RoofGeometry` côté TypeScript pour fonctionner — l'API les lit en `as any` et ils sont optionnels.
+
+## 4. Format `analysis.json` : 4 champs ajoutés
+
+Lecture de `bench-berlin1-analysis.json` (le seul fichier baked où le delta est visible côté Dev-D) :
+
+```
+modulesMax: 73            // panneaux placés par l'algo après LOD2/variant pick
+modulesMaxAreaSqm: 143.3  // surface couverte par ces panneaux (modulesMax * 1.045 * 1.879)
+roofTotalAreaSqm: 283.9   // somme des f.area (toit brut)
+roofUsableAreaSqm: 215.9  // somme des f.usableArea (toit moins obstacles)
+```
+
+**Sémantique** : raccourcis pour `/api/design` afin d'éviter de reparser le tableau `modulePositions` ou de recalculer la surface utile à chaque requête. C'est un cache. Aucun changement d'algo, juste de la sérialisation. Les fichiers existants sans ces champs continuent de fonctionner via le fallback `analysis.modulePositions?.length ?? 0`.
+
+## 5. Plan recommandé
+
+### Option A — Rebase complet de `feat/Dev-D` sur `main`
+- **Probabilité de succès : ~5%.** 122 fichiers, dont la quasi-totalité du Scene3D, du store, de sizing, de l'API a été réécrite en parallèle des deux côtés. Chaque commit Dev-D va déclencher des conflits massifs avec un état que l'auteur ne connaît pas.
+- **Effort : 2-3 jours-développeur** de résolution manuelle, avec haut risque d'introduire des régressions silencieuses (Pioneer fantôme, types.ts contradictoire, store réinitialisé).
+- **Risque de régression silencieuse : très élevé.** À proscrire.
+
+### Option B — Cherry-pick chirurgical (recommandé conditionnellement)
+- Cherry-pick `09829c2` puis `1095b63` (skip `4f430ee`/`bb28db6` qui s'annulent).
+- **Conflits prévisibles** :
+  - `src/app/api/design/route.ts` : conflit total. Le commit Dev-D supprime tout le BOM (k-NN, financials, customRoof) pour le remplacer par un stub. Il faut résoudre **manuellement** en gardant la structure main et en greffant uniquement : (i) la branche `lat/lng` au début, (ii) `findClosestHouse` + `listPrebakedHouses`, (iii) le bloc `fetchAndAnalyzeLive` + `runChild`, (iv) `export const dynamic = 'force-dynamic'` et `maxDuration = 600`, (v) la lecture de `analysis.modulesMax` en plus du calcul existant.
+  - `src/scripts/{analyze-multi,analyze-roof,fetch-3d-tiles}.ts` : conflits **triviaux** (additions pures), résolution mécanique.
+- **À réécrire à la main** : le bloc API. Les 50-80 lignes de logique GPS-lookup + spawn child process s'isolent proprement de ce que fait Dev B (sizing) — il suffit de les insérer comme étape 0 (résolution `houseId`) avant l'appel à `loadBakedGeometry`. Dev B ne touche pas à la résolution houseId, son `recommendSystem(profile, roofMaxKwp)` continue de tourner.
+
+### Option C — Réimplémenter le mode live à partir de zéro sur `main`
+- Copier sans cherry-pick : les 11 lignes `analyze-multi.ts`, les 29 lignes `analyze-roof.ts`, les 18 lignes `fetch-3d-tiles.ts` (du contenu déjà visible dans la section 2). Trois `Edit` ciblés.
+- Écrire neuf dans `main:src/app/api/design/route.ts` :
+  - helper `haversineDistanceM` (8 lignes)
+  - helper `listPrebakedHouses` qui lit les `*-photogrammetry.json` headers (~25 lignes)
+  - helper `findClosestHouse` (~10 lignes)
+  - helper `fetchAndAnalyzeLive` qui spawn `pnpm bake:fetch` puis `pnpm bake:analyze:multi` (~30 lignes)
+  - branchement `if (!houseId &amp;&amp; lat &amp;&amp; lng) { houseId = (await findClosestHouse(...))?.house.houseId ?? await fetchAndAnalyzeLive(...) }`
+- Re-bake les analyses pour ajouter les 4 champs top-level (un seul script run).
+
+**Recommandation : Option C.** Pour 3 raisons :
+1. Le fichier `route.ts` a divergé trop fortement (les deux versions n'ont presque plus rien en commun). Résoudre un conflit Git ici prend autant de temps que réécrire les 75 lignes utiles.
+2. Le code Dev-D est à recopier ligne par ligne de toute façon — autant le faire propre sans bagage Git (et sans le `_partial:true` qui casserait Dev B).
+3. On évite de polluer l'historique avec un cherry-pick qui dit "merge Pioneer-removed state" alors qu'il vient avec un stub de BOM.
+
+L'option B reste valide si vous tenez à préserver l'attribution commit. Mais le `route.ts` finira identique aux deux options.
+
+## 6. Effort restant après merge
+
+Une fois le mode live greffé, voici uniquement les ajustements **spécifiques à l'arrivée du live** (pas le travail UX général) :
+
+1. **Frontend appelant** : la page de design doit envoyer `{lat, lng, profile}` au lieu de `{houseId:'custom', lat, lng, profile}` quand l'adresse vient de Google Places. Trace : `src/app/design/[houseId]/page.tsx` + le call site qui POST sur `/api/design` (probablement dans `Orchestrator.tsx` ou un hook). Sinon le code main passe par `customRoof.ts` (synthèse grossière) et n'utilise jamais le pipeline Dev-D.
+2. **UI feedback long-running** : le live fetch dure 3-5 min. L'AgentStep correspondant doit accepter un `durationMs` dynamique ou être marqué `running` jusqu'à résolution réelle de la promesse. La structure `AgentStep` sur main supporte déjà ça (statut + label dynamique), il faut juste un step "Fetching 3D Tiles…" et "Analyzing 22 variants…" dans `Orchestrator.tsx`.
+3. **Cohérence des trois affichages KPI** : aujourd'hui Dev B affiche `totalKwp` (k-NN), Scene3D affiche `modulePositions.length`, KPI sidebar ré-affiche encore autre chose. Avec `modulesMax` désormais lu en top-level, **utiliser `analysis.modulesMax` comme source unique de vérité côté serveur** dans `route.ts`, le réinjecter dans `DesignResult.moduleCount`, et laisser Scene3D et KPISidebar lire `design.moduleCount` partout. C'est l'occasion de supprimer les 2-3 chemins parallèles qui calculent encore le compte de panneaux.
+4. **Cache key custom address** : `live-{lat6}-{lng6}` est stable mais si Google Places renvoie deux résultats à 2 m de distance pour la même adresse, on bake deux fois. Optionnel : arrondir à 5 décimales (~1 m) ou normaliser via `place_id`.
+5. **Quota &amp; coût** : ajouter un log côté Cloud Run de chaque hit `fetchAndAnalyzeLive` (Google 3D Tiles est facturé). Un simple `console.log('[live] tiles fetched for', liveId)` suffit pour la démo, mais à mentionner avant un vrai déploiement.
+
+## Fichiers clés cités
+
+- `/Users/max/reonic-hackathon/src/app/api/design/route.ts`
+- `/Users/max/reonic-hackathon/src/lib/types.ts`
+- `/Users/max/reonic-hackathon/src/lib/sizing.ts`
+- `/Users/max/reonic-hackathon/src/lib/financials.ts`
+- `/Users/max/reonic-hackathon/src/lib/customRoof.ts`
+- `/Users/max/reonic-hackathon/src/lib/store.ts`
+- `/Users/max/reonic-hackathon/src/components/Scene3D/Panels.tsx`
+- `/Users/max/reonic-hackathon/src/scripts/analyze-multi.ts`
+- `/Users/max/reonic-hackathon/src/scripts/analyze-roof.ts`
+- `/Users/max/reonic-hackathon/src/scripts/fetch-3d-tiles.ts`
+- `/Users/max/reonic-hackathon/public/baked/bench-berlin1-analysis.json`</result>
+<usage><total_tokens>68454</total_tokens><tool_uses>40</tool_uses><duration_ms>169416</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>ac2a43d64a45971c9</task-id>
+<tool-use-id>toolu_0138sXy9r2SnVB8AJ8ssi8zD</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-max-reonic-hackathon/74d1e193-f7b0-4a73-84eb-1daf77f7e760/tasks/ac2a43d64a45971c9.output</output-file>
+<status>completed</status>
+<summary>Agent "Audit complet mocks et fallbacks" completed</summary>
+<result>`tavily` is referenced as overriding tariffs but no `tavily.ts` exists in src — phantom mention. The `overrides` in computeFinancials is never wired from any caller (`/api/design` doesn't pass `overrides`).
+
+I have enough material. Let me consolidate the audit.
+
+# Audit exhaustif — mocks, fallbacks et figeages non encore signalés
+
+## Vue d'ensemble
+
+J'ai parcouru les 77 fichiers TypeScript de `src/`, les 8 routes API, les composants UI, le store Zustand et la lib financière. Au-delà des trois points déjà connus (`baked/*-analysis.json`, `house-profiles.json`, `Orchestrator` court-circuit), j'ai identifié **plus d'une vingtaine** de zones où la valeur affichée ne reflète pas le calcul live. Les plus dangereuses concernent l'auto-consommation hardcodée, le refinement non recalculé, et la duplication des profils maison.
+
+## 1. Composants UI : valeurs en dur affichées comme "live"
+
+| Chemin:ligne | Type | Valeur | Impact | Recommandation |
+|---|---|---|---|---|
+| `src/components/KPISidebar/KPISidebar.tsx:58` | hardcoded | `const ownConsumptionPct = 62` | 🔴 La tuile "Own consumption" affiche **toujours 62 %** quel que soit le profil, la batterie ou la conso. Signé "Live" en haut. | Calculer depuis `fin.selfConsumptionRatio` (déjà retourné par `computeFinancials`). Effort S. |
+| `src/components/KPISidebar/KPISidebar.tsx:49` | hardcoded | `evKwh = round(evKm * 0.18)` | 🟠 Facteur de conso EV figé à 18 kWh/100 km. | Paramétrer ou justifier dans un commentaire. Effort S. |
+| `src/components/KPISidebar/KPISidebar.tsx:14-18` | hardcoded | `HOUSE_LOCATION` dupliqué 3× (KPISidebar, ApprovalModal, ProfileForm) | 🟡 Adresses figées qui peuvent diverger en cas de refactor. | Centraliser dans `lib/houses.ts`. Effort S. |
+| `src/components/AutoFillForm/CustomAddressForm.tsx:2095-2149` | hardcoded | Toute la `ResultDashboard` : `baseSelfSuff = hasBattery ? 63 : 38`, `baseYears = starter ? 8 : comfort ? 11 : 14`, `co2 = totalKwh * 0.0004`, `yieldKwh = 5500/6640/9800` | 🔴 La page de résultat custom-form n'appelle **jamais** `/api/design` ni `computeFinancials`. Tous les KPIs (auto-consommation, payback, CO₂, Sankey solar→batterie→EV) sont des fonctions trigonométriques inventées localement. | Brancher sur `/api/design` ou supprimer la vue. Effort M. |
+| `src/components/ApprovalModal/ApprovalModal.tsx:33-41` | fake animation | Checklist auto-cochée 4×320 ms par `setTimeout` | 🟠 « Pre-flight checklist » prétend valider 4 items réels (accès au toit, calendrier, panneau électrique, prix accepté) alors qu'aucun n'est vérifié. | Renommer ou faire de vraies cases à cocher manuelles. Effort S. |
+| `src/components/AgentTrace/AgentTrace.tsx:15` | hardcoded | `POPUP_HOLD_MS = 1300` ms par étape | 🟡 Un délai cosmétique fixe — pas faux mais à savoir. | Documenté. RAS. |
+
+## 2. Refinements (toggles bas de page) : effets visuels sans recalcul
+
+| Chemin:ligne | Type | Valeur | Impact | Recommandation |
+|---|---|---|---|---|
+| `src/components/ControlPanel/ControlPanel.tsx:111-113` + `src/lib/store.ts:301-303` | bypass | Les toggles `includeBattery / includeHeatPump / includeWallbox` modifient juste `refinements` dans le store. Aucun appel à `/api/design` n'est refait. | 🔴 L'utilisateur peut décocher Battery → la batterie disparaît du 3D, **mais le prix, le payback, les KPIs CO₂ et l'auto-conso restent ceux de la première réponse**. La maquette est incohérente. | Soit appeler `/api/design` à chaque changement, soit recalculer côté client via `computeFinancials`. Effort M. |
+| `src/components/ControlPanel/ControlPanel.tsx:146` | partial | Le slider `annualConsumptionKwh` modifie `profile.annualConsumptionKwh` mais ne déclenche pas `/api/design` non plus. | 🔴 Même symptôme : la conso change dans la KPI "Power consumption" mais le sizing kWp/batterie reste figé. | Idem. Effort M. |
+
+## 3. Profils maison dupliqués (3 sources qui peuvent diverger)
+
+| Chemin:ligne | Type | Valeur | Impact | Recommandation |
+|---|---|---|---|---|
+| `src/components/AutoFillForm/ProfileForm.tsx:9-35` | hardcoded | `HOUSE_PROFILES` (brandenburg=4500 kWh, hamburg=5200, ruhr=6100) | 🔴 Cette source est ce qui pilote l'autofill UI. | Lire `public/baked/house-profiles.json`. Effort S. |
+| `src/components/Scene3D/dev-mocks.ts:8-34` | hardcoded | `MOCK_PROFILES` (mêmes clés mais valeurs différentes : brandenburg.hasEv=true vs false) | 🟠 Diverge déjà des deux autres. Activé via `?mock=` en dev seulement. | Lire la même source. Effort S. |
+| `public/baked/house-profiles.json` | hardcoded | brandenburg=4200, hamburg=5100/EV, ruhr=3600/jumelée | 🔴 Le JSON dit `_note: "consumed by ProfileForm.tsx::HOUSE_PROFILES"` — mais **aucun code ne le lit**. ruhr y est `isJumelee: true` (donc /2 sur le toit), tandis que dans `ProfileForm.tsx` `isJumelee: false`. Les démos donneront des résultats différents selon la source. | Faire lire ce JSON, ou supprimer le fichier. Effort S. |
+
+## 4. Constantes physiques figées dans `lib/financials.ts`
+
+Toutes ces valeurs sont définies **une seule fois** (constantes module-level), aucun caller ne fournit `overrides`, et le commentaire ligne 3 mentionne un `tavily.ts` qui n'existe pas dans le repo.
+
+| Constante | Valeur | Risque |
+|---|---|---|
+| `FEED_IN_TARIFF` | 0,0786 €/kWh | 🟡 Documenté, mais figé EEG. |
+| `RETAIL_PRICE` | 0,33 €/kWh | 🟠 Hardcodé alors que le formulaire custom demande `electricityPrice` (`store.ts:226 = 35`) — la valeur saisie par l'utilisateur **n'est jamais propagée**. |
+| `CO2_FACTOR` | 0,363 kg/kWh | 🟡 Source datée 2024. |
+| `ANNUAL_GENERATION_PER_KWP` | 1000 kWh/kWp/an | 🟠 Constante nationale appliquée même à des toits nord ou ombragés. |
+| `SELF_CONSUMPTION_NO_BATT/WITH_BATT/...` | 0,30 / 0,65 / 0,75 / 0,72 | 🟠 Quatre paliers binaires, pas de continuum. |
+| `LIFETIME_YEARS` | 25 | RAS. |
+| `PRICE_PER_KWP_INSTALLED` | 1100 €/kWp | 🟠 Marché DE 2026, pas de contrôle de cohérence. |
+| `MODULE_WATT_PEAK` (`api/design/route.ts:28`) | 475 | Cohérent avec `sizing.ts:92` `DEFAULT_PANEL_W = 475` mais incohérent avec `dev-mocks.ts:60` (`moduleWattPeak: 440`) et `Panels.tsx:48-69` (variantes 475/220/120). Trois sources de "Wp par module". |
+| `PANEL_EFFICIENCY` (`api/design/route.ts:33`) | 0,18 | 🟡 Module efficiency figée. |
+| `manualInputs.electricityPrice` (`store.ts:226`) | 35 ct/kWh | 🔴 Saisi par l'utilisateur, **jamais lu par computeFinancials**. |
+| `manualInputs.annualIncreasePct` (`store.ts:228`) | 3 % | 🔴 Saisi par l'utilisateur, **aucun calcul actualisé** ne l'utilise (le payback est non actualisé selon le commentaire `:84` "no discounting"). |
+
+## 5. Routes API : fallbacks et erreurs masquées
+
+| Chemin:ligne | Type | Détail | Impact |
+|---|---|---|---|
+| `src/app/api/design/route.ts:151-153` | catch silencieux | `designPromise` côté client retourne `null` sans propager. | 🟠 L'orchestrateur affiche `error` sur l'étape `size`, OK ; mais aucun log côté serveur n'apparaît. |
+| `src/app/api/design/route.ts:69-71, 80` | fallback | Si `!profile &amp;&amp; houseId === 'custom'` : `inferProfileFromLocation(lat, lng)` qui retourne **toujours** `{4500 kWh, 3 hab, no-EV, gas, 140 m², not jumelée}` (`customRoof.ts:104-116`). Les paramètres `_lat _lng` sont préfixés `_` et **non utilisés**. | 🔴 Toute adresse "custom" sans formulaire reçoit le même profil par défaut. La promesse "auto-fill plausible" est cosmétique. |
+| `src/app/api/design/route.ts:77-90` | fallback | Pour `custom` : `synthesiseRoofGeometry` toujours produit une maison gable 35°, 195° SSW, aspect 1.4, modules grille naïve sur la face sud uniquement. Aucun lien avec la réalité de l'adresse. | 🔴 Le calcul kWp/m² est fictif sur du custom. |
+| `src/app/api/aerial/route.ts:107-113` | catch silencieux | Si Elevation API plante, `elevAboveEllipsoid = null` sans warning. | 🟡 Conséquence visible dans /oblique (marqueur mal placé). |
+| `src/app/api/aerial/route.ts:109` | hardcoded | `+45 m` constant pour ondulation du géoïde Europe occidentale. | 🟡 Documenté. |
+| `src/app/api/clean-image/route.ts:33` | env fallback | `process.env.PORT ?? '3000'` | 🟡 OK en dev/prod. |
+| `src/app/api/parse-profile/route.ts` | unused | Route entière marquée "wired but unused" (commentaire ligne 4). | 🟡 Endpoint mort à supprimer. |
+| `src/app/api/explain/route.ts` | aucune validation | `body` parsé sans try/catch ni schéma — `body.profile` peut être `undefined`. | 🟠 500 silencieux possible. |
+| `src/app/api/export/route.ts:86` | catch silencieux | Échec d'embed image → continue silencieusement. | 🟡 PDF sans screenshot. |
+
+## 6. Caches et singletons invisibles
+
+| Chemin:ligne | Type | Détail |
+|---|---|---|
+| `src/lib/sizing.ts:43-45` | singleton lazy | `PROJECTS / MEAN / STD` chargés au premier appel et **jamais invalidés**. Si les CSV changent on doit redémarrer. 🟡 |
+| `src/lib/sizing.ts:195-198` | seeded random | `seededRand` synthétise les `inhabitants / houseSize / heatingType` manquants — donc 1 420 / 1 620 lignes (88 %) ont des features **inventées de façon déterministe**. La pitch dit "synthesized when GDPR-stripped" mais ce n'est pas surfacé dans la réponse `/api/design`. 🟠 |
+| `src/lib/fal.ts:25-27` | cache mémoire | `cachedKey` jamais purgé : un changement de `.env.local` ne prend pas effet sans restart. 🟡 |
+| `src/app/api/aerial/route.ts:62-77` | disk cache infini | `existsSync(cachePath)` → renvoie le PNG sans TTL. Une adresse re-générée n'est jamais re-rendue. 🟠 |
+
+## 7. Flags d'environnement et bypass
+
+| Chemin:ligne | Détail |
+|---|---|
+| `src/components/Scene3D/DevMockProvider.tsx:46` | Gate stricte `NODE_ENV !== 'development'` + `?mock=…` requis. ✅ Sûr en prod. |
+| `src/components/Scene3D/Scene3D.tsx:38-41` | En dev, expose `window.__store = useStore`. Pas un risque prod. |
+| `src/scripts/analyze-multi.ts:663` | `DISABLE_LOD2_FALLBACK` — script offline only. |
+| `src/lib/fal.ts:28-44` | En dev, lit `.env.local` à chaud, ignoré en prod. ✅ |
+
+## 8. Tests
+
+**Aucun test** : pas de `__tests__/`, pas de `*.test.ts` / `*.spec.ts`, ni `vitest.config*` ni `jest.config*` à la racine ni dans `src`. Le seul "smoke" est `src/scripts/smoke-sizing.ts` (script CLI, pas un test). 🔴 Tout le code financier, sizing, customRoof tourne sans filet.
+
+## 9. Texte vs réalité
+
+| Endroit | Affirmation | Réalité |
+|---|---|---|
+| `src/app/page.tsx:74` | "From an address to a complete solar design in 30 seconds" | 🟠 Le `SEQUENCE` (`Orchestrator.tsx:35-60`) annonce déjà 12+25+1.2+60 = **98 secondes** d'estimation. Sur cache (démo houses), ~12 s seulement, donc valable uniquement sur les 3 démos. |
+| `src/app/page.tsx:78-80` | "captures from Google Photorealistic 3D Tiles, isolates with GPT Image 2, reconstructs with Hunyuan 3D Pro" | ✅ Vrai pour custom; ⚠ contourné par `loadCachedHouse` pour les 3 démos. |
+| `src/components/KPISidebar/KPISidebar.tsx:72` | "k-NN match · 1 620 deliveries" | 🟠 Vrai au sens algorithmique mais 88 % des features de ces 1 620 lignes sont **synthétisées** (`sizing.ts:181`). Pas mentionné dans l'UI. |
+| `src/lib/financials.ts:3` | "can be overridden at runtime by tavily.ts" | 🔴 `tavily.ts` n'existe pas dans `src/`. Promesse non tenue. |
+
+## 10. Heatmap mort + TODO non résolus
+
+- `src/components/Scene3D/Heatmap.tsx:31-35` : composant entier renvoie `null` après TODOs Dev A. Importé nulle part dans Scene3D ; cosmétique.
+- `src/components/Scene3D/Sun.tsx:11` : TODO Dev A.
+
+---
+
+## Top 5 dangers à corriger en priorité
+
+| # | Problème | Effort | Pourquoi en priorité |
+|---|---|---|---|
+| **1** | `ownConsumptionPct = 62` hardcodé dans `KPISidebar.tsx:58` | **S** | Affiché comme KPI "Live" et **toujours faux** — la valeur sortie par `computeFinancials.selfConsumptionRatio` est jetée. C'est la fraude la plus visible pour le jury. |
+| **2** | Toggles `Battery / HeatPump / Wallbox / Slider conso` ne re-déclenchent pas `/api/design` | **M** | Le démo "live tweak" est un théâtre : le 3D bouge mais le prix/payback/CO₂ restent gelés. Un journaliste qui touche à un toggle pendant la démo va voir le décalage. |
+| **3** | `ResultDashboard` du `CustomAddressForm` (lignes 2095-2149) calcule prix/auto-conso/Sankey en local | **M** | Toute la branche "custom address → manual" affiche des chiffres totalement déconnectés de l'engine k-NN, alors que `computeFinancials` existe et marche. |
+| **4** | Triple source de `HOUSE_PROFILES` (ProfileForm, dev-mocks, baked JSON) avec **valeurs déjà divergentes** (ruhr.isJumelee, brandenburg.hasEv) | **S** | Brandenburg avec `hasEv:true` (ProfileForm) → dimensionnement EV. Brandenburg avec `hasEv:false` (baked JSON) → autre résultat. Selon où on lit, on obtient des kWp différents. |
+| **5** | `manualInputs.electricityPrice` + `annualIncreasePct` saisis par l'utilisateur **jamais transmis** à `computeFinancials` (`overrides` jamais peuplé, route `/api/design` ne reçoit pas ces champs) | **M** | Le formulaire custom demande explicitement le prix de l'électricité, l'utilisateur le change, et l'engine recalcule avec 0,33 €/kWh constant. La promesse de personnalisation est cassée silencieusement. |
+
+### Mention bonus (cosmétique mais à savoir)
+
+- Aucun test automatique → toute régression sur `sizing.ts` ou `financials.ts` passera inaperçue.
+- Cache disque `/api/aerial` sans TTL ni invalidation : si Google met à jour ses tuiles, on resservira l'ancienne capture pour toujours.
+- `inferProfileFromLocation` n'utilise pas la lat/lng (paramètres préfixés `_`) → toute adresse custom non formulaire reçoit le même profil moyen. La fonction est nommée comme une heuristique géographique, c'est en fait une constante.
+
+Fichiers clés référencés : `/Users/max/reonic-hackathon/src/components/KPISidebar/KPISidebar.tsx`, `/Users/max/reonic-hackathon/src/components/ControlPanel/ControlPanel.tsx`, `/Users/max/reonic-hackathon/src/components/AutoFillForm/CustomAddressForm.tsx`, `/Users/max/reonic-hackathon/src/components/AutoFillForm/ProfileForm.tsx`, `/Users/max/reonic-hackathon/src/components/ApprovalModal/ApprovalModal.tsx`, `/Users/max/reonic-hackathon/src/lib/financials.ts`, `/Users/max/reonic-hackathon/src/lib/customRoof.ts`, `/Users/max/reonic-hackathon/src/lib/sizing.ts`, `/Users/max/reonic-hackathon/src/lib/store.ts`, `/Users/max/reonic-hackathon/src/app/api/design/route.ts`, `/Users/max/reonic-hackathon/src/app/api/aerial/route.ts`, `/Users/max/reonic-hackathon/public/baked/house-profiles.json`.</result>
+<usage><total_tokens>143432</total_tokens><tool_uses>46</tool_uses><duration_ms>232583</duration_ms></usage>
+</task-notification>
