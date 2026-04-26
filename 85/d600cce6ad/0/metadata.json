@@ -1,0 +1,50 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "85d600cce6ad",
+  "session_id": "74d1e193-f7b0-4a73-84eb-1daf77f7e760",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T08:16:45.928296Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/lib/houses.ts",
+    "src/components/Scene3D/Scene3D.tsx",
+    "src/lib/fal.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-7[1m]",
+  "turn_id": "de832ba48eec",
+  "checkpoint_transcript_start": 1125,
+  "transcript_lines_at_start": 1125,
+  "token_usage": {
+    "input_tokens": 42,
+    "cache_creation_tokens": 23353,
+    "cache_read_tokens": 11054892,
+    "output_tokens": 14741,
+    "api_call_count": 27
+  },
+  "session_metrics": {
+    "turn_count": 19
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T08:16:45.879662Z",
+    "agent_lines": 14,
+    "agent_removed": 8,
+    "human_added": 2,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 16,
+    "total_lines_changed": 3107,
+    "agent_percentage": 0.7080785323463148,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}

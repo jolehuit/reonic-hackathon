@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "85d600cce6ad",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/components/Scene3D/Scene3D.tsx",
+    "src/lib/fal.ts",
+    "src/lib/houses.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/85/d600cce6ad/0/metadata.json",
+      "transcript": "/85/d600cce6ad/0/full.jsonl",
+      "content_hash": "/85/d600cce6ad/0/content_hash.txt",
+      "prompt": "/85/d600cce6ad/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 42,
+    "cache_creation_tokens": 23353,
+    "cache_read_tokens": 11054892,
+    "output_tokens": 14741,
+    "api_call_count": 27
+  }
+}

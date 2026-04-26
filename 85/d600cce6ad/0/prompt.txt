@@ -1,0 +1,18 @@
+utilise t'on Tavily ? et utilise t'on gemini ?
+
+et push tout du coup stp avant
+
+---
+
+utilise t'on Tavily ? et utilise t'on gemini ?
+
+---
+
+du coup on l'utilise ou pas du tout gemini ?
+
+---
+
+Supprime le code mort
+Implémente tavily pour chercher les aides dispo pour les panneaux solaires a l'adresse donnée (pays ville etc)
+et implémente gemini pour générer un rapport dans le pdf :
+utilise le model gemini 3.1 flash lite
