@@ -19,7 +19,7 @@ export const HOUSE_COORDS: Record<HouseId, HouseCoords> = {
   hamburg: {
     lat: 52.40826,
     lng: 12.96441,
-    address: 'Test addr 2, Potsdam-Golm, Germany',
+    address: 'Potsdam-Golm, Germany',
   },
   ruhr: {
     lat: 52.616457,

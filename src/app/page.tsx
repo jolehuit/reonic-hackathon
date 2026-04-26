@@ -24,7 +24,7 @@ const HOUSES: {
   },
   {
     id: 'hamburg',
-    label: 'Test addr 2, Potsdam-Golm',
+    label: 'Potsdam-Golm',
     size: '165 m²',
     heating: 'Oil heating · 4 inhabitants',
     highlight: 'Heat-pump candidate',

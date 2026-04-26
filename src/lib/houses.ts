@@ -44,6 +44,6 @@ export const HOUSE_PROFILES: Record<HouseId, CustomerProfile> = {
 
 export const HOUSE_LOCATION: Record<HouseId, string> = {
   brandenburg: 'Thielallee 36, Berlin, Germany',
-  hamburg: 'Test addr 2, Potsdam-Golm, Germany',
+  hamburg: 'Potsdam-Golm, Germany',
   ruhr: 'Schönerlinder Weg 83, Berlin Karow, Germany',
 };
