@@ -28,7 +28,7 @@ import type { HouseId, RoofGeometry } from '@/lib/types';
 const MODULE_WATT_PEAK = 475;
 const BAKED_DIR = path.join(process.cwd(), 'public', 'baked');
 
-const HOUSES: HouseId[] = ['brandenburg', 'hamburg', 'ruhr'];
+const HOUSES: HouseId[] = ['berlin-dahlem', 'potsdam-golm', 'berlin-karow'];
 
 function loadBaked(houseId: HouseId): RoofGeometry {
   const filePath = path.join(BAKED_DIR, `${houseId}-analysis.json`);

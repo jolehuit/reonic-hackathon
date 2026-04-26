@@ -438,7 +438,7 @@ async function readHouseCoords(houseId: string): Promise<{ lat: number; lng: num
 }
 
 async function main() {
-  const houseId = process.argv[2] ?? 'brandenburg';
+  const houseId = process.argv[2] ?? 'berlin-dahlem';
 
   console.log(`Running ${VARIANTS.length} variants for ${houseId}…`);
   for (const v of VARIANTS) console.log(`  ${v.suffix} (${v.name}): ${v.description}`);

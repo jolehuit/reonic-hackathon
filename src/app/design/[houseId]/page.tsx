@@ -24,7 +24,7 @@ interface Props {
   params: Promise<{ houseId: string }>;
 }
 
-const KNOWN_HOUSE_IDS: HouseId[] = ['brandenburg', 'hamburg', 'ruhr'];
+const KNOWN_HOUSE_IDS: HouseId[] = ['berlin-dahlem', 'potsdam-golm', 'berlin-karow'];
 
 function isHouseId(value: string): value is HouseId {
   return KNOWN_HOUSE_IDS.includes(value as HouseId);

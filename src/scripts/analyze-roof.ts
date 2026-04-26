@@ -39,7 +39,7 @@ import { placePanelsOnFace, type ShadeSampler } from './place-panels';
 import { fetchMSBuildingFootprint } from '../lib/ms-building-footprints';
 
 const HOUSES = [
-  'brandenburg', 'hamburg', 'ruhr',
+  'berlin-dahlem', 'potsdam-golm', 'berlin-karow',
   'test1', 'test2', 'test3', 'test4',
   'bench-koeln1', 'bench-koeln2', 'bench-meerbusch', 'bench-leipzig',
   'bench-dresden1', 'bench-dresden2', 'bench-bochum', 'bench-hamburg2',

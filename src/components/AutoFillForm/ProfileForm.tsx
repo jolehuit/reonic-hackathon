@@ -18,9 +18,9 @@ export function ProfileForm() {
   const profile = useStore((s) => s.profile);
 
   const isDemoHouse =
-    selectedHouse === 'brandenburg' ||
-    selectedHouse === 'hamburg' ||
-    selectedHouse === 'ruhr';
+    selectedHouse === 'berlin-dahlem' ||
+    selectedHouse === 'potsdam-golm' ||
+    selectedHouse === 'berlin-karow';
   const isCustom = selectedHouse === 'custom';
 
   // Demo houses: kick off the typewriter as soon as we land in autofilling.

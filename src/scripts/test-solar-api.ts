@@ -13,7 +13,7 @@ import path from 'node:path';
 
 const DEFAULT_LAT = 52.408718770055735;
 const DEFAULT_LNG = 12.963106383979836;
-const DEFAULT_HOUSE_ID = 'brandenburg';
+const DEFAULT_HOUSE_ID = 'berlin-dahlem';
 const BAKED_DIR = path.join(process.cwd(), 'public/baked');
 
 interface RoofSegment {

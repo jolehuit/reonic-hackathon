@@ -1,7 +1,7 @@
 // POST /api/design — OWNED by Dev B (with live geometry from Dev D's pipeline).
 //
 // Two input modes:
-//   1. By houseId (demo): { houseId: 'brandenburg', profile }
+//   1. By houseId (demo): { houseId: 'berlin-dahlem', profile }
 //      → reads public/baked/{houseId}-analysis.json (already on disk).
 //   2. By GPS coords (live): { lat, lng, profile }
 //      → looks up the closest pre-baked house within MATCH_RADIUS_M.

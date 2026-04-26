@@ -155,7 +155,7 @@ export function useHouseGeometry(): HouseGeometryValue {
   const ctx = useContext(Ctx);
   if (!ctx) {
     return {
-      houseId: 'brandenburg',
+      houseId: 'berlin-dahlem',
       width: DEFAULT_SIZE[0],
       depth: DEFAULT_SIZE[2],
       wallHeight: DEFAULT_WALL_HEIGHT,

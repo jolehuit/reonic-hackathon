@@ -1,7 +1,12 @@
 // Shared TS contracts — owned jointly by Dev B (backend) and Dev C (UI)
 // Pair sync sam 12h. After that, this file is FROZEN unless team-wide change.
 
-export type HouseId = 'brandenburg' | 'hamburg' | 'ruhr';
+// IDs used as URL slugs and storage keys for the three demo addresses.
+// Geographic — match the actual neighbourhood each address sits in
+// (the previous IDs `brandenburg / hamburg / ruhr` were misleading:
+// brandenburg's address was in Berlin-Dahlem, hamburg's was in
+// Potsdam-Golm, ruhr's was in Berlin-Karow).
+export type HouseId = 'berlin-dahlem' | 'potsdam-golm' | 'berlin-karow';
 
 export type HeatingType = 'oil' | 'gas' | 'heatpump' | 'other';
 

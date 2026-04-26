@@ -113,9 +113,9 @@ const HOUSES: DemoHouse[] = [
   // sidebar lies about which building the analysis was run on. Earlier
   // placeholder coords (Hamburg=53.55,9.99, Ruhr=Dortmund city centre)
   // captured multiple buildings and produced absurd panel counts (1053+).
-  { id: 'brandenburg', lat: 52.4530, lng: 13.2868, label: 'Thielallee 36, Berlin' },
-  { id: 'hamburg', lat: 52.408257, lng: 12.964409, label: 'Test address 2 Potsdam-Golm 14476, DE' },
-  { id: 'ruhr', lat: 52.616457, lng: 13.485022, label: 'Schönerlinder Weg 83, Berlin Karow' },
+  { id: 'berlin-dahlem', lat: 52.4530, lng: 13.2868, label: 'Thielallee 36, Berlin Dahlem' },
+  { id: 'potsdam-golm', lat: 52.408257, lng: 12.964409, label: 'Potsdam-Golm 14476, DE' },
+  { id: 'berlin-karow', lat: 52.616457, lng: 13.485022, label: 'Schönerlinder Weg 83, Berlin Karow' },
   // Independent test houseIds so subagents can run in parallel without file
   // collisions (each houseId namespaces its own photogrammetry / analysis files).
   { id: 'test1', lat: 52.4083205, lng: 12.9658936, label: 'Ritterstraße 33, Golm, Potsdam 14476, DE' },

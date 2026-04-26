@@ -15,7 +15,7 @@ const HOUSES: {
   highlightTone: 'blue' | 'emerald';
 }[] = [
   {
-    id: 'brandenburg',
+    id: 'berlin-dahlem',
     label: 'Thielallee 36, Berlin',
     size: '140 m²',
     heating: 'Gas heating · 3 inhabitants',
@@ -23,7 +23,7 @@ const HOUSES: {
     highlightTone: 'blue',
   },
   {
-    id: 'hamburg',
+    id: 'potsdam-golm',
     label: 'Potsdam-Golm',
     size: '165 m²',
     heating: 'Oil heating · 4 inhabitants',
@@ -31,7 +31,7 @@ const HOUSES: {
     highlightTone: 'emerald',
   },
   {
-    id: 'ruhr',
+    id: 'berlin-karow',
     label: 'Schönerlinder Weg 83, Berlin Karow',
     size: '190 m²',
     heating: 'Oil heating · 5 inhabitants',
