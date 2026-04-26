@@ -1,0 +1,11 @@
+mais du coup repush la key stp sur google cloud
+
+---
+
+du coup faut que je mette TAVILY_API_KEY ?
+
+---
+
+voici la tavily key : REDACTED
+
+et ou est le recap gemini dans le pdf ?
