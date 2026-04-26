@@ -4,19 +4,13 @@ import { motion, useSpring, useTransform } from 'framer-motion';
 import { useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { useEffectiveDesign } from '@/lib/useEffectiveDesign';
-import type { HouseId } from '@/lib/types';
+import { HOUSE_LOCATION } from '@/lib/houses';
 
 // Real-world panel surface area, used to translate the placed panel count
 // into m² of roof covered. Defaults to AIKO 475 W (~1.95 m²) — the cascade
 // in <Panels/> picks compact / mini for tight roofs but the area tends to
 // land in the same ballpark since smaller panels need higher counts.
 const PANEL_AREA_M2 = 1.722 * 1.134;
-
-const HOUSE_LOCATION: Record<HouseId, string> = {
-  brandenburg: 'Thielallee 36, Berlin, Germany',
-  hamburg: 'Test addr 2, Potsdam-Golm, Germany',
-  ruhr: 'Schönerlinder Weg 83, Berlin Karow, Germany',
-};
 
 export function KPISidebar() {
   // Reactive design — recomputed live from `useEffectiveDesign` whenever the

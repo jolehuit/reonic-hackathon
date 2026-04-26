@@ -3,35 +3,12 @@
 // Lets Dev A test the full 3D rendering pipeline before Dev B/C/D push their work.
 // Strictly scoped to Scene3D/, never imported by other devs' code.
 
-import type { CustomerProfile, DesignResult, HouseId, SimilarProject } from '@/lib/types';
+import { HOUSE_PROFILES } from '@/lib/houses';
+import type { DesignResult, SimilarProject } from '@/lib/types';
 
-export const MOCK_PROFILES: Record<HouseId, CustomerProfile> = {
-  brandenburg: {
-    annualConsumptionKwh: 4500,
-    inhabitants: 3,
-    hasEv: true,
-    evAnnualKm: 15000,
-    heatingType: 'gas',
-    houseSizeSqm: 140,
-    isJumelee: false,
-  },
-  hamburg: {
-    annualConsumptionKwh: 5200,
-    inhabitants: 4,
-    hasEv: false,
-    heatingType: 'oil',
-    houseSizeSqm: 165,
-    isJumelee: false,
-  },
-  ruhr: {
-    annualConsumptionKwh: 6100,
-    inhabitants: 5,
-    hasEv: false,
-    heatingType: 'oil',
-    houseSizeSqm: 190,
-    isJumelee: false,
-  },
-};
+// Dev mocks reuse the same profiles the autofill flow uses, so toggling
+// `?mock=1` in development renders against the same data the demo shows.
+export const MOCK_PROFILES = HOUSE_PROFILES;
 
 const MOCK_SIMILAR: SimilarProject[] = [
   { projectId: 'R-1042', energyDemandKwh: 4400, hasEv: true, totalKwp: 9.0, batteryKwh: 6, priceEur: 11200 },

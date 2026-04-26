@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@/lib/store';
 import { useEffectiveDesign } from '@/lib/useEffectiveDesign';
-import type { HouseId } from '@/lib/types';
+import { HOUSE_LOCATION } from '@/lib/houses';
 
 const CHECKLIST = [
   'Roof access verified with customer',
@@ -12,12 +12,6 @@ const CHECKLIST = [
   'Existing electrical panel sufficient',
   'Pricing accepted by customer',
 ];
-
-const HOUSE_LOCATION: Record<HouseId, string> = {
-  brandenburg: 'Thielallee 36, Berlin, Germany',
-  hamburg: 'Test addr 2, Potsdam-Golm, Germany',
-  ruhr: 'Schönerlinder Weg 83, Berlin Karow, Germany',
-};
 
 export function ApprovalModal() {
   const phase = useStore((s) => s.phase);

@@ -3,42 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from '@/lib/store';
+import { HOUSE_LOCATION, HOUSE_PROFILES } from '@/lib/houses';
 import type { CustomerProfile, HouseId } from '@/lib/types';
 import { CustomAddressForm } from './CustomAddressForm';
-
-const HOUSE_PROFILES: Record<HouseId, CustomerProfile> = {
-  brandenburg: {
-    annualConsumptionKwh: 4500,
-    inhabitants: 3,
-    hasEv: true,
-    evAnnualKm: 15000,
-    heatingType: 'gas',
-    houseSizeSqm: 140,
-    isJumelee: false,
-  },
-  hamburg: {
-    annualConsumptionKwh: 5200,
-    inhabitants: 4,
-    hasEv: false,
-    heatingType: 'oil',
-    houseSizeSqm: 165,
-    isJumelee: false,
-  },
-  ruhr: {
-    annualConsumptionKwh: 6100,
-    inhabitants: 5,
-    hasEv: false,
-    heatingType: 'oil',
-    houseSizeSqm: 190,
-    isJumelee: false,
-  },
-};
-
-const HOUSE_LOCATION: Record<HouseId, string> = {
-  brandenburg: 'Thielallee 36, Berlin, Germany',
-  hamburg: 'Test addr 2, Potsdam-Golm, Germany',
-  ruhr: 'Schönerlinder Weg 83, Berlin Karow, Germany',
-};
 
 type CustomMode = 'choosing' | 'auto' | 'manual';
 
