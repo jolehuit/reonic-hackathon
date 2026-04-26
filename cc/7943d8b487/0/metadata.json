@@ -1,0 +1,80 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "cc7943d8b487",
+  "session_id": "764125d8-8e35-4fa8-bcec-9aa284ed783e",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T05:54:51.915403Z",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "src/components/ApprovalModal/ApprovalModal.tsx",
+    "src/components/KPISidebar/KPISidebar.tsx"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "97e1c0f9619a",
+  "token_usage": {
+    "input_tokens": 59,
+    "cache_creation_tokens": 137535,
+    "cache_read_tokens": 1579623,
+    "output_tokens": 9377,
+    "api_call_count": 29
+  },
+  "session_metrics": {
+    "turn_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T05:54:51.90087Z",
+    "agent_lines": 51,
+    "agent_removed": 20,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 51,
+    "total_lines_changed": 71,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 59,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".claude/settings.local.json": 59
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 59,
+      "user_lines_removed": 0,
+      "agent_lines_added": 19,
+      "agent_lines_removed": 12,
+      "user_added_per_file": {
+        ".claude/settings.local.json": 59
+      }
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 60,
+      "user_lines_removed": 0,
+      "agent_lines_added": 19,
+      "agent_lines_removed": 12,
+      "user_added_per_file": {
+        ".claude/settings.local.json": 60
+      }
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 60,
+      "user_lines_removed": 0,
+      "agent_lines_added": 50,
+      "agent_lines_removed": 19,
+      "user_added_per_file": {
+        ".claude/settings.local.json": 60
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+va sur la branche main et ajoute l'adresse de l'endroit ciblé dans la facture 
+Et lorsque l'on export un pdf fait en sorte que l'on reste sur la page où l'on appuyé pour pouvoir quand même ajusté au cas ou
+
+---
+
+lance le projet pour tester avant de push
+
+---
+
+met aussi l'adresse sur cette page dans un endroit stratégique

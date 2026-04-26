@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "cc7943d8b487",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "src/components/ApprovalModal/ApprovalModal.tsx",
+    "src/components/KPISidebar/KPISidebar.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/cc/7943d8b487/0/metadata.json",
+      "transcript": "/cc/7943d8b487/0/full.jsonl",
+      "content_hash": "/cc/7943d8b487/0/content_hash.txt",
+      "prompt": "/cc/7943d8b487/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 59,
+    "cache_creation_tokens": 137535,
+    "cache_read_tokens": 1579623,
+    "output_tokens": 9377,
+    "api_call_count": 29
+  }
+}
