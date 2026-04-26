@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@/lib/store';
+import type { HouseId } from '@/lib/types';
 
 const CHECKLIST = [
   'Roof access verified with customer',
@@ -12,13 +12,19 @@ const CHECKLIST = [
   'Pricing accepted by customer',
 ];
 
+const HOUSE_LOCATION: Record<HouseId, string> = {
+  brandenburg: 'Thielallee 36, Berlin, Germany',
+  hamburg: 'Test addr 2, Potsdam-Golm, Germany',
+  ruhr: 'Schönerlinder Weg 83, Berlin Karow, Germany',
+};
+
 export function ApprovalModal() {
   const phase = useStore((s) => s.phase);
   const design = useStore((s) => s.design);
   const profile = useStore((s) => s.profile);
+  const selectedHouse = useStore((s) => s.selectedHouse);
+  const customAddress = useStore((s) => s.customAddress);
   const setPhase = useStore((s) => s.setPhase);
-  const reset = useStore((s) => s.reset);
-  const router = useRouter();
   const [checks, setChecks] = useState<boolean[]>(CHECKLIST.map(() => false));
   const [exporting, setExporting] = useState(false);
 
@@ -34,11 +40,16 @@ export function ApprovalModal() {
     }
     await new Promise((r) => setTimeout(r, 400));
 
+    const address =
+      selectedHouse && selectedHouse !== 'custom'
+        ? HOUSE_LOCATION[selectedHouse]
+        : customAddress?.formatted;
+
     try {
       const res = await fetch('/api/export', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ profile, design }),
+        body: JSON.stringify({ profile, design, address }),
       });
       if (res.ok) {
         const blob = await res.blob();
@@ -56,14 +67,10 @@ export function ApprovalModal() {
     }
 
     setExporting(false);
-    setPhase('approved');
-
-    // Brief pause so the user sees the "approved" state, then back to landing
-    // with a clean store so the next demo run starts from scratch.
-    setTimeout(() => {
-      reset();
-      router.push('/');
-    }, 600);
+    // Drop back to interactive so the user can keep adjusting the design
+    // after the PDF has been generated, instead of being bounced to landing.
+    setPhase('interactive');
+    setChecks(CHECKLIST.map(() => false));
   };
 
   return (

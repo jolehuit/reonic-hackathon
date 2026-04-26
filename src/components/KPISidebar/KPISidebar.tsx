@@ -3,12 +3,19 @@
 import { motion, useSpring, useTransform } from 'framer-motion';
 import { useEffect } from 'react';
 import { useStore } from '@/lib/store';
+import type { HouseId } from '@/lib/types';
 
 // Real-world panel surface area, used to translate the placed panel count
 // into m² of roof covered. Defaults to AIKO 475 W (~1.95 m²) — the cascade
 // in <Panels/> picks compact / mini for tight roofs but the area tends to
 // land in the same ballpark since smaller panels need higher counts.
 const PANEL_AREA_M2 = 1.722 * 1.134;
+
+const HOUSE_LOCATION: Record<HouseId, string> = {
+  brandenburg: 'Thielallee 36, Berlin, Germany',
+  hamburg: 'Test addr 2, Potsdam-Golm, Germany',
+  ruhr: 'Schönerlinder Weg 83, Berlin Karow, Germany',
+};
 
 export function KPISidebar() {
   const design = useStore((s) => s.design);
@@ -19,6 +26,12 @@ export function KPISidebar() {
   // efficient install matched against 1 620 historical Reonic deliveries.
   const efficientPanelCount = design?.moduleCount ?? 0;
   const glbRoofAreaM2 = useStore((s) => s.glbRoofAreaM2);
+  const selectedHouse = useStore((s) => s.selectedHouse);
+  const customAddress = useStore((s) => s.customAddress);
+  const address =
+    selectedHouse && selectedHouse !== 'custom'
+      ? HOUSE_LOCATION[selectedHouse]
+      : customAddress?.formatted ?? null;
 
   const totalKwp = design?.totalKwp ?? 0;
   const battery = design?.batteryCapacityKwh ?? 0;
@@ -46,14 +59,25 @@ export function KPISidebar() {
       className="overflow-hidden rounded-3xl border border-zinc-200/70 bg-white shadow-[0_8px_28px_-12px_rgba(0,0,0,0.18)]"
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-3.5">
-        <div>
-          <h3 className="text-[14px] font-bold tracking-tight text-zinc-900">Your design</h3>
-          <p className="text-[11px] text-zinc-500">k-NN match · 1 620 deliveries</p>
+      <div className="border-b border-zinc-100 px-5 py-3.5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-[14px] font-bold tracking-tight text-zinc-900">Your design</h3>
+            <p className="text-[11px] text-zinc-500">k-NN match · 1 620 deliveries</p>
+          </div>
+          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+            Live
+          </span>
         </div>
-        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-          Live
-        </span>
+        {address && (
+          <div className="mt-2 flex items-start gap-1.5 text-[11px] text-zinc-500" title={address}>
+            <svg className="mt-0.5 h-3 w-3 flex-shrink-0 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span className="truncate">{address}</span>
+          </div>
+        )}
       </div>
 
       {/* Top KPIs grid 2×2 */}
