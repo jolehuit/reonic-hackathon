@@ -340,7 +340,7 @@ function ResultPopup({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.96, opacity: 0, y: -8 }}
             transition={{ type: 'spring', stiffness: 240, damping: 22 }}
-            className="relative flex flex-col items-center gap-5 overflow-hidden rounded-[32px] border border-emerald-200/60 bg-gradient-to-br from-white via-white to-emerald-50/70 p-9 shadow-[0_60px_140px_-30px_rgba(15,23,42,0.6)] backdrop-blur"
+            className="relative flex max-h-[88vh] w-[min(92vw,520px)] flex-col items-center gap-3 overflow-hidden rounded-[28px] border border-emerald-200/60 bg-gradient-to-br from-white via-white to-emerald-50/70 px-7 py-6 shadow-[0_60px_140px_-30px_rgba(15,23,42,0.6)] backdrop-blur"
           >
             {/* Top progress bar — fills 0 → 100 % over POPUP_HOLD_MS so the
                 user has a visible cue for how much time is left. */}
@@ -367,20 +367,20 @@ function ResultPopup({
 
             <div className="flex items-center gap-2">
               <motion.span
-                className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.4)]"
+                className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.4)]"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 18, delay: 0.1 }}
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </motion.span>
-              <span className="font-mono text-[12px] font-bold uppercase tracking-[0.22em] text-emerald-700">
+              <span className="font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-700">
                 Step complete
               </span>
             </div>
-            <span className="max-w-[440px] text-center text-[19px] font-semibold leading-tight text-zinc-900">
+            <span className="max-w-[440px] text-center text-[17px] font-semibold leading-tight text-zinc-900">
               {label}
             </span>
             {artifactUrl && (
@@ -388,7 +388,7 @@ function ResultPopup({
                 layoutId={imgLayoutId}
                 src={artifactUrl}
                 alt={label}
-                className="h-[420px] w-[420px] rounded-3xl object-cover shadow-[0_20px_60px_-15px_rgba(15,23,42,0.45)] ring-1 ring-emerald-200/60"
+                className="aspect-square w-full max-w-[360px] rounded-2xl bg-zinc-50 object-contain shadow-[0_20px_60px_-15px_rgba(15,23,42,0.45)] ring-1 ring-emerald-200/60"
               />
             )}
             {!artifactUrl && resultLine && (
