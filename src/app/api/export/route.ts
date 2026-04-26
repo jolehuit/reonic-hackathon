@@ -5,6 +5,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jsPDF } from 'jspdf';
 import type { DesignResult, CustomerProfile } from '@/lib/types';
+import { searchSolarIncentives } from '@/lib/tavily';
+import { generateSolarReport } from '@/lib/report';
+
+// PDF generation can take ~3-5s once Tavily + Gemini are in the loop.
+// Force dynamic so Next doesn't try to cache, and bump the timeout.
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 interface ExportBody {
   profile: CustomerProfile;
@@ -19,6 +26,21 @@ const REONIC_GREEN: [number, number, number] = [38, 145, 100];
 const DARK_TEXT: [number, number, number] = [30, 30, 30];
 const MUTED_TEXT: [number, number, number] = [110, 110, 110];
 
+/** Parse "Thielallee 36, Berlin, Germany" → { country: 'Germany', region:
+ *  undefined, city: 'Berlin' }. The address is comma-separated; the LAST
+ *  segment is treated as country, the second-to-last as city. We don't
+ *  try to disambiguate region-vs-city — the Tavily query is fed all of
+ *  it as a single string anyway. */
+function parseAddress(address: string | undefined): { country: string; region?: string; city?: string } {
+  if (!address) return { country: 'Germany' }; // demo default
+  const parts = address.split(/,\s*/).map((p) => p.trim()).filter(Boolean);
+  if (parts.length === 0) return { country: 'Germany' };
+  const country = parts[parts.length - 1];
+  const city = parts.length >= 2 ? parts[parts.length - 2] : undefined;
+  const region = parts.length >= 3 ? parts[parts.length - 3] : undefined;
+  return { country, region, city };
+}
+
 export async function POST(req: NextRequest) {
   let body: ExportBody;
   try {
@@ -30,6 +52,14 @@ export async function POST(req: NextRequest) {
   if (!profile || !design) {
     return NextResponse.json({ error: 'Missing profile or design' }, { status: 400 });
   }
+
+  // Tavily looks up local solar incentives, Gemini turns the design + the
+  // incentive context into a short narrative report. Both gracefully
+  // degrade to empty if their API key is missing — page 2 of the PDF is
+  // then simply skipped.
+  const { country, region, city } = parseAddress(address);
+  const incentives = await searchSolarIncentives({ country, region, city });
+  const reportText = await generateSolarReport({ address, profile, design, incentives });
 
   const doc = new jsPDF({ format: 'a4', unit: 'mm' });
   const PAGE_W = 210;
@@ -188,6 +218,120 @@ export async function POST(req: NextRequest) {
     285,
   );
   doc.text('iconic.haus', PAGE_W - 20, 285, { align: 'right' });
+
+  // --- Page 2: Personalised note (Gemini) + Local incentives (Tavily) ---
+  // Only render if we actually have content from at least one source.
+  const hasReport = reportText.length > 0;
+  const hasIncentives = incentives.results.length > 0 || !!incentives.answer;
+  if (hasReport || hasIncentives) {
+    doc.addPage();
+    let py = 20;
+    const leftMargin = 20;
+    const contentWidth = PAGE_W - 40;
+
+    // Page 2 header
+    doc.setTextColor(...REONIC_GREEN);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text('Personalised note', leftMargin, py);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...MUTED_TEXT);
+    doc.text('Generated for your address', PAGE_W - leftMargin, py, { align: 'right' });
+    py += 4;
+    doc.setDrawColor(220, 220, 220);
+    doc.line(leftMargin, py, PAGE_W - leftMargin, py);
+    py += 8;
+
+    // Gemini narrative — three blocks separated by blank lines, each
+    // tagged with one of: SUMMARY / KEY BENEFITS / LOCAL INCENTIVES.
+    if (hasReport) {
+      const blocks = reportText
+        .split(/\n\s*\n/)
+        .map((b) => b.trim())
+        .filter(Boolean);
+      for (const block of blocks) {
+        const [firstLine, ...rest] = block.split('\n');
+        const isHeader = /^(SUMMARY|KEY BENEFITS|LOCAL INCENTIVES)\b/i.test(firstLine.trim());
+
+        if (isHeader) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(10);
+          doc.setTextColor(...REONIC_GREEN);
+          doc.text(firstLine.trim().toUpperCase(), leftMargin, py);
+          py += 5;
+
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9.5);
+          doc.setTextColor(...DARK_TEXT);
+          for (const line of rest) {
+            const wrapped = doc.splitTextToSize(line.trim(), contentWidth) as string[];
+            for (const w of wrapped) {
+              if (py > 270) { doc.addPage(); py = 20; }
+              doc.text(w, leftMargin, py);
+              py += 4.6;
+            }
+          }
+        } else {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9.5);
+          doc.setTextColor(...DARK_TEXT);
+          const wrapped = doc.splitTextToSize(block, contentWidth) as string[];
+          for (const w of wrapped) {
+            if (py > 270) { doc.addPage(); py = 20; }
+            doc.text(w, leftMargin, py);
+            py += 4.6;
+          }
+        }
+        py += 3;
+      }
+    }
+
+    // Tavily sources block — clickable URLs the customer can verify.
+    if (hasIncentives) {
+      py += 4;
+      if (py > 250) { doc.addPage(); py = 20; }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(...REONIC_GREEN);
+      doc.text('Sources', leftMargin, py);
+      py += 5;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(...MUTED_TEXT);
+      doc.text('Independent web search via Tavily — click to verify each programme', leftMargin, py);
+      py += 5;
+
+      for (const r of incentives.results.slice(0, 5)) {
+        if (py > 275) { doc.addPage(); py = 20; }
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...DARK_TEXT);
+        const titleLines = doc.splitTextToSize(r.title, contentWidth) as string[];
+        for (const t of titleLines) {
+          doc.text(t, leftMargin, py);
+          py += 4.4;
+        }
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(...REONIC_GREEN);
+        doc.textWithLink(r.url, leftMargin, py, { url: r.url });
+        py += 5;
+      }
+    }
+
+    // Page 2 footer
+    doc.setDrawColor(220, 220, 220);
+    doc.line(leftMargin, 280, PAGE_W - leftMargin, 280);
+    doc.setTextColor(...MUTED_TEXT);
+    doc.setFontSize(7);
+    const footerBits: string[] = [];
+    if (hasReport) footerBits.push('Narrative: Gemini 3 Flash Lite');
+    if (hasIncentives) footerBits.push('Incentives: Tavily web search');
+    doc.text(footerBits.join(' · '), leftMargin, 285);
+    doc.text('iconic.haus', PAGE_W - leftMargin, 285, { align: 'right' });
+  }
 
   // jsPDF.output('arraybuffer') returns an ArrayBuffer; Web Response accepts it as BodyInit.
   const arrayBuffer = doc.output('arraybuffer');
