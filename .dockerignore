@@ -21,7 +21,8 @@ build
 # Tests + bake outputs that don't need to ship.
 coverage
 .entire
-data
+# `data/` is intentionally NOT excluded — k-NN sizing in /api/design reads
+# the CSV deliveries dataset at runtime via fs.readFileSync('data/...').
 
 # Don't ship the dev-only Cesium asset mirror or transient browser caches.
 public/cesium
