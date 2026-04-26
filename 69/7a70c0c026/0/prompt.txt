@@ -1,0 +1,17 @@
+passe moi la liste des adresses test du back
+
+---
+
+je veux les 4 adresses qu'on avait avant
+
+---
+
+t'en pose quoi de utiliser ca "LOD2-Gebäudemodelle "
+
+---
+
+sur mes 4 adresses et mes 1à adresses je pourras utiliser ca ?
+
+---
+
+"Use the photogrammetry models (find the models here) and build something to detect the roof spaces and obstructions, and place modules on the roof automatically. If that’s too hard, build something that estimates the space available and estimates how many modules would fit." ca repond a ca ?

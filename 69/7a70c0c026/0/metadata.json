@@ -1,0 +1,86 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "697a70c0c026",
+  "session_id": "f21e70f3-a9f2-4a3d-a54e-884d60a9d708",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T00:42:37.315345Z",
+  "branch": "feat/Dev-D",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "src/scripts/analyze-roof.ts",
+    "src/scripts/fetch-3d-tiles.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "f60e1b82ca80",
+  "token_usage": {
+    "input_tokens": 34,
+    "cache_creation_tokens": 32643,
+    "cache_read_tokens": 229530,
+    "output_tokens": 3734,
+    "api_call_count": 9
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T00:42:37.313051Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 12109,
+    "human_modified": 4,
+    "human_removed": 0,
+    "total_committed": 12109,
+    "total_lines_changed": 13202,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 9483,
+      "user_lines_removed": 2,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "public/baked/bench-berlin1-analysis.json": 708,
+        "public/baked/bench-berlin2-analysis.json": 333,
+        "public/baked/bench-bochum-analysis.json": 864,
+        "public/baked/bench-dresden1-analysis.json": 141,
+        "public/baked/bench-dresden2-analysis.json": 1067,
+        "public/baked/bench-hamburg2-analysis.json": 1796,
+        "public/baked/bench-koeln1-analysis.json": 507,
+        "public/baked/bench-koeln2-analysis.json": 2049,
+        "public/baked/bench-leipzig-analysis.json": 1420,
+        "public/baked/bench-meerbusch-analysis.json": 579,
+        "src/scripts/analyze-roof.ts": 7,
+        "src/scripts/fetch-3d-tiles.ts": 12
+      },
+      "user_removed_per_file": {
+        "src/scripts/analyze-roof.ts": 1,
+        "src/scripts/fetch-3d-tiles.ts": 1
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 9483,
+      "agent_lines_removed": 2
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 9483,
+      "agent_lines_removed": 2
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 9483,
+      "agent_lines_removed": 2
+    }
+  ]
+}
