@@ -342,11 +342,21 @@ async function main() {
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
 
   // Optional CLI filter: `pnpm bake:fetch brandenburg` → fetch only that house.
+  // Or live mode (used by /api/design when GPS coords miss the cache):
+  //   LIVE_HOUSE_ID=live-xyz LIVE_LAT=52.45 LIVE_LNG=13.28 pnpm bake:fetch
   const onlyId = process.argv[2];
-  const queue = onlyId ? HOUSES.filter((h) => h.id === onlyId) : HOUSES;
-  if (onlyId && queue.length === 0) {
-    console.error(`Unknown house "${onlyId}". Known: ${HOUSES.map((h) => h.id).join(', ')}`);
-    process.exit(1);
+  const liveId = process.env.LIVE_HOUSE_ID;
+  const liveLat = process.env.LIVE_LAT ? parseFloat(process.env.LIVE_LAT) : null;
+  const liveLng = process.env.LIVE_LNG ? parseFloat(process.env.LIVE_LNG) : null;
+  let queue: DemoHouse[];
+  if (liveId && liveLat !== null && liveLng !== null) {
+    queue = [{ id: liveId, lat: liveLat, lng: liveLng, label: `Live: ${liveId}` }];
+  } else {
+    queue = onlyId ? HOUSES.filter((h) => h.id === onlyId) : HOUSES;
+    if (onlyId && queue.length === 0) {
+      console.error(`Unknown house "${onlyId}". Known: ${HOUSES.map((h) => h.id).join(', ')}`);
+      process.exit(1);
+    }
   }
 
   for (const house of queue) {

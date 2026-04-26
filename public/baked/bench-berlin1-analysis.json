@@ -1351,6 +1351,10 @@
       18.487029441321887
     ]
   },
+  "modulesMax": 73,
+  "modulesMaxAreaSqm": 143.3,
+  "roofTotalAreaSqm": 283.9,
+  "roofUsableAreaSqm": 215.9,
   "_autoMultiLevel": {
     "fired": false,
     "trigger": 0

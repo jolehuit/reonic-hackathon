@@ -5,11 +5,19 @@
 //   1. By houseId (legacy): { houseId: 'bench-berlin1', profile: {...} }
 //   2. By GPS coords: { lat: 52.4530, lng: 13.2868, profile: {...} }
 //      → looks up the closest pre-baked house within MATCH_RADIUS_M.
+//      → if cache miss: spawns bake:fetch + bake:analyze:multi live (~3-5min).
+//        Set DISABLE_LIVE_FETCH=1 to disable on-demand fetching.
 //
 // Output: DesignResult including modulesMax (panel count from algo).
 
+// Long-running route (live fetch+analyze can take 3-5 min). Force dynamic so
+// Next.js doesn't try to cache or pre-render.
+export const dynamic = 'force-dynamic';
+export const maxDuration = 600;  // seconds (Next 14+ on Vercel; ignored locally)
+
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import { NextRequest, NextResponse } from 'next/server';
 import type { CustomerProfile, HouseId, RoofGeometry } from '@/lib/types';
 
@@ -91,6 +99,65 @@ async function findClosestHouse(
   return best && best.distanceM <= MATCH_RADIUS_M ? best : null;
 }
 
+/**
+ * Run a child process to completion, capturing stdout/stderr in memory.
+ * Resolves with the exit code; rejects if the process can't be spawned.
+ */
+function runChild(cmd: string, args: string[], extraEnv: Record<string, string> = {}): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, {
+      cwd: process.cwd(),
+      env: { ...process.env, ...extraEnv },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let lastLine = '';
+    child.stdout?.on('data', (d) => { lastLine = d.toString().trim().split('\n').pop() ?? lastLine; });
+    child.stderr?.on('data', (d) => { lastLine = d.toString().trim().split('\n').pop() ?? lastLine; });
+    child.on('error', reject);
+    child.on('exit', (code) => {
+      if (code !== 0) console.warn(`[runChild] ${cmd} ${args.join(' ')} exit ${code}: ${lastLine}`);
+      resolve(code ?? 0);
+    });
+  });
+}
+
+/**
+ * Live mode: fetch 3D tiles for {lat, lng}, then run multi-variant analysis.
+ * Returns the houseId used (live-{shortHash}) on success, or throws.
+ *
+ * Cost: ~30-60s tile fetch + ~2-4min analysis (22 variants in parallel internally).
+ * Use only when the user explicitly opts in or when cache miss is acceptable.
+ */
+async function fetchAndAnalyzeLive(lat: number, lng: number): Promise<string> {
+  // Stable ID from coords (6-digit precision = ~10cm)
+  const liveId = `live-${lat.toFixed(6).replace('.', '_')}-${lng.toFixed(6).replace('.', '_')}`;
+  const photoPath = path.join(BAKED_DIR, `${liveId}-photogrammetry.json`);
+  const analysisPath = path.join(BAKED_DIR, `${liveId}-analysis.json`);
+
+  // Skip fetch if already done (e.g., previous live request)
+  const photoExists = await fs.stat(photoPath).then(() => true).catch(() => false);
+  if (!photoExists) {
+    console.log(`[live] fetching 3D tiles for ${liveId} at (${lat}, ${lng})…`);
+    const code = await runChild('pnpm', ['bake:fetch'], {
+      LIVE_HOUSE_ID: liveId,
+      LIVE_LAT: String(lat),
+      LIVE_LNG: String(lng),
+    });
+    if (code !== 0) throw new Error(`bake:fetch exited ${code}`);
+  }
+
+  const analysisExists = await fs.stat(analysisPath).then(() => true).catch(() => false);
+  if (!analysisExists) {
+    console.log(`[live] running multi-variant analysis for ${liveId}…`);
+    const code = await runChild('pnpm', ['bake:analyze:multi', liveId]);
+    if (code !== 0) throw new Error(`bake:analyze:multi exited ${code}`);
+  }
+
+  // Bust the prebaked cache so this new house shows up in subsequent requests
+  prebakedCache = null;
+  return liveId;
+}
+
 interface DesignRequestBody {
   profile: CustomerProfile;
   houseId?: HouseId;
@@ -109,18 +176,34 @@ export async function POST(req: NextRequest) {
     houseId = requestedHouseId;
   } else if (typeof lat === 'number' && typeof lng === 'number') {
     const match = await findClosestHouse(lat, lng);
-    if (!match) {
-      const all = await listPrebakedHouses();
-      return NextResponse.json(
-        {
-          error: `No pre-baked analysis within ${MATCH_RADIUS_M}m of (${lat}, ${lng}). Run pnpm bake:fetch + bake:analyze:multi for this address first.`,
-          knownHouseCount: all.length,
-        },
-        { status: 404 },
-      );
+    if (match) {
+      houseId = match.house.houseId;
+      matchedDistanceM = Math.round(match.distanceM * 10) / 10;
+    } else {
+      // Cache miss → fetch 3D tiles + run analyze pipeline live (~3-5min).
+      // Honour env flag to disable on-demand fetching (e.g., in CI / read-only).
+      if (process.env.DISABLE_LIVE_FETCH === '1') {
+        const all = await listPrebakedHouses();
+        return NextResponse.json(
+          {
+            error: `No pre-baked analysis within ${MATCH_RADIUS_M}m of (${lat}, ${lng}); live fetch disabled.`,
+            knownHouseCount: all.length,
+          },
+          { status: 404 },
+        );
+      }
+      try {
+        houseId = await fetchAndAnalyzeLive(lat, lng);
+        matchedDistanceM = 0;
+      } catch (err) {
+        return NextResponse.json(
+          {
+            error: `Live fetch+analyze failed for (${lat}, ${lng}): ${err instanceof Error ? err.message : String(err)}`,
+          },
+          { status: 502 },
+        );
+      }
     }
-    houseId = match.house.houseId;
-    matchedDistanceM = Math.round(match.distanceM * 10) / 10;
   } else {
     return NextResponse.json(
       { error: 'Request must include either `houseId` OR (`lat` AND `lng`).' },

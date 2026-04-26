@@ -1347,10 +1347,18 @@ async function main() {
   await fs.mkdir(BAKED_DIR, { recursive: true });
 
   const onlyId = process.argv[2];
-  const queue = onlyId ? HOUSES.filter((h) => h === onlyId) : HOUSES;
-  if (onlyId && queue.length === 0) {
-    console.error(`Unknown house "${onlyId}". Known: ${HOUSES.join(', ')}`);
-    process.exit(1);
+  // Accept ad-hoc IDs prefixed with "live-" (used by /api/design when GPS coords
+  // miss the cache and we fetch+analyze on demand).
+  const isLiveId = onlyId?.startsWith('live-');
+  let queue: readonly string[];
+  if (isLiveId) {
+    queue = [onlyId!];
+  } else {
+    queue = onlyId ? HOUSES.filter((h) => h === onlyId) : HOUSES;
+    if (onlyId && queue.length === 0) {
+      console.error(`Unknown house "${onlyId}". Known: ${HOUSES.join(', ')}`);
+      process.exit(1);
+    }
   }
 
   for (const house of queue) {
