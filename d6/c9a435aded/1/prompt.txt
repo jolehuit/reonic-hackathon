@@ -363,3 +363,7 @@ pull
 ---
 
 une fois que l'on a exporté le pdf  reviens  sur la landing page
+
+---
+
+push
