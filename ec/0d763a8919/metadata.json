@@ -3,7 +3,7 @@
   "checkpoint_id": "ec0d763a8919",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "src/components/AgentTrace/AgentTrace.tsx"
   ],
@@ -13,13 +13,19 @@
       "transcript": "/ec/0d763a8919/0/full.jsonl",
       "content_hash": "/ec/0d763a8919/0/content_hash.txt",
       "prompt": "/ec/0d763a8919/0/prompt.txt"
+    },
+    {
+      "metadata": "/ec/0d763a8919/1/metadata.json",
+      "transcript": "/ec/0d763a8919/1/full.jsonl",
+      "content_hash": "/ec/0d763a8919/1/content_hash.txt",
+      "prompt": "/ec/0d763a8919/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 20,
-    "cache_creation_tokens": 118681,
-    "cache_read_tokens": 1015029,
-    "output_tokens": 5401,
-    "api_call_count": 10
+    "input_tokens": 253,
+    "cache_creation_tokens": 561731,
+    "cache_read_tokens": 13041538,
+    "output_tokens": 58716,
+    "api_call_count": 133
   }
 }
