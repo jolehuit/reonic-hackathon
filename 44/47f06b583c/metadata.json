@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "4447f06b583c",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/components/Scene3D/TrellisModel.tsx",
+    "src/lib/fal.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/44/47f06b583c/0/metadata.json",
+      "transcript": "/44/47f06b583c/0/full.jsonl",
+      "content_hash": "/44/47f06b583c/0/content_hash.txt",
+      "prompt": "/44/47f06b583c/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1207,
+    "cache_creation_tokens": 2978964,
+    "cache_read_tokens": 304437657,
+    "output_tokens": 398299,
+    "api_call_count": 743
+  }
+}
