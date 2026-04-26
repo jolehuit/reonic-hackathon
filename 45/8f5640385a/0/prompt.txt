@@ -1,0 +1,100 @@
+Tu travailles sur le repo reonic-hackathon (algo solar PV). Branche feat/Dev-D.
+
+🎯 OBJECTIF GLOBAL
+Améliorer la précision de l'algo qui place des panneaux solaires sur des toits, mesurée vs Google Solar API ground truth sur 25 maisons.
+
+État actuel (baseline) :
+- Mean |Δ%| = 41%
+- Dans ±10% : 7/25 (28%)
+- Dans ±25% : 12/25 (48%)
+- 13 cas poor/fail (>±25%)
+
+CIBLES :
+1. PRIORITÉ ABSOLUE : Aucune régression sur les 7 wins (bench-berlin1, bench-koeln1, bench-hamburg2, b3-zehlendorf, b3-wannsee, b3-karow, test2)
+2. Dans ±10% ≥ 10/25 minimum, idéalement 15/25
+3. Mean |Δ%| < 25%
+4. Dans ±25% ≥ 18/25
+🎯 SI 25/25 EN ±10% — passe au mode EXTENSION (nouvelles maisons).
+
+🚫 RÈGLE D'OR : SOLUTIONS GLOBALES UNIQUEMENT
+INTERDIT :
+- Hardcoder valeur pour 1 maison
+- Tuner seuil pour 1 cas précis
+- Magic numbers sur 1 maison
+OBLIGATOIRE :
+- Pattern GÉNÉRIQUE (≥3 maisons)
+- Test sur ≥5 maisons avant validation
+- Justification géométrique/physique
+- Si résout 1 cas mais en casse 1 autre → REVERT
+
+📋 PLAN D'ATTAQUE
+ÉTAPE 1 — TELEMETRY (50 LOC)
+- src/scripts/analyze-roof.ts: dump JSON via DEBUG_DETAIL=1
+- public/baked/{house}-debug.json par face: candidates_before/after_dedup, dropped_by_shade, dropped_by_flux, dropped_by_north_tilt, final_panels
+- Test sur bench-berlin1 et bench-koeln2
+
+ÉTAPE 2 — RANKING PAR annualFlux (80 LOC)
+- src/scripts/place-panels.ts ~L119: remplacer "yieldScore = v" par flux annuel via shadeSampler.annualFlux()
+- Test ≥5 maisons (bench-berlin1, bench-koeln1, bench-hamburg2, b3-zehlendorf, brandenburg)
+- Si régression sur 1 win → revert
+
+ÉTAPE 3 — ADJACENCY-AWARE CLUSTERING (150 LOC)
+- src/scripts/analyze-roof.ts: split clusters si triangles non-adjacents (graph connexité)
+- Run 25 cas
+- Si Δ% mean amélioré ET 0 régression sur 7 wins → garder, sinon revert
+
+ÉTAPE 4 — PER-PAVILION AUTO MULTI-LEVEL (150 LOC)
+- DBSCAN XZ + Gaussian mixture sur Y par pavillon (au lieu de P10..P90 global)
+
+🔁 SI 15/25 EN ±10% PAS ATTEINT — CONTINUE
+5. Polygon quality score (~120 LOC)
+6. Dedup unifié multi-level (~200 LOC)
+7. Sachsen LOD2 fetcher
+8. Hamburg LOD2 fetcher
+9. Variant thresholds en env vars (~80 LOC)
+10. Fix mergeFaces O(n³) + caching hull (~60 LOC)
+CRÉATIVITÉ AUTORISÉE si pattern générique (≥3 maisons).
+
+🚀 EXTENSION : SI 25/25 EN ±10% ATTEINT
+1. Trouver 10 nouvelles maisons Berlin via Overpass
+2. Solar API check
+3. Ajouter dans fetch-3d-tiles.ts + analyze-roof.ts avec ID prefix "bnight-"
+4. pnpm bake:fetch UNE par UNE
+5. pnpm bake:analyze:multi UNE par UNE
+6. Identifier patterns génériques, améliorer
+7. Re-run 25 originales pour non-régression
+8. Si plateau → 10 nouvelles maisons (Hamburg, Köln avec LOD2 NRW)
+
+🛡️ CONTRAINTES
+GIT :
+- AUTORISÉ : git checkout <fichier>, git status, git diff, git stash push/pop
+- INTERDIT : git push, git commit, git add, git rebase, git merge, git branch, git tag, git remote, gh, glab
+
+AUTRES :
+- JAMAIS run en parallèle (PC crash) — UNE maison à la fois
+- JAMAIS hardcode pour 1 maison
+- Snapshot AVANT chaque étape : cp public/baked/*-analysis.json /tmp/snapshot-etape-N/
+- Backup source : cp src/scripts/*.ts /tmp/source-backup-etape-N/
+- Revert : cp /tmp/source-backup-X/*.ts src/scripts/ OU git checkout src/scripts/<file>
+- Logger Δ% dans /tmp/overnight-progress.md
+
+⏰ DEADLINE : ARRÊT IMPÉRATIF À 6H50
+Tu seras tué automatiquement à 6h50.
+À 6H40 (10 min avant) :
+- ARRÊTE toute nouvelle modification
+- Termine l'étape en cours
+- Run benchmark final UNE dernière fois
+- Écris /tmp/overnight-summary.md avec état final
+- Si étape INCOMPLÈTE → revert depuis backup
+Vérifier l'heure : date +%H:%M
+
+Liste maisons (Solar API ground truth) :
+- 7 WINS : bench-berlin1=73, bench-koeln1=26, bench-hamburg2=59, b3-zehlendorf=22, b3-wannsee=53, b3-karow=35, test2=39
+- 13 POOR/FAIL : bench-koeln2=37, bench-meerbusch=57, bench-leipzig=67, bench-dresden1=39, bench-bochum=50, b3-mahlsdorf=87, b3-mahlsdorf2=40, b3-kladow=35, b3-lichterfelde=33, b3-hermsdorf=10, b3-wannsee2=26, test4=38, bench-berlin2=40
+- 5 MID : test1=22, test3=48, b3-hermsdorf2=49, bench-dresden2=66, brandenburg=48
+
+Bench script :
+for h in bench-berlin1 bench-koeln1 bench-hamburg2 b3-zehlendorf b3-wannsee b3-karow test2 bench-koeln2 bench-meerbusch bench-leipzig bench-dresden1 bench-dresden2 bench-bochum b3-mahlsdorf b3-mahlsdorf2 b3-kladow b3-lichterfelde b3-hermsdorf b3-hermsdorf2 b3-wannsee2 test1 test3 test4 brandenburg bench-berlin2; do pnpm bake:analyze:multi $h 2>&1 | tail -1; done
+
+🎯 RAPPEL : SOLUTIONS GLOBALES UNIQUEMENT. Aucun hardcode.
+VAS-Y. Bonne nuit 🌙

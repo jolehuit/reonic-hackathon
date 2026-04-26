@@ -1,0 +1,74 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "458f5640385a",
+  "session_id": "14f572a9-489b-4db6-a1e9-8f615591e900",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T06:10:58.367083Z",
+  "branch": "feat/Dev-D",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "public/baked/b3-hermsdorf-analysis.json",
+    "public/baked/b3-hermsdorf2-analysis.json",
+    "public/baked/b3-karow-analysis.json",
+    "public/baked/b3-kladow-analysis.json",
+    "public/baked/b3-lichterfelde-analysis.json",
+    "public/baked/b3-mahlsdorf-analysis.json",
+    "public/baked/b3-mahlsdorf2-analysis.json",
+    "public/baked/b3-wannsee-analysis.json",
+    "public/baked/b3-wannsee2-analysis.json",
+    "public/baked/b3-zehlendorf-analysis.json",
+    "public/baked/bench-berlin1-analysis.json",
+    "public/baked/bench-berlin2-analysis.json",
+    "public/baked/bench-bochum-analysis.json",
+    "public/baked/bench-dresden1-analysis.json",
+    "public/baked/bench-dresden2-analysis.json",
+    "public/baked/bench-hamburg2-analysis.json",
+    "public/baked/bench-koeln1-analysis.json",
+    "public/baked/bench-koeln2-analysis.json",
+    "public/baked/bench-leipzig-analysis.json",
+    "public/baked/bench-meerbusch-analysis.json",
+    "public/baked/brandenburg-analysis.json",
+    "public/baked/test1-analysis.json",
+    "public/baked/test2-analysis.json",
+    "public/baked/test3-analysis.json",
+    "public/baked/test4-analysis.json",
+    "src/lib/lod2-buildings.ts",
+    "src/scripts/analyze-multi.ts",
+    "src/scripts/analyze-roof.ts",
+    "src/scripts/place-panels.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "81a3e5d51f31",
+  "token_usage": {
+    "input_tokens": 236,
+    "cache_creation_tokens": 487092,
+    "cache_read_tokens": 59262141,
+    "output_tokens": 250123,
+    "api_call_count": 226
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T06:10:58.334624Z",
+    "agent_lines": 5864,
+    "agent_removed": 3589,
+    "human_added": 9365,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 15229,
+    "total_lines_changed": 18831,
+    "agent_percentage": 50.199139716425044,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}

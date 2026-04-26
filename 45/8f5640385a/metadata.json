@@ -1,0 +1,53 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "458f5640385a",
+  "strategy": "manual-commit",
+  "branch": "feat/Dev-D",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "public/baked/b3-hermsdorf-analysis.json",
+    "public/baked/b3-hermsdorf2-analysis.json",
+    "public/baked/b3-karow-analysis.json",
+    "public/baked/b3-kladow-analysis.json",
+    "public/baked/b3-lichterfelde-analysis.json",
+    "public/baked/b3-mahlsdorf-analysis.json",
+    "public/baked/b3-mahlsdorf2-analysis.json",
+    "public/baked/b3-wannsee-analysis.json",
+    "public/baked/b3-wannsee2-analysis.json",
+    "public/baked/b3-zehlendorf-analysis.json",
+    "public/baked/bench-berlin1-analysis.json",
+    "public/baked/bench-berlin2-analysis.json",
+    "public/baked/bench-bochum-analysis.json",
+    "public/baked/bench-dresden1-analysis.json",
+    "public/baked/bench-dresden2-analysis.json",
+    "public/baked/bench-hamburg2-analysis.json",
+    "public/baked/bench-koeln1-analysis.json",
+    "public/baked/bench-koeln2-analysis.json",
+    "public/baked/bench-leipzig-analysis.json",
+    "public/baked/bench-meerbusch-analysis.json",
+    "public/baked/brandenburg-analysis.json",
+    "public/baked/test1-analysis.json",
+    "public/baked/test2-analysis.json",
+    "public/baked/test3-analysis.json",
+    "public/baked/test4-analysis.json",
+    "src/lib/lod2-buildings.ts",
+    "src/scripts/analyze-multi.ts",
+    "src/scripts/analyze-roof.ts",
+    "src/scripts/place-panels.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/45/8f5640385a/0/metadata.json",
+      "transcript": "/45/8f5640385a/0/full.jsonl",
+      "content_hash": "/45/8f5640385a/0/content_hash.txt",
+      "prompt": "/45/8f5640385a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 236,
+    "cache_creation_tokens": 487092,
+    "cache_read_tokens": 59262141,
+    "output_tokens": 250123,
+    "api_call_count": 226
+  }
+}
