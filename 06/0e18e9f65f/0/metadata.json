@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "060e18e9f65f",
+  "session_id": "74d1e193-f7b0-4a73-84eb-1daf77f7e760",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T07:04:17.355666Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/lib/financials.ts",
+    "src/components/ApprovalModal/ApprovalModal.tsx",
+    "src/components/AutoFillForm/CustomAddressForm.tsx"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-7[1m]",
+  "turn_id": "097b79c6fc48",
+  "checkpoint_transcript_start": 513,
+  "transcript_lines_at_start": 513,
+  "token_usage": {
+    "input_tokens": 12,
+    "cache_creation_tokens": 13621,
+    "cache_read_tokens": 2681861,
+    "output_tokens": 7773,
+    "api_call_count": 12
+  },
+  "session_metrics": {
+    "turn_count": 12
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T07:04:17.331757Z",
+    "agent_lines": 61,
+    "agent_removed": 51,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 61,
+    "total_lines_changed": 112,
+    "agent_percentage": 100,
+    "metric_version": 2
+  }
+}
