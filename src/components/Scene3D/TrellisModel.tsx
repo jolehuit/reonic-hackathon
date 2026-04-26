@@ -8,8 +8,28 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
 import { Edges } from '@react-three/drei';
-import { Box3, Group, Mesh, Shape, Vector3 } from 'three';
+import { Box3, BufferGeometry, Group, Mesh, Shape, Vector3 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import {
+  computeBoundsTree,
+  disposeBoundsTree,
+  acceleratedRaycast,
+} from 'three-mesh-bvh';
+
+// Wire three-mesh-bvh into Three.js once. Now any geometry with
+// `geometry.computeBoundsTree()` builds a BVH, and Mesh.raycast uses it.
+// Without this, <Panels/> raycasts walk every triangle linearly — on a
+// 50k-face Hunyuan mesh that's still ~125M ops for a typical roof scan.
+// With BVH, it's O(log n) per ray → freeze gone.
+type BvhAugmentedGeometry = BufferGeometry & {
+  computeBoundsTree?: typeof computeBoundsTree;
+  disposeBoundsTree?: typeof disposeBoundsTree;
+};
+type BvhAugmentedMesh = Mesh & { raycast: typeof acceleratedRaycast };
+const proto = BufferGeometry.prototype as BvhAugmentedGeometry;
+proto.computeBoundsTree = computeBoundsTree;
+proto.disposeBoundsTree = disposeBoundsTree;
+(Mesh.prototype as BvhAugmentedMesh).raycast = acceleratedRaycast;
 import { useStore } from '@/lib/store';
 import { useHouseGeometry } from './HouseGeometry';
 
@@ -377,8 +397,9 @@ function LoadedGlb({
     setGlbRoofAreaM2,
   ]);
 
-  // Cast/receive shadows on every mesh + flip materials transparent so the
-  // opacity fade-in works during the morph.
+  // One-shot post-load mesh prep: shadows + transparent materials (for the
+  // skeleton→GLB cross-fade) + BVH on the geometry so downstream raycasts
+  // in <Panels/> finish in milliseconds instead of freezing the tab.
   useEffect(() => {
     scene.traverse((obj) => {
       const mesh = obj as Mesh;
@@ -389,7 +410,17 @@ function LoadedGlb({
       for (const m of mats) {
         if (m && 'transparent' in m) m.transparent = true;
       }
+      const geom = mesh.geometry as BvhAugmentedGeometry;
+      if (geom.computeBoundsTree && !geom.boundsTree) {
+        geom.computeBoundsTree();
+      }
     });
+    return () => {
+      scene.traverse((obj) => {
+        const geom = (obj as Mesh).geometry as BvhAugmentedGeometry | undefined;
+        if (geom?.disposeBoundsTree) geom.disposeBoundsTree();
+      });
+    };
   }, [scene]);
 
   // Drive the opacity each frame (cheaper than a re-render on every step).

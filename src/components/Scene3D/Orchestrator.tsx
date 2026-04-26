@@ -48,7 +48,7 @@ export const SEQUENCE: SeqStep[] = [
   {
     id: 'size',
     label: 'Computing solar sizing & financial model',
-    sublabel: 'k-NN over 1,620 Reonic deliveries',
+    sublabel: 'k-NN over 1,620 Iconic deliveries',
     estDurationMs: 1_200,
   },
   {

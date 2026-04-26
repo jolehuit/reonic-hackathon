@@ -42,62 +42,46 @@ const HOUSES: {
 
 const FEATURES = [
   'Photovoltaic system, energy storage and electric car',
-  'Profitability analysis on 1 620 real Reonic deliveries',
+  'Profitability analysis on 1 620 real Iconic deliveries',
   'CO₂ savings + 1-page PDF quick-offer',
 ];
 
 export default function Home() {
   const [addressOpen, setAddressOpen] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
   return (
     <main className="min-h-screen bg-white text-zinc-900 antialiased">
-      <div className="mx-auto flex max-w-[1240px] flex-col px-10 pb-16 pt-14">
-        {/* Header */}
-        <header className="mb-14 flex items-start justify-between">
-          <div>
-            <h1 className="mb-1.5 text-[34px] font-bold leading-[1.15] tracking-[-0.02em] text-zinc-900">
-              Welcome to your energy household.
-            </h1>
-            <p className="text-[15px] text-zinc-500">
-              Pick a demo house and watch our AI design a complete renewable system in 30 seconds.
-            </p>
-          </div>
-          <div className="flex items-center gap-2.5 pt-1">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-50">
-              <svg className="h-6 w-6 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <circle cx="12" cy="6" r="1.6" fill="currentColor" stroke="none" />
-                <path d="M12 8v2M9.5 9l-1 1M14.5 9l1 1" strokeLinecap="round" />
-                <rect x="6" y="11" width="12" height="9" rx="0.6" />
-                <path d="M6 14h12M6 17h12M9 11v9M12 11v9M15 11v9" />
-              </svg>
-            </div>
-            <div className="flex flex-col leading-tight">
-              <span className="text-[13px] font-bold text-zinc-900">Reonic</span>
-              <span className="text-[11px] text-zinc-500">AI Designer</span>
-            </div>
-          </div>
+      <div className="mx-auto flex max-w-[1240px] flex-col px-10 pb-16 pt-8">
+        {/* Header — logo top-left, like Reonic. Big enough that the wordmark
+            reads from the back row. No "AI Designer" sublabel: the hero
+            headline below carries the positioning. */}
+        <header className="mb-12 flex items-center justify-between">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/iconic-logo.png" alt="Iconic" className="h-14 w-auto" />
+          <button
+            type="button"
+            onClick={() => setAddressOpen(true)}
+            className="rounded-full bg-zinc-900 px-5 py-2.5 text-[13px] font-semibold text-white shadow-sm transition hover:bg-zinc-800"
+          >
+            Try it now
+          </button>
         </header>
 
-        {/* Hero — 2 panels */}
-        <section className="mb-14 grid grid-cols-1 gap-5 lg:grid-cols-[1.1fr_1fr]">
-          {/* Left visual */}
-          <div className="rounded-3xl border border-zinc-200/70 bg-zinc-50/60 p-10">
-            <div className="flex h-full items-center justify-center">
-              <HouseIllustration />
-            </div>
-          </div>
-
-          {/* Right copy */}
-          <div className="flex flex-col rounded-3xl border border-zinc-200/70 bg-white p-10">
-            <p className="mb-2.5 text-[13px] text-zinc-500">Welcome to your digital energy consultant</p>
-            <h2 className="mb-7 text-[32px] font-bold leading-[1.15] tracking-[-0.02em]">
-              We make you ready for a{' '}
-              <span className="bg-blue-100/70 px-1 underline decoration-blue-500 decoration-[3px] underline-offset-[6px]">
-                green future.
-              </span>
-            </h2>
-            <ul className="mb-7 space-y-3">
+        {/* Hero — copy left + visual right (Reonic-style split). */}
+        <section className="mb-16 grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.15fr_1fr]">
+          <div>
+            <h1 className="mb-5 text-[56px] font-bold leading-[1.04] tracking-[-0.025em] text-zinc-900">
+              From an address to a complete solar design in 30&nbsp;seconds.
+            </h1>
+            <p className="mb-7 text-[17px] leading-relaxed text-zinc-500">
+              Type any address. Iconic captures the building from Google Photorealistic 3D Tiles,
+              isolates it with GPT Image&nbsp;2, reconstructs a textured mesh with Hunyuan&nbsp;3D&nbsp;Pro,
+              then sizes the PV&nbsp;/ storage&nbsp;/ heat-pump bundle against 1,620 real Iconic deliveries
+              and exports a quick-offer PDF.
+            </p>
+            <ul className="mb-8 space-y-2.5">
               {FEATURES.map((f) => (
-                <li key={f} className="flex items-start gap-3 text-[14px] leading-snug text-zinc-700">
+                <li key={f} className="flex items-start gap-3 text-[14.5px] leading-snug text-zinc-700">
                   <span className="mt-0.5 flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-full bg-blue-500 text-white">
                     <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
@@ -107,102 +91,39 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <p className="mb-8 text-[13.5px] leading-relaxed text-zinc-500">
-              Are you wondering whether renewable technologies make economic sense for you? Pick one of
-              three real demo houses below. Watch the AI agent design, refine via sliders, then export
-              a 1-page PDF quick-offer.
-            </p>
-            <div className="mt-auto flex justify-end">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={() => setAddressOpen(true)}
-                className="group inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-[14px] font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                className="group inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-[14.5px] font-semibold text-white shadow-sm transition hover:bg-emerald-700"
               >
-                Start now
+                Type your address
                 <svg className="h-4 w-4 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
               </button>
-            </div>
-          </div>
-        </section>
-
-        {/* House chips */}
-        <section id="houses" className="mb-12 scroll-mt-10">
-          <div className="mb-5 flex items-end justify-between">
-            <div>
-              <h3 className="text-[20px] font-bold tracking-tight text-zinc-900">
-                Or try a demo house
-              </h3>
-              <p className="mt-0.5 text-[13px] text-zinc-500">
-                3 pre-validated buildings from the 1 620-project Reonic dataset.
-              </p>
-            </div>
-            <span className="hidden text-[12px] font-medium text-zinc-400 md:block">
-              ~30 s · auto-fill → AI design → quick-offer
-            </span>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {HOUSES.map((h, i) => (
-              <motion.div
-                key={h.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.08, duration: 0.3 }}
+              <button
+                type="button"
+                onClick={() => setDemoOpen(true)}
+                className="group inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-6 py-3 text-[14.5px] font-semibold text-zinc-800 shadow-sm transition hover:border-zinc-400 hover:bg-zinc-50"
               >
-                <Link
-                  href={`/design/${h.id}`}
-                  className="group relative flex h-full flex-col rounded-2xl border border-zinc-200/70 bg-white p-6 transition hover:border-blue-300 hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)]"
-                >
-                  <div className="mb-5 flex items-start justify-between">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50">
-                      <svg className="h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 10.5L12 3l9 7.5" />
-                        <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5" />
-                      </svg>
-                    </div>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                        h.highlightTone === 'blue'
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'bg-emerald-50 text-emerald-700'
-                      }`}
-                    >
-                      {h.highlight}
-                    </span>
-                  </div>
-                  <div className="mb-1.5 flex items-baseline gap-2">
-                    <span className="text-[20px] font-bold text-zinc-900">{h.label}</span>
-                    <span className="text-[13px] text-zinc-400">{h.size}</span>
-                  </div>
-                  <div className="mb-6 text-[13px] text-zinc-500">{h.heating}</div>
-                  <div className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-4">
-                    <span className="text-[12px] font-medium text-zinc-400">Demo · validated</span>
-                    <span className="flex items-center gap-1.5 text-[13px] font-semibold text-emerald-600 transition group-hover:gap-2.5">
-                      Start now
-                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                        <polyline points="12 5 19 12 12 19" />
-                      </svg>
-                    </span>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                Try a demo house
+                <svg className="h-4 w-4 text-zinc-400 transition group-hover:text-zinc-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 10.5L12 3l9 7.5" />
+                  <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-zinc-200/70 bg-zinc-50/60 p-10">
+            <div className="flex h-full items-center justify-center">
+              <HouseIllustration />
+            </div>
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-6 text-[12px] text-zinc-400">
-          <div className="flex items-center gap-5">
-            <span className="cursor-pointer hover:text-zinc-600">Imprint</span>
-            <span className="cursor-pointer hover:text-zinc-600">Data protection</span>
-          </div>
-          <div className="font-medium text-zinc-500">
-            Built on <span className="text-blue-600">1 620</span> real Reonic deliveries
-          </div>
-        </footer>
       </div>
 
       <AnimatePresence>
@@ -212,7 +133,7 @@ export default function Home() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setAddressOpen(false)}
-            className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-zinc-900/50 p-4 backdrop-blur-sm sm:p-8"
+            className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-zinc-900/50 p-4 backdrop-blur-sm sm:p-8"
           >
             <motion.div
               initial={{ y: 30, opacity: 0 }}
@@ -234,6 +155,103 @@ export default function Home() {
                 </svg>
               </button>
               <AddressSearch />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {demoOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setDemoOpen(false)}
+            className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-zinc-900/50 p-4 backdrop-blur-sm sm:p-8"
+          >
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 30, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-4xl"
+            >
+              <button
+                type="button"
+                onClick={() => setDemoOpen(false)}
+                aria-label="Close"
+                className="absolute -top-2 right-0 flex h-9 w-9 items-center justify-center rounded-full bg-white text-zinc-500 shadow-md transition hover:text-zinc-900"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                </svg>
+              </button>
+
+              <div className="rounded-3xl border border-zinc-200/70 bg-white p-8 shadow-xl">
+                <div className="mb-6">
+                  <div className="mb-3 inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-emerald-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    Live demo
+                  </div>
+                  <h3 className="mb-2 text-[26px] font-bold leading-[1.15] tracking-[-0.02em] text-zinc-900">
+                    Pick a pre-validated building.
+                  </h3>
+                  <p className="text-[14px] leading-relaxed text-zinc-500">
+                    Three houses from the 1,620-project Iconic dataset.
+                    Auto-fills the customer profile, runs the AI agent, and exports a quick-offer PDF — end to end in about 30 seconds.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  {HOUSES.map((h, i) => (
+                    <motion.div
+                      key={h.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.05 + i * 0.06, duration: 0.25 }}
+                    >
+                      <Link
+                        href={`/design/${h.id}`}
+                        className="group relative flex h-full flex-col rounded-2xl border border-zinc-200/70 bg-white p-5 transition hover:border-blue-300 hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)]"
+                      >
+                        <div className="mb-4 flex items-start justify-between">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+                            <svg className="h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M3 10.5L12 3l9 7.5" />
+                              <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5" />
+                            </svg>
+                          </div>
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                              h.highlightTone === 'blue'
+                                ? 'bg-blue-50 text-blue-700'
+                                : 'bg-emerald-50 text-emerald-700'
+                            }`}
+                          >
+                            {h.highlight}
+                          </span>
+                        </div>
+                        <div className="mb-1 flex items-baseline gap-2">
+                          <span className="text-[17px] font-bold text-zinc-900">{h.label}</span>
+                          <span className="text-[12px] text-zinc-400">{h.size}</span>
+                        </div>
+                        <div className="mb-5 text-[12.5px] text-zinc-500">{h.heating}</div>
+                        <div className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-3">
+                          <span className="text-[11.5px] font-medium text-zinc-400">Demo · validated</span>
+                          <span className="flex items-center gap-1.5 text-[12.5px] font-semibold text-emerald-600 transition group-hover:gap-2.5">
+                            Start
+                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <line x1="5" y1="12" x2="19" y2="12" />
+                              <polyline points="12 5 19 12 12 19" />
+                            </svg>
+                          </span>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}

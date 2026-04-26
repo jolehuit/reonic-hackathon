@@ -17,7 +17,10 @@ ARG NODE_VERSION=20-bookworm-slim
 FROM node:${NODE_VERSION} AS deps
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
-COPY package.json pnpm-lock.yaml ./
+# .npmrc carries `public-hoist-pattern[]=playwright-core` — required so the
+# runner stage's `COPY .../node_modules/playwright-core` resolves. Without it,
+# pnpm's strict layout keeps playwright-core under .pnpm/ only.
+COPY package.json pnpm-lock.yaml .npmrc ./
 RUN pnpm install --frozen-lockfile
 
 # ─── Stage 2: builder ───────────────────────────────────────────────────────
@@ -57,6 +60,10 @@ COPY --from=builder /app/.next/standalone ./
 # Static assets and public/ aren't bundled into standalone — copy explicitly.
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+# k-NN sizing in /api/design reads CSVs from /app/data at runtime via
+# fs.readFileSync (not a JS import), so Next's standalone tracer doesn't
+# pick them up. Copy the dataset explicitly. ~2.5 MB.
+COPY --from=builder /app/data ./data
 # The Chromium binary downloaded at build time.
 COPY --from=builder /app/.cache/ms-playwright /app/.cache/ms-playwright
 # `playwright` package itself, needed to spawn the browser at runtime.

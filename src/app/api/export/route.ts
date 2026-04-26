@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   doc.setTextColor(...REONIC_GREEN);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(22);
-  doc.text('Reonic', 20, y);
+  doc.text('Iconic', 20, y);
   doc.setTextColor(...DARK_TEXT);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
   doc.setTextColor(...REONIC_GREEN);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
-  doc.text(`Validated against ${design.similarProjects.length} similar Reonic deliveries`, 20, y);
+  doc.text(`Validated against ${design.similarProjects.length} similar Iconic deliveries`, 20, y);
   y += 5;
   doc.setTextColor(...MUTED_TEXT);
   doc.setFont('helvetica', 'normal');
@@ -183,11 +183,11 @@ export async function POST(req: NextRequest) {
   doc.setTextColor(...MUTED_TEXT);
   doc.setFontSize(7);
   doc.text(
-    `Approved by ${installerName ?? 'Reonic Team'} on ${new Date().toLocaleDateString('de-DE')} · Sized via k-NN over 1620 real Reonic deliveries · Source: ${design.source}`,
+    `Approved by ${installerName ?? 'Iconic Team'} on ${new Date().toLocaleDateString('de-DE')} · Sized via k-NN over 1620 real Iconic deliveries · Source: ${design.source}`,
     20,
     285,
   );
-  doc.text('reonic.com', PAGE_W - 20, 285, { align: 'right' });
+  doc.text('iconic.haus', PAGE_W - 20, 285, { align: 'right' });
 
   // jsPDF.output('arraybuffer') returns an ArrayBuffer; Web Response accepts it as BodyInit.
   const arrayBuffer = doc.output('arraybuffer');
@@ -195,7 +195,7 @@ export async function POST(req: NextRequest) {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="reonic-offer-${Date.now()}.pdf"`,
+      'Content-Disposition': `attachment; filename="iconic-offer-${Date.now()}.pdf"`,
       'Content-Length': String(arrayBuffer.byteLength),
     },
   });
