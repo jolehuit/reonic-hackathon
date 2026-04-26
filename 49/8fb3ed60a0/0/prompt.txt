@@ -1,0 +1,39 @@
+1/1
+
+Next.js 16.2.4
+Turbopack
+Runtime Error
+
+
+
+Could not load lebombo_1k.hdr: Failed to fetch
+src/components/Scene3D/Scene3D.tsx (73:5) @ ProceduralCanvas
+
+
+  71 |
+  72 |   return (
+> 73 |     <Canvas
+     |     ^
+  74 |       shadows
+  75 |       dpr={[1, 2]}
+  76 |       camera={{ position: [13, 8, 13], fov: 38 }}
+Call Stack
+7
+
+Show 4 ignore-listed frame(s)
+ProceduralCanvas
+src/components/Scene3D/Scene3D.tsx (73:5)
+Scene3D
+src/components/Scene3D/Scene3D.tsx (53:9)
+DesignPage
+src/app/design/[houseId]/page.tsx (167:7)
+
+Pourquoi ça marchait ya quelques commits et mtn ça marche pas
+
+---
+
+mais enlève cette merde
+
+---
+
+mais enlève cette merde de csp la
