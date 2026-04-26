@@ -32,10 +32,24 @@ export async function POST(req: NextRequest) {
   // fetch fails with SSL_PROTOCOL_ERROR.
   const port = process.env.PORT ?? '3000';
   const origin = `http://localhost:${port}`;
-  const aerialUrl = `${origin}/api/aerial?lat=${lat}&lng=${lng}&zoom=${body.zoom ?? 20}&tilted=1`;
+  const zoomParam = Number.isFinite(Number(body.zoom)) ? Number(body.zoom) : 20;
+  const aerialUrl = `${origin}/api/aerial?lat=${lat}&lng=${lng}&zoom=${zoomParam}&tilted=1`;
   // _ keeps `req` referenced for clarity; we intentionally don't use
   // req.nextUrl.origin anymore.
   void req;
+  // SSRF guard — the URL is constructed from PORT (deploy-controlled) and
+  // numeric lat/lng/zoom (validated above), so it's never user-controlled
+  // by design. The explicit hostname assertion is a tripwire: if the URL
+  // template ever drifts to include a string from the body, the parsed
+  // `host` will no longer match `localhost` and the request is refused
+  // before fetch() can hit a foreign origin.
+  const parsed = new URL(aerialUrl);
+  if (parsed.hostname !== 'localhost') {
+    return NextResponse.json(
+      { ok: false, error: 'invalid aerial URL — not loopback' },
+      { status: 500 },
+    );
+  }
   const aerialRes = await fetch(aerialUrl);
   if (!aerialRes.ok) {
     return NextResponse.json(

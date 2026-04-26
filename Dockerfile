@@ -76,20 +76,32 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libcairo2 libasound2 fonts-liberation libdrm2 libxshmfence1 \
     && rm -rf /var/lib/apt/lists/*
 
+# Non-root runtime user. Aikido SAST flagged the previous default-root
+# CMD; running as root means an exploited Next handler would have
+# unrestricted access to the container filesystem (and to the Cloud Run
+# metadata service, since Cloud Run's network policy isn't a security
+# boundary against in-container code). The `node` user (uid 1000) is
+# pre-created by the official node base image — we just have to chown
+# the app dir and drop into it before CMD.
+RUN groupadd --system --gid 1001 iconic \
+ && useradd --system --uid 1001 --gid iconic --shell /bin/bash --create-home iconic
+
 # Standalone Next bundle (server.js + minimal node_modules + .next/server).
-COPY --from=builder /app/.next/standalone ./
+COPY --from=builder --chown=iconic:iconic /app/.next/standalone ./
 # Static assets and public/ aren't bundled into standalone — copy explicitly.
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=iconic:iconic /app/.next/static ./.next/static
+COPY --from=builder --chown=iconic:iconic /app/public ./public
 # k-NN sizing in /api/design reads CSVs from /app/data at runtime via
 # fs.readFileSync (not a JS import), so Next's standalone tracer doesn't
 # pick them up. Copy the dataset explicitly. ~2.5 MB.
-COPY --from=builder /app/data ./data
+COPY --from=builder --chown=iconic:iconic /app/data ./data
 # The Chromium binary moved into the project cache during the builder stage.
-COPY --from=builder /app/.cache/ms-playwright /app/.cache/ms-playwright
+COPY --from=builder --chown=iconic:iconic /app/.cache/ms-playwright /app/.cache/ms-playwright
 # `playwright` package itself, needed to spawn the browser at runtime.
-COPY --from=builder /app/node_modules/playwright /app/node_modules/playwright
-COPY --from=builder /app/node_modules/playwright-core /app/node_modules/playwright-core
+COPY --from=builder --chown=iconic:iconic /app/node_modules/playwright /app/node_modules/playwright
+COPY --from=builder --chown=iconic:iconic /app/node_modules/playwright-core /app/node_modules/playwright-core
+
+USER iconic
 
 EXPOSE 8080
 CMD ["node", "server.js"]

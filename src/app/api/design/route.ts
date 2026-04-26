@@ -171,7 +171,21 @@ async function fetchAndAnalyzeLive(lat: number, lng: number): Promise<string> {
   return liveId;
 }
 
+// Strict houseId allowlist. Demo IDs and ad-hoc live-* slugs (the
+// fetchAndAnalyzeLive output) are the only valid shapes. Anything else
+// — relative paths, traversal payloads (`..`, `/`), shell metacharacters
+// — gets rejected before it can reach fs.readFile. Aikido SAST flagged
+// path.join(BAKED_DIR, `${houseId}-...`) as a potential file inclusion.
+const HOUSE_ID_RE = /^(berlin-dahlem|potsdam-golm|berlin-karow|live-[\w-]+)$/;
+
+function assertValidHouseId(id: string): void {
+  if (!HOUSE_ID_RE.test(id)) {
+    throw new Error(`Invalid houseId "${id}"`);
+  }
+}
+
 async function loadBakedGeometry(houseId: string): Promise<RoofGeometry> {
+  assertValidHouseId(houseId);
   const filePath = path.join(BAKED_DIR, `${houseId}-analysis.json`);
   const raw = await fs.readFile(filePath, 'utf-8');
   return JSON.parse(raw) as RoofGeometry;
