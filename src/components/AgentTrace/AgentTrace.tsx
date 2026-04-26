@@ -14,6 +14,10 @@ import type { AgentStep } from '@/lib/types';
 // step's slot. The progress bar at the top of the popup fills in sync —
 // 3 s gives the user time to actually read what just happened.
 const POPUP_HOLD_MS = 3000;
+// Pause between two consecutive popups so the eye gets a beat of rest
+// between artifacts — without it the previous popup's exit animation
+// runs over the next popup's entry and the trace looks frantic.
+const POPUP_GAP_MS = 500;
 // Once every step is done, fade the panel out after a short hold so the
 // 3D viewer takes the full attention (the customer doesn't need to keep
 // staring at "✓ ✓ ✓ 100%" while they explore the model).
@@ -40,7 +44,9 @@ export function AgentTrace() {
     }
   }, [steps, shownIds, activePopupId]);
 
-  // Queue: when no popup is active, pick the next eligible step.
+  // Queue: when no popup is active, pick the next eligible step — but
+  // wait POPUP_GAP_MS first so the previous popup's exit animation has
+  // time to clear before the next one enters.
   useEffect(() => {
     if (activePopupId) return;
     const next = steps.find((s, i) => {
@@ -55,7 +61,9 @@ export function AgentTrace() {
       }
       return true;
     });
-    if (next) setActivePopupId(next.id);
+    if (!next) return;
+    const t = setTimeout(() => setActivePopupId(next.id), POPUP_GAP_MS);
+    return () => clearTimeout(t);
   }, [steps, activePopupId, shownIds]);
 
   // Timer: depends ONLY on activePopupId, so step updates during the hold

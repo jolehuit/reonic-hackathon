@@ -6,10 +6,15 @@
 // Resp: { ok: true, imageUrl } | { ok: false, error }
 
 import { NextResponse, type NextRequest } from 'next/server';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 import { cleanBuildingImage } from '@/lib/fal';
+import { liveCacheKey } from '@/lib/cacheKey';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
+
+const HOUSE_CACHE_DIR = path.join(process.cwd(), 'public', 'cache', 'houses');
 
 export async function POST(req: NextRequest) {
   let body: { lat?: number; lng?: number; zoom?: number } = {};
@@ -23,6 +28,23 @@ export async function POST(req: NextRequest) {
   const lng = Number(body.lng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
     return NextResponse.json({ ok: false, error: 'lat & lng required' }, { status: 400 });
+  }
+
+  // 0. Disk cache lookup. Same coords already cleaned in a previous
+  //    session → skip GPT Image 2 entirely (otherwise that's ~25 s +
+  //    paid quota every visit). 6-decimal precision = ~10 cm so two
+  //    requests for the same address always hit.
+  const cacheKey = liveCacheKey(lat, lng);
+  const cleanedFile = path.join(HOUSE_CACHE_DIR, cacheKey, 'clean.png');
+  try {
+    await fs.access(cleanedFile);
+    return NextResponse.json({
+      ok: true,
+      imageUrl: `/cache/houses/${cacheKey}/clean.png`,
+      cached: true,
+    });
+  } catch {
+    // miss — proceed to generate and save below
   }
 
   // 1. Pull the oblique screenshot from /api/aerial?tilted=1.
@@ -61,8 +83,27 @@ export async function POST(req: NextRequest) {
 
   // 2. Run GPT Image 2 to clean / isolate the building.
   try {
-    const { imageUrl } = await cleanBuildingImage(buf);
-    return NextResponse.json({ ok: true, imageUrl });
+    const { imageUrl: falImageUrl } = await cleanBuildingImage(buf);
+
+    // 3. Persist to local disk so the next request for this address skips
+    //    GPT Image 2 entirely. Failure to cache shouldn't fail the request
+    //    — fall back to returning the fal-hosted URL.
+    try {
+      const r = await fetch(falImageUrl);
+      if (r.ok) {
+        const cleanedBuf = Buffer.from(await r.arrayBuffer());
+        await fs.mkdir(path.dirname(cleanedFile), { recursive: true });
+        await fs.writeFile(cleanedFile, cleanedBuf);
+        return NextResponse.json({
+          ok: true,
+          imageUrl: `/cache/houses/${cacheKey}/clean.png`,
+          cached: false,
+        });
+      }
+    } catch (err) {
+      console.warn('[/api/clean-image] cache write failed, returning fal URL:', err);
+    }
+    return NextResponse.json({ ok: true, imageUrl: falImageUrl });
   } catch (err) {
     console.error('[/api/clean-image] gpt-image-2 failed:', err);
     return NextResponse.json(

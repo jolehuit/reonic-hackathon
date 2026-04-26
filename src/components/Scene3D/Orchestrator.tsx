@@ -271,10 +271,17 @@ export function Orchestrator() {
       updateStepStatus('model', 'running');
       setTrellisStatus('generating');
       try {
+        // Pass lat/lng so /api/trellis can disk-cache the GLB. Same coords
+        // next session → Hunyuan call skipped, GLB served from
+        // /cache/houses/live-{key}/model.glb.
         const r = await fetch('/api/trellis', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ imageUrl: cleanedImageUrl }),
+          body: JSON.stringify({
+            imageUrl: cleanedImageUrl,
+            lat: coords.lat,
+            lng: coords.lng,
+          }),
         });
         const j = (await r.json()) as { ok: boolean; glbUrl?: string; error?: string };
         if (cancelled) return;
