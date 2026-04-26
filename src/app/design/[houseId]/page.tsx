@@ -184,10 +184,9 @@ export default function DesignPage({ params }: Props) {
             </svg>
             Back
           </button>
-          <div className="flex items-center gap-2 rounded-xl bg-white/95 px-3 py-1.5 text-[12px] font-medium text-zinc-700 shadow-sm backdrop-blur">
+          <div className="rounded-xl bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/iconic-logo.png" alt="Iconic" className="h-5 w-auto" />
-            <span className="text-zinc-500">AI Designer</span>
+            <img src="/iconic-logo.png" alt="Iconic" className="h-9 w-auto" />
           </div>
         </header>
 

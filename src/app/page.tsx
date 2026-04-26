@@ -50,47 +50,37 @@ export default function Home() {
   const [addressOpen, setAddressOpen] = useState(false);
   return (
     <main className="min-h-screen bg-white text-zinc-900 antialiased">
-      <div className="mx-auto flex max-w-[1240px] flex-col px-10 pb-16 pt-14">
-        {/* Header */}
-        <header className="mb-14 flex items-start justify-between">
-          <div>
-            <h1 className="mb-1.5 text-[34px] font-bold leading-[1.15] tracking-[-0.02em] text-zinc-900">
-              Welcome to your energy household.
-            </h1>
-            <p className="text-[15px] text-zinc-500">
-              Pick a demo house and watch our AI design a complete renewable system in 30 seconds.
-            </p>
-          </div>
-          <div className="flex items-center gap-2.5 pt-1">
-            {/* Iconic logo (PNG, transparent bg). Height matches the height
-                we used for the previous icon-pill so the header doesn't shift. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/iconic-logo.png" alt="Iconic" className="h-9 w-auto" />
-            <span className="text-[11px] text-zinc-500">AI Designer</span>
-          </div>
+      <div className="mx-auto flex max-w-[1240px] flex-col px-10 pb-16 pt-8">
+        {/* Header — logo top-left, like Reonic. Big enough that the wordmark
+            reads from the back row. No "AI Designer" sublabel: the hero
+            headline below carries the positioning. */}
+        <header className="mb-12 flex items-center justify-between">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/iconic-logo.png" alt="Iconic" className="h-14 w-auto" />
+          <button
+            type="button"
+            onClick={() => setAddressOpen(true)}
+            className="rounded-full bg-zinc-900 px-5 py-2.5 text-[13px] font-semibold text-white shadow-sm transition hover:bg-zinc-800"
+          >
+            Try it now
+          </button>
         </header>
 
-        {/* Hero — 2 panels */}
-        <section className="mb-14 grid grid-cols-1 gap-5 lg:grid-cols-[1.1fr_1fr]">
-          {/* Left visual */}
-          <div className="rounded-3xl border border-zinc-200/70 bg-zinc-50/60 p-10">
-            <div className="flex h-full items-center justify-center">
-              <HouseIllustration />
-            </div>
-          </div>
-
-          {/* Right copy */}
-          <div className="flex flex-col rounded-3xl border border-zinc-200/70 bg-white p-10">
-            <p className="mb-2.5 text-[13px] text-zinc-500">Welcome to your digital energy consultant</p>
-            <h2 className="mb-7 text-[32px] font-bold leading-[1.15] tracking-[-0.02em]">
-              We make you ready for a{' '}
-              <span className="bg-blue-100/70 px-1 underline decoration-blue-500 decoration-[3px] underline-offset-[6px]">
-                green future.
-              </span>
-            </h2>
-            <ul className="mb-7 space-y-3">
+        {/* Hero — copy left + visual right (Reonic-style split). */}
+        <section className="mb-16 grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.15fr_1fr]">
+          <div>
+            <h1 className="mb-5 text-[56px] font-bold leading-[1.04] tracking-[-0.025em] text-zinc-900">
+              From an address to a complete solar design in 30&nbsp;seconds.
+            </h1>
+            <p className="mb-7 text-[17px] leading-relaxed text-zinc-500">
+              Type any address. Iconic captures the building from Google Photorealistic 3D Tiles,
+              isolates it with GPT Image&nbsp;2, reconstructs a textured mesh with Hunyuan&nbsp;3D&nbsp;Pro,
+              then sizes the PV&nbsp;/ storage&nbsp;/ heat-pump bundle against 1,620 real Iconic deliveries
+              and exports a quick-offer PDF.
+            </p>
+            <ul className="mb-8 space-y-2.5">
               {FEATURES.map((f) => (
-                <li key={f} className="flex items-start gap-3 text-[14px] leading-snug text-zinc-700">
+                <li key={f} className="flex items-start gap-3 text-[14.5px] leading-snug text-zinc-700">
                   <span className="mt-0.5 flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-full bg-blue-500 text-white">
                     <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
@@ -100,23 +90,22 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <p className="mb-8 text-[13.5px] leading-relaxed text-zinc-500">
-              Are you wondering whether renewable technologies make economic sense for you? Pick one of
-              three real demo houses below. Watch the AI agent design, refine via sliders, then export
-              a 1-page PDF quick-offer.
-            </p>
-            <div className="mt-auto flex justify-end">
-              <button
-                type="button"
-                onClick={() => setAddressOpen(true)}
-                className="group inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-[14px] font-semibold text-white shadow-sm transition hover:bg-emerald-700"
-              >
-                Start now
-                <svg className="h-4 w-4 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
-              </button>
+            <button
+              type="button"
+              onClick={() => setAddressOpen(true)}
+              className="group inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-[14.5px] font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+            >
+              Type your address
+              <svg className="h-4 w-4 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="rounded-3xl border border-zinc-200/70 bg-zinc-50/60 p-10">
+            <div className="flex h-full items-center justify-center">
+              <HouseIllustration />
             </div>
           </div>
         </section>
