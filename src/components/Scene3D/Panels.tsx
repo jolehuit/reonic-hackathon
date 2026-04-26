@@ -1,28 +1,36 @@
 // Solar panels — OWNED by Dev A
-// Placement strategy:
-//   1. Each baked panel position is recentred by HouseGeometryProvider so its
-//      (X, Z) lies in the same local space as the GLB.
-//   2. We then raycast straight down from above (X, Z) onto the GLB mesh
-//      (Hunyuan-3D output) to find the actual roof surface point — the
-//      photogrammetry-baked Y is unreliable because the AI-reconstructed roof
-//      doesn't match the baked roof shape.
-//   3. Hits whose normal points sideways (walls, vertical faces, ground)
-//      are dropped.
-//   4. A greedy pass removes overlaps so no two panels share the same patch.
-//   5. Baked obstructions (chimneys, dormers, vents) are excluded with a
-//      safety margin.
+// Placement strategy (GLB-driven, baked positions are NOT used for layout):
+//   1. After the GLB is fully visible (glbStable), sample its XZ bbox with a
+//      grid of vertical raycasts at panel-pitch resolution. Each successful
+//      hit on a roof-like face (normal.y above threshold) becomes a candidate.
+//   2. Score each candidate by tilt + flatness so the algorithm prefers the
+//      part of the roof a real installer would target.
+//   3. Greedy placement walks candidates from best score down, accepting one
+//      only if (a) all four corners land on the same roof slope (no eave or
+//      ridge overhang, no straddling two pitches), (b) it doesn't overlap a
+//      panel already placed, (c) it isn't on a baked obstruction (chimney,
+//      dormer, vent).
+//   4. Stops once we hit the count requested by the k-NN sizer (design.
+//      modulePositions.length).
 //
 // Reveal animation: the orchestrator ticks `placedCount` up from 0 to the
 // total module count over a few seconds. We slice the projected positions
 // array by that count, and each panel mesh, on mount, "drops" along its
-// (face) normal from ~0.9 m above the final spot down onto the roof with an
+// (face) normal from ~1.5 m above the final spot down onto the roof with an
 // ease-out cubic — so panels appear to land one by one in order.
 
 'use client';
 
 import { useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Group, Object3D, Quaternion, Raycaster, Vector3 } from 'three';
+import {
+  Box3,
+  Group,
+  Object3D,
+  Quaternion,
+  Raycaster,
+  Vector3,
+} from 'three';
 import { useStore } from '@/lib/store';
 import { useHouseGeometry } from './HouseGeometry';
 
@@ -40,11 +48,11 @@ const PANEL_SIZES: Record<'AIKO' | 'Trina', [number, number, number]> = {
 };
 const DEFAULT_PANEL_SIZE: [number, number, number] = PANEL_SIZES.AIKO;
 // Distance from the raycast hit point (roof surface) to the panel mesh
-// CENTRE along the surface normal. Must be ≥ panel half-thickness + visible
-// clearance so the panel reads as "on" the roof, not embedded in it. With
-// the AIKO datasheet thickness of 30 mm, half-thickness is 15 mm; ~6.5 cm
-// extra mounting offset is what real-world rail systems use.
-const PANEL_LIFT_M = 0.08;
+// CENTRE along the surface normal. Real photovoltaic panels sit on rail
+// systems that lift them 10-15 cm above the tile. Half-thickness of the
+// AIKO datasheet (30 mm) is 15 mm, so with LIFT = 0.13 m the panel BASE
+// floats ~11.5 cm above the roof — visibly mounted, not embedded.
+const PANEL_LIFT_M = 0.13;
 const PANEL_COLOR = '#1a3a6e';
 const DROP_HEIGHT_M = 1.5;
 const DROP_DURATION_MS = 550;
@@ -75,7 +83,11 @@ interface ProjectedPanel {
 export function Panels() {
   const design = useStore((s) => s.design);
   const placedCount = useStore((s) => s.placedCount);
-  const glbLoaded = useStore((s) => s.glbLoaded);
+  // Wait for `glbStable` (post-morph) — not just `glbLoaded` (mounted) —
+  // before doing any raycast-based projection. This guarantees the GLB is
+  // at full opacity AND its world matrix has settled (the morph animates
+  // the parent group's scale 0.6 → 1.0).
+  const glbStable = useStore((s) => s.glbStable);
   const glbHeight = useStore((s) => s.glbHeight);
   const { modulePositions: recenteredPositions, obstructions } =
     useHouseGeometry();
@@ -97,7 +109,7 @@ export function Panels() {
   // measured height changes. We re-find the GLB root each time because the
   // R3F scene tree mutates around the morph animation.
   const projectedPositions = useMemo<ProjectedPanel[] | null>(() => {
-    if (!glbLoaded) return null;
+    if (!glbStable) return null;
     if (!design) return null;
 
     // Source positions are the recentred baked ones (or design's, for
@@ -236,7 +248,7 @@ export function Panels() {
 
     return cleaned;
   }, [
-    glbLoaded,
+    glbStable,
     glbHeight,
     design,
     recenteredPositions,

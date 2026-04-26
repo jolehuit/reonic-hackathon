@@ -85,11 +85,17 @@ interface AppState {
   setGlbUrl: (u: string | null) => void;
 
   /** Set to `true` by <LoadedGlb/> after the GLTFLoader has finished
-   *  loading the mesh. The orchestrator gates the panel-drop animation on
-   *  this so panels only start descending once the roof is actually
-   *  visible. */
+   *  loading the mesh. Means the GLB is parsed and mounted, but the
+   *  skeleton→GLB cross-fade may still be running. */
   glbLoaded: boolean;
   setGlbLoaded: (v: boolean) => void;
+
+  /** Set to `true` by <MorphingBuilding/> after the skeleton→GLB cross-fade
+   *  is COMPLETE and the GLB is fully visible at scale 1.0. This is the
+   *  signal the panel-drop animation gates on — guarantees we never start
+   *  laying panels onto a still-morphing or invisible roof. */
+  glbStable: boolean;
+  setGlbStable: (v: boolean) => void;
 
   /** Rendered Y height of the GLB after the uniform XZ scale applied by
    *  <LoadedGlb/>. Used by <HouseGeometryProvider/> to rescale baked panel
@@ -200,10 +206,14 @@ export const useStore = create<AppState>((set) => ({
   setTrellisStatus: (trellisStatus) => set({ trellisStatus }),
 
   glbUrl: null,
-  setGlbUrl: (glbUrl) => set({ glbUrl, glbLoaded: false, glbHeight: null }),
+  setGlbUrl: (glbUrl) =>
+    set({ glbUrl, glbLoaded: false, glbStable: false, glbHeight: null }),
 
   glbLoaded: false,
   setGlbLoaded: (glbLoaded) => set({ glbLoaded }),
+
+  glbStable: false,
+  setGlbStable: (glbStable) => set({ glbStable }),
 
   glbHeight: null,
   setGlbHeight: (glbHeight) => set({ glbHeight }),
@@ -275,6 +285,7 @@ export const useStore = create<AppState>((set) => ({
       agentSteps: [],
       placedCount: 0,
       glbLoaded: false,
+      glbStable: false,
       glbHeight: null,
     }),
 }));

@@ -211,7 +211,7 @@ export function Orchestrator() {
           if (cancelled) return;
           setGlbUrl(cached.glbUrl);
           setTrellisStatus('ready');
-          updateStepFields('model', { status: 'done', resultLine: 'GLB ready (cached)' });
+          updateStepFields('model', { status: 'done' });
           return;
         }
       }
@@ -285,7 +285,7 @@ export function Orchestrator() {
         }
         setGlbUrl(j.glbUrl);
         setTrellisStatus('ready');
-        updateStepFields('model', { status: 'done', resultLine: 'GLB ready' });
+        updateStepFields('model', { status: 'done' });
       } catch {
         if (cancelled) return;
         updateStepFields('model', { status: 'error' });
@@ -293,29 +293,35 @@ export function Orchestrator() {
       }
     })();
 
-    // Once both lanes settle, wait for the GLB to actually appear in the
-    // scene (set by <LoadedGlb/> when GLTFLoader resolves), give the
-    // skeleton→GLB morph a moment to land, then drop panels one by one.
+    // ── STRICT SEQUENCING ─────────────────────────────────────────────────
+    // GLB-loading and panel-drop animation are deliberately separated:
+    //   1. Wait for both promises (sizing + imagery) to resolve.
+    //   2. Wait for `glbStable` — flipped true by <MorphingBuilding/> only
+    //      AFTER the skeleton→GLB cross-fade has finished AND the mesh is
+    //      in the scene. No fixed timer, so the animation never starts on
+    //      a still-morphing or invisible roof.
+    //   3. Add a small breathing pause so the user perceives "GLB landed,
+    //      now panels are about to fall".
+    //   4. Tick placedCount up to launch <Panels/>'s drop choreography.
+    //   5. Flip phase → interactive once every panel has landed.
     Promise.all([designPromise, imageryPromise]).then(async () => {
       if (cancelled) return;
 
-      // Spin until the GLB is in the scene — capped so we never hang the
-      // demo if Trellis errored out and no GLB ever loads.
-      const POLL_MS = 100;
-      const MAX_WAIT_MS = 20_000;
+      const POLL_MS = 80;
+      const MAX_WAIT_MS = 60_000;
       const waitStart = performance.now();
-      while (!useStore.getState().glbLoaded) {
+      while (!useStore.getState().glbStable) {
         if (cancelled) return;
         if (performance.now() - waitStart > MAX_WAIT_MS) break;
         await new Promise<void>((res) => setTimeout(res, POLL_MS));
       }
-      // Let the morph (skeleton → GLB cross-fade in TrellisModel.tsx,
-      // MORPH_MS = 1500) finish before panels start landing.
-      await new Promise<void>((res) => setTimeout(res, 1700));
+
+      // Beat — visual breath between "roof appears" and "panels descend".
+      await new Promise<void>((res) => setTimeout(res, 450));
       if (cancelled) return;
 
       const total = useStore.getState().design?.modulePositions.length ?? 0;
-      const stepMs = total > 0 ? Math.max(60, Math.min(180, Math.round(2400 / total))) : 0;
+      const stepMs = total > 0 ? Math.max(80, Math.min(200, Math.round(2800 / total))) : 0;
       for (let i = 1; i <= total; i++) {
         if (cancelled) return;
         await new Promise<void>((res) => setTimeout(res, stepMs));

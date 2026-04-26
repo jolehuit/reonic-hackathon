@@ -69,11 +69,18 @@ function MorphingBuilding({
 }) {
   const transitionStartedRef = useRef<number | null>(null);
   const [transitionT, setTransitionT] = useState(0); // 0..1 over MORPH_MS
+  const stableSignalledRef = useRef(false);
+  const setGlbStable = useStore((s) => s.setGlbStable);
+  const glbLoaded = useStore((s) => s.glbLoaded);
   const MORPH_MS = 1500;
 
   useEffect(() => {
     if (status.kind === 'ready' && transitionStartedRef.current === null) {
       transitionStartedRef.current = performance.now();
+    }
+    // When the URL changes / we leave 'ready', allow another stable signal.
+    if (status.kind !== 'ready') {
+      stableSignalledRef.current = false;
     }
   }, [status.kind]);
 
@@ -82,6 +89,17 @@ function MorphingBuilding({
     const elapsed = performance.now() - transitionStartedRef.current;
     const t = Math.min(1, elapsed / MORPH_MS);
     if (t !== transitionT) setTransitionT(t);
+    // The morph is visually complete AND the GLB is in the scene. Only flip
+    // glbStable once per ready cycle so we don't spam the store every frame.
+    if (
+      t >= 1 &&
+      glbLoaded &&
+      status.kind === 'ready' &&
+      !stableSignalledRef.current
+    ) {
+      stableSignalledRef.current = true;
+      setGlbStable(true);
+    }
   });
 
   // Easing: smoothstep. Skeleton fade-out is 1-ease(t); GLB fade-in is ease(t).
