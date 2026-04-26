@@ -1,0 +1,40 @@
+est ce qu'il y a moyen que dès qu'on commit ça push aussi sur google cloud
+
+---
+
+pull toutes les modif qui ont été faites et dis moi
+
+---
+
+tout est dans des branches séparées ?
+
+---
+
+bah preends les derniers commit et met tout proprement sur main genre faut plus de branche a part main
+
+---
+
+Et on va s'appeler iconic
+    Voici le logo '/Users/max/Downloads/ChatGPT Image 26 avr. 2026, 05_37_09.png'
+
+  quand tu fais la config google cloud aussi faudra config le fait qu'on a un domaine :
+  https://iconic.haus/
+
+et analyse le site reonic avec claude code in chrome 
+
+Et aussi mtn t'as le mcp google cloud run
+
+---
+
+analyse notre landing et vois ce qu'on pourrait adapte rpour que ça colle vrm a reonic pcq la par ex je suis pas fan du "AI Designer" et ntore logo est pas assez gros
+
+---
+
+analyse notre landing et vois ce qu'on pourrait adapte rpour que ça colle vrm a reonic pcq la par ex je suis pas fan du "AI Designer" et ntore logo est pas assez gros
+
+---
+
+/agent-browser   analyse notre landing et vois ce qu'on pourrait adapte rpour que ça colle vrm a reonic
+  pcq la par ex je suis pas fan du "AI Designer" et ntore logo est pas assez gros
+
+  Utilise agent browser plutot que chrome claude
