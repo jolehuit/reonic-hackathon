@@ -350,3 +350,8 @@ non actuellement quand je rentre une adresse à la main j'arrive directement sur
 ---
 
 oui c'est bon mais ça n'a pas fait l'étape comme dans la version avec les maisons déja genérés où sa affiche la maison avec les panneaux solaires que l'on peut rajouter dessus
+
+---
+
+<ide_opened_file>The user opened the file /Users/lionelleguier/reonic-hackathon/reonic-hackathon/src/components/AutoFillForm/CustomAddressForm.tsx in the IDE. This may or may not be related to the current task.</ide_opened_file>
+push
