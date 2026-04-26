@@ -72,11 +72,17 @@ interface AppState {
   phase: AppPhase;
   setPhase: (phase: AppPhase) => void;
 
-  // Trellis (image-to-3D) generation status. Written by TrellisModel, read by
-  // Orchestrator (which gates phase transitions on it) and the design page
-  // overlays (which only mount once the GLB is in the scene).
+  // Trellis (image-to-3D) generation status. Written by Orchestrator as it
+  // walks the capture → clean → trellis chain; read by TrellisModel (which
+  // shows the GLB once ready) and the design page overlays (which only
+  // mount once the scene is interactive).
   trellisStatus: TrellisStatus;
   setTrellisStatus: (s: TrellisStatus) => void;
+
+  // URL of the generated GLB (set by Orchestrator when fal-ai/trellis
+  // returns). TrellisModel watches this to load the mesh into the scene.
+  glbUrl: string | null;
+  setGlbUrl: (u: string | null) => void;
 
   // House selection — either a demo HouseId or 'custom' for an arbitrary address.
   selectedHouse: HouseId | 'custom' | null;
@@ -124,6 +130,8 @@ interface AppState {
   agentSteps: AgentStep[];
   setAgentSteps: (s: AgentStep[]) => void;
   updateStepStatus: (id: string, status: AgentStep['status']) => void;
+  /** Patch any subset of fields on a single step (artifactUrl, resultLine, …). */
+  updateStepFields: (id: string, fields: Partial<AgentStep>) => void;
 
   // Reset
   reset: () => void;
@@ -168,8 +176,12 @@ export const useStore = create<AppState>((set) => ({
   trellisStatus: 'idle',
   setTrellisStatus: (trellisStatus) => set({ trellisStatus }),
 
+  glbUrl: null,
+  setGlbUrl: (glbUrl) => set({ glbUrl }),
+
   selectedHouse: null,
-  selectHouse: (id) => set({ selectedHouse: id, phase: 'house-selected', trellisStatus: 'idle' }),
+  selectHouse: (id) =>
+    set({ selectedHouse: id, phase: 'house-selected', trellisStatus: 'idle', glbUrl: null }),
 
   customAddress: null,
   setCustomAddress: (customAddress) => set({ customAddress }),
@@ -209,11 +221,18 @@ export const useStore = create<AppState>((set) => ({
         step.id === id ? { ...step, status } : step,
       ),
     })),
+  updateStepFields: (id, fields) =>
+    set((s) => ({
+      agentSteps: s.agentSteps.map((step) =>
+        step.id === id ? { ...step, ...fields } : step,
+      ),
+    })),
 
   reset: () =>
     set({
       phase: 'idle',
       trellisStatus: 'idle',
+      glbUrl: null,
       selectedHouse: null,
       customAddress: null,
       manualInputs: defaultManualInputs,

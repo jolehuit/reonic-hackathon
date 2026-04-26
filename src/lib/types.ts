@@ -120,7 +120,17 @@ export interface AgentStep {
   id: string;
   label: string;
   status: AgentStepStatus;
+  /** Estimated duration in ms (used for the progress bar; the real wall
+   *  clock can exceed it — running state lasts until the underlying promise
+   *  resolves). */
   durationMs: number;
+  /** Optional one-line subtitle shown under the label. */
+  sublabel?: string;
+  /** Optional URL of an image artifact (e.g. the captured screenshot) shown
+   *  as a thumbnail next to the step once status === 'done'. */
+  artifactUrl?: string;
+  /** Optional one-line summary set when the step completes (e.g. "9.2 kWp"). */
+  resultLine?: string;
 }
 
 // Global app state machine phases

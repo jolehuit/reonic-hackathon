@@ -185,10 +185,12 @@ export default function DesignPage({ params }: Props) {
           </div>
         )}
 
-        {/* Agent trace — visible ONLY while the AI agent is running. Once the
-            scene is interactive (3D model rendered), it gets replaced by the
-            ControlPanel below so the left edge stays clean. */}
-        {phase === 'agent-running' && (
+        {/* Agent trace — visible from the moment the chain starts and stays
+            after completion so the user can review what happened. */}
+        {(phase === 'agent-running' ||
+          phase === 'interactive' ||
+          phase === 'reviewing' ||
+          phase === 'approved') && (
           <div className="pointer-events-auto absolute left-5 top-20 max-h-[calc(100vh-7rem)] w-[360px] overflow-hidden">
             <AgentTrace />
           </div>

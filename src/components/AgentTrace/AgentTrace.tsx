@@ -1,48 +1,22 @@
+// Real-time view of the 3 actual pipeline steps (CAPTURE → SIZE → MODEL).
+// Driven entirely by the AgentStep[] in the store, which Orchestrator.tsx
+// updates as each underlying promise resolves. No fake durations, no fake
+// substeps — what you see is what's actually happening.
+
 'use client';
 
+import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@/lib/store';
-import { SEQUENCE } from '@/components/Scene3D/Orchestrator';
-import { useAgentSounds } from './useAgentSounds';
-import type { CustomerProfile, DesignResult } from '@/lib/types';
-
-type Phase = 'INGEST' | 'ANALYZE' | 'RENDER';
-
-const PHASE_META: Record<Phase, { num: string; label: string; sub: string }> = {
-  INGEST: { num: '1', label: 'INGEST', sub: 'Google 3D Tiles → mesh' },
-  ANALYZE: { num: '2', label: 'ANALYZE', sub: 'Geometry + sizing engine' },
-  RENDER: { num: '3', label: 'RENDER', sub: 'Stylized model + panels' },
-};
-
-const KIND_GLYPH: Record<string, string> = {
-  fetch: '↓',
-  compute: '∑',
-  think: '✦',
-  place: '◫',
-  render: '◇',
-  done: '·',
-};
-
-const TYPEWRITER_MS_PER_CHAR = 50;
+import type { AgentStep } from '@/lib/types';
 
 export function AgentTrace() {
   const steps = useStore((s) => s.agentSteps);
-  const phase = useStore((s) => s.phase);
-  const profile = useStore((s) => s.profile);
-  const design = useStore((s) => s.design);
-
-  useAgentSounds();
 
   if (steps.length === 0) return null;
 
-  const byPhase: Record<Phase, typeof steps> = { INGEST: [], ANALYZE: [], RENDER: [] };
-  for (const step of steps) {
-    const meta = SEQUENCE.find((s) => s.id === step.id);
-    if (meta) byPhase[meta.phase].push(step);
-  }
-
   const totalDone = steps.filter((s) => s.status === 'done').length;
+  const totalErr = steps.filter((s) => s.status === 'error').length;
   const progressPct = Math.round((totalDone / steps.length) * 100);
 
   return (
@@ -50,23 +24,39 @@ export function AgentTrace() {
       initial={{ opacity: 0, x: -16 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.35 }}
-      className="flex max-h-[78vh] w-[380px] flex-col overflow-hidden rounded-3xl border border-zinc-200/70 bg-white shadow-[0_8px_28px_-12px_rgba(0,0,0,0.18)]"
+      className="flex w-[380px] flex-col overflow-hidden rounded-3xl border border-zinc-200/70 bg-white shadow-[0_8px_28px_-12px_rgba(0,0,0,0.18)]"
     >
       {/* Header */}
       <div className="border-b border-zinc-100 px-5 py-4">
         <div className="mb-2.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
+              <span
+                className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                  totalErr > 0 ? 'bg-red-400' : 'animate-ping bg-blue-400'
+                }`}
+              />
+              <span
+                className={`relative inline-flex h-2 w-2 rounded-full ${
+                  totalErr > 0 ? 'bg-red-500' : 'bg-blue-500'
+                }`}
+              />
             </span>
-            <h2 className="text-[14px] font-bold tracking-tight text-zinc-900">AI agent trace</h2>
+            <h2 className="text-[14px] font-bold tracking-tight text-zinc-900">
+              AI pipeline
+            </h2>
           </div>
-          <span className="font-mono text-[11px] font-bold text-blue-600">{progressPct}%</span>
+          <span
+            className={`font-mono text-[11px] font-bold ${
+              totalErr > 0 ? 'text-red-600' : 'text-blue-600'
+            }`}
+          >
+            {progressPct}%
+          </span>
         </div>
         <div className="h-1 overflow-hidden rounded-full bg-zinc-100">
           <motion.div
-            className="h-full bg-blue-500"
+            className={`h-full ${totalErr > 0 ? 'bg-red-500' : 'bg-blue-500'}`}
             initial={{ width: '0%' }}
             animate={{ width: `${progressPct}%` }}
             transition={{ duration: 0.4 }}
@@ -74,224 +64,144 @@ export function AgentTrace() {
         </div>
       </div>
 
-      {/* Phases */}
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
-        {(Object.keys(byPhase) as Phase[]).map((phaseKey) => {
-          const phaseSteps = byPhase[phaseKey];
-          if (phaseSteps.length === 0) return null;
-          const allDone = phaseSteps.every((s) => s.status === 'done');
-          const anyRunning = phaseSteps.some((s) => s.status === 'running');
-          const meta = PHASE_META[phaseKey];
-
-          const dotColor = allDone
-            ? 'bg-emerald-500 text-white'
-            : anyRunning
-              ? 'bg-blue-500 text-white'
-              : 'bg-zinc-200 text-zinc-500';
-
-          return (
-            <section key={phaseKey} className="flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${dotColor}`}
-                >
-                  {allDone ? '✓' : meta.num}
-                </div>
-                <div className="flex flex-col">
-                  <span
-                    className={`text-xs font-bold uppercase tracking-wider ${
-                      allDone ? 'text-emerald-700' : anyRunning ? 'text-blue-700' : 'text-zinc-400'
-                    }`}
-                  >
-                    {meta.label}
-                  </span>
-                  <span className="text-[10px] text-zinc-500">{meta.sub}</span>
-                </div>
-              </div>
-
-              <ol className="ml-3 space-y-1.5 border-l border-zinc-200 pl-4">
-                {phaseSteps.map((step) => (
-                  <StepRow key={`${step.id}-${step.status}`} step={step} />
-                ))}
-              </ol>
-            </section>
-          );
-        })}
-
-        {phase === 'interactive' && profile && design && (
-          <GeminiExplanation profile={profile} design={design} />
-        )}
-      </div>
+      {/* Steps */}
+      <ol className="flex flex-col gap-2 px-4 py-4">
+        {steps.map((step, i) => (
+          <StepCard key={step.id} step={step} index={i + 1} />
+        ))}
+      </ol>
     </motion.div>
   );
 }
 
-function GeminiExplanation({
-  profile,
-  design,
-}: {
-  profile: CustomerProfile;
-  design: DesignResult;
-}) {
-  const text = useGeminiStream(profile, design);
+function StepCard({ step, index }: { step: AgentStep; index: number }) {
+  const isDone = step.status === 'done';
+  const isRunning = step.status === 'running';
+  const isError = step.status === 'error';
+  const isPending = step.status === 'pending';
 
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="mt-2 rounded-xl border border-violet-100 bg-gradient-to-br from-violet-50 to-blue-50 p-4"
-    >
-      <div className="mb-2 flex items-center gap-2">
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-500 text-white">
-          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5Z" />
-          </svg>
-        </div>
-        <span className="text-xs font-bold uppercase tracking-wider text-violet-700">
-          Gemini · Why this design
-        </span>
-      </div>
-      <p className="text-xs leading-relaxed text-zinc-700">
-        {text || (
-          <span className="italic text-zinc-400">Asking Gemini for a customer-friendly summary…</span>
-        )}
-        {text && (
-          <span className="ml-0.5 inline-block h-3 w-px animate-pulse bg-violet-500 align-middle" />
-        )}
-      </p>
-    </motion.section>
+  const elapsed = useElapsedSeconds(isRunning);
+
+  // Border + background tone reflects state.
+  const tone = isError
+    ? 'border-red-200 bg-red-50/60'
+    : isDone
+    ? 'border-emerald-200 bg-emerald-50/40'
+    : isRunning
+    ? 'border-blue-200 bg-blue-50/60'
+    : 'border-zinc-200 bg-zinc-50/40';
+
+  // Numbered status badge.
+  const badge = isError ? (
+    <BadgeIcon tone="error" content="!" />
+  ) : isDone ? (
+    <BadgeIcon tone="done" content="✓" />
+  ) : isRunning ? (
+    <BadgeSpinner />
+  ) : (
+    <BadgeIcon tone="pending" content={String(index)} />
   );
-}
 
-function useGeminiStream(profile: CustomerProfile, design: DesignResult) {
-  const [text, setText] = useState('');
-  const fired = useRef(false);
-
-  useEffect(() => {
-    if (fired.current) return;
-    fired.current = true;
-
-    const abort = new AbortController();
-    (async () => {
-      try {
-        const res = await fetch('/api/explain', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ profile, design }),
-          signal: abort.signal,
-        });
-        if (!res.ok || !res.body) {
-          setText(
-            'Based on your 4 500 kWh demand and EV usage, this 9.2 kWp system with 6 kWh battery aligns with 47 similar Reonic projects. Heat pump recommended for your gas heating replacement.',
-          );
-          return;
-        }
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buf = '';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buf += decoder.decode(value, { stream: true });
-          setText(buf);
-        }
-      } catch {
-        setText(
-          'Based on your demand profile, this system size matches the median of similar Reonic deliveries in your region.',
-        );
-      }
-    })();
-
-    return () => abort.abort();
-  }, [profile, design]);
-
-  return text;
-}
-
-function StepRow({ step }: { step: { id: string; label: string; status: string } }) {
-  const meta = SEQUENCE.find((s) => s.id === step.id);
-  const kind = meta?.kind ?? 'done';
-  const isThink = kind === 'think';
-
-  const typed = useTypewriter(step.label, step.status === 'running' ? TYPEWRITER_MS_PER_CHAR : 0);
-  const display = step.status === 'running' ? typed : step.label;
-
-  const styles =
-    step.status === 'pending'
-      ? 'text-zinc-300'
-      : step.status === 'running'
-        ? isThink
-          ? 'text-violet-700'
-          : 'text-blue-700'
-        : 'text-zinc-700';
-
-  const glyph =
-    step.status === 'done'
-      ? '✓'
-      : step.status === 'running'
-        ? KIND_GLYPH[kind] ?? '·'
-        : KIND_GLYPH[kind] ?? '·';
-
-  const glyphBg =
-    step.status === 'done'
-      ? 'bg-emerald-100 text-emerald-700'
-      : step.status === 'running'
-        ? isThink
-          ? 'bg-violet-100 text-violet-700'
-          : 'bg-blue-100 text-blue-700'
-        : 'bg-zinc-100 text-zinc-400';
+  const labelClass = isPending
+    ? 'text-zinc-400'
+    : isError
+    ? 'text-red-800'
+    : isDone
+    ? 'text-zinc-800'
+    : 'text-zinc-900';
 
   return (
     <motion.li
-      initial={{ opacity: 0, x: -4 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.2 }}
-      className="flex items-start gap-2 text-xs"
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className={`flex items-start gap-3 rounded-2xl border p-3 transition ${tone}`}
     >
-      <span
-        className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${glyphBg}`}
-      >
-        {step.status === 'running' && !isThink ? (
-          <motion.span
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-          >
-            {glyph}
-          </motion.span>
-        ) : (
-          glyph
+      <div className="flex-shrink-0 pt-0.5">{badge}</div>
+      <div className="min-w-0 flex-1">
+        <div className={`text-[13.5px] font-semibold leading-tight ${labelClass}`}>
+          {step.label}
+        </div>
+        {step.sublabel && (
+          <div className="mt-0.5 text-[11px] text-zinc-500">{step.sublabel}</div>
         )}
-      </span>
-      <span className={`flex-1 leading-relaxed ${styles} ${isThink ? 'italic' : ''}`}>
-        {display}
-        {step.status === 'running' && (
-          <span className="ml-0.5 inline-block h-3 w-px animate-pulse bg-current align-middle" />
+        {/* Result summary (e.g. "9.2 kWp · €11,400") shown when done. */}
+        {isDone && step.resultLine && (
+          <div className="mt-1.5 inline-block rounded-md bg-white px-2 py-0.5 font-mono text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+            {step.resultLine}
+          </div>
         )}
-      </span>
+        {/* Live timer while running (only if the step is non-trivial). */}
+        {isRunning && (
+          <div className="mt-1 font-mono text-[10.5px] tabular-nums text-blue-600">
+            {elapsed}s elapsed
+          </div>
+        )}
+        {isError && (
+          <div className="mt-1 text-[11px] text-red-700">Step failed — see server log</div>
+        )}
+      </div>
+      {/* Artifact thumbnail (used by step 1 to show the captured screenshot). */}
+      {isDone && step.artifactUrl && (
+        <motion.img
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.35 }}
+          src={step.artifactUrl}
+          alt={step.label}
+          className="h-14 w-14 flex-shrink-0 rounded-lg object-cover ring-1 ring-zinc-200"
+        />
+      )}
     </motion.li>
   );
 }
 
-function useTypewriter(text: string, msPerChar: number) {
-  const [count, setCount] = useState(() => (msPerChar > 0 ? 0 : text.length));
-
-  useEffect(() => {
-    if (msPerChar <= 0) return;
-    const id = setInterval(() => {
-      setCount((c) => {
-        if (c >= text.length) {
-          clearInterval(id);
-          return c;
-        }
-        return c + 1;
-      });
-    }, msPerChar);
-    return () => clearInterval(id);
-  }, [text, msPerChar]);
-
-  return text.slice(0, count);
+function BadgeIcon({ tone, content }: { tone: 'done' | 'pending' | 'error'; content: string }) {
+  const cls =
+    tone === 'done'
+      ? 'bg-emerald-500 text-white'
+      : tone === 'error'
+      ? 'bg-red-500 text-white'
+      : 'bg-zinc-200 text-zinc-500';
+  return (
+    <span
+      className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold ${cls}`}
+    >
+      {content}
+    </span>
+  );
 }
 
-// Re-export AnimatePresence usage marker — keeps tree-shaking happy if needed elsewhere.
-export const __agentTraceAnims = AnimatePresence;
+function BadgeSpinner() {
+  return (
+    <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-blue-500 text-white">
+      <motion.span
+        className="absolute inset-0 rounded-full border-2 border-blue-300 border-t-transparent"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+      />
+      <span className="text-[10px] font-bold">·</span>
+    </span>
+  );
+}
+
+function useElapsedSeconds(active: boolean): number {
+  const startedAt = useRef<number | null>(null);
+  const [secs, setSecs] = useState(0);
+
+  useEffect(() => {
+    if (!active) {
+      startedAt.current = null;
+      setSecs(0);
+      return;
+    }
+    startedAt.current = performance.now();
+    const id = setInterval(() => {
+      if (startedAt.current == null) return;
+      setSecs(Math.floor((performance.now() - startedAt.current) / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [active]);
+
+  return secs;
+}

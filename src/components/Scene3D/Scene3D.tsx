@@ -75,7 +75,7 @@ function ProceduralCanvas({ houseId }: { houseId: HouseId | 'custom' }) {
         <ambientLight intensity={0.55} />
         <Sun />
 
-        <TrellisModel houseId={houseId} />
+        <TrellisModel />
         <Panels />
         {showComponents && design && (
           <>

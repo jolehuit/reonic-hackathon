@@ -1,62 +1,77 @@
-// Animation orchestrator — OWNED by Dev A (paired with Dev C on store)
-// Drives the visible AI agent run: 3 explicit phases, each with reasoning sub-steps
-// so the jury sees the AI thinking, computing, and rendering — not just animating.
+// Real-pipeline orchestrator. Drives the 4-step chain that produces the
+// final 3D building + financial design from a lat/lng. Every step is tied
+// to a real network call so the AgentTrace narrates what's actually
+// happening — no fake durations.
 //
-// The 3 phases mirror the actual offline pipeline:
-//   Phase 1 — INGEST  : fetch 3D Tiles photogrammetry + extract structure
-//   Phase 2 — ANALYZE : detect roof, place panels, size BOM (real calls)
-//   Phase 3 — RENDER  : generate the stylized model + drop panels onto it
+//   1. CAPTURE — /api/aerial?tilted=1 → oblique screenshot via Cesium +
+//                Google Photorealistic 3D Tiles.
+//   2. CLEAN   — /api/clean-image → openai/gpt-image-2/edit isolates the
+//                target building on a white background.
+//   3. SIZE    — /api/design       → k-NN sizing + financial model.
+//                (Runs in parallel from the start; surfaces here for trace
+//                ordering.)
+//   4. MODEL   — /api/trellis      → fal-ai/trellis image-to-3D, fed the
+//                cleaned image URL from step 2.
 //
-// At the end, the user sees ONLY the clean stylized model + interactive controls.
+// Capture / clean / model run sequentially because they form a dependency
+// chain. Sizing runs in parallel from t=0. The phase flips to 'interactive'
+// once all four are settled.
 
 'use client';
 
 import { useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import type { AgentStep } from '@/lib/types';
+import { HOUSE_COORDS } from './vision/houseLatLng';
+import type { HouseId } from '@/lib/types';
 
-type StepKind = 'fetch' | 'think' | 'compute' | 'place' | 'render' | 'done';
-
-interface SeqStep {
-  id: string;
+export interface SeqStep {
+  id: 'capture' | 'clean' | 'size' | 'model';
   label: string;
-  kind: StepKind;
-  durationMs: number;
-  /** Phase shown in the UI ("INGEST", "ANALYZE", "RENDER"). */
-  phase: 'INGEST' | 'ANALYZE' | 'RENDER';
+  sublabel: string;
+  estDurationMs: number;
 }
 
-const SEQUENCE: SeqStep[] = [
-  // ─── Phase 1 : INGEST ─────────────────────────────────────────────
-  { id: 'tiles_fetch',     phase: 'INGEST',  kind: 'fetch',  label: 'Fetching Google 3D Tiles for 52.4125, 13.06...',                durationMs: 1800 },
-  { id: 'tiles_loaded',    phase: 'INGEST',  kind: 'done',   label: 'Loaded 14.2 MB photogrammetric mesh (offline cache)',          durationMs: 600  },
-  { id: 'mesh_parse',      phase: 'INGEST',  kind: 'compute',label: 'Extracting building geometry from neighbourhood...',          durationMs: 1400 },
-  { id: 'mesh_isolated',   phase: 'INGEST',  kind: 'done',   label: '1 building, 11 230 triangles isolated',                       durationMs: 600  },
-
-  // ─── Phase 2 : ANALYZE ────────────────────────────────────────────
-  { id: 'normals',         phase: 'ANALYZE', kind: 'compute',label: 'Computing per-triangle normals + DBSCAN clustering...',       durationMs: 1500 },
-  { id: 'faces_found',     phase: 'ANALYZE', kind: 'done',   label: '4 roof faces · 2 obstructions detected',                      durationMs: 700  },
-  { id: 'think_orient',    phase: 'ANALYZE', kind: 'think',  label: '↪ "South-southwest face is dominant. Yield should be 1180 kWh/m²/yr at this latitude."', durationMs: 1400 },
-  { id: 'yield',           phase: 'ANALYZE', kind: 'compute',label: 'Casting shadows over 8 760 sun positions...',                 durationMs: 1800 },
-  { id: 'optimal_face',    phase: 'ANALYZE', kind: 'done',   label: 'Optimal face: SSW 195° · 47 m² · 1 180 kWh/m²/yr',           durationMs: 800  },
-
-  { id: 'knn',             phase: 'ANALYZE', kind: 'compute',label: 'k-NN over 1 620 Reonic projects (k=5, z-score features)...', durationMs: 900 },
-  { id: 'knn_out',         phase: 'ANALYZE', kind: 'done',   label: 'kWp recommended: 9.2 (median similar: 8.8 ± 0.6)',           durationMs: 700 },
-
-  { id: 'place_compute',   phase: 'ANALYZE', kind: 'place',  label: 'Placing 24 modules on green-zone (offset 0.5 m, gap 0.05 m)...', durationMs: 1200 },
-  { id: 'place_out',       phase: 'ANALYZE', kind: 'done',   label: '24 module positions · grid 6×4 · respects chimney clearance',durationMs: 600  },
-
-  { id: 'think_battery',   phase: 'ANALYZE', kind: 'think',  label: '↪ "EV + 4 500 kWh demand → 6 kWh battery aligns with 47 similar projects."', durationMs: 1200 },
-  { id: 'pricing',         phase: 'ANALYZE', kind: 'compute',label: 'Building BOM + Tavily live tariffs (EnBW · EEG)...',          durationMs: 1100 },
-  { id: 'pricing_out',     phase: 'ANALYZE', kind: 'done',   label: 'Total: €11 400 · Payback 9.4 yrs · CO₂ 8.2 t/25 yrs',         durationMs: 800  },
-
-  // ─── Phase 3 : RENDER ────────────────────────────────────────────
-  { id: 'stylize',         phase: 'RENDER',  kind: 'render', label: 'AI generating stylized mesh from photogrammetry + analysis...', durationMs: 1500 },
-  { id: 'stylize_out',     phase: 'RENDER',  kind: 'done',   label: 'Architectural mockup ready · footprint 7×5 m · roof 35°',    durationMs: 600  },
-  { id: 'panels_drop',     phase: 'RENDER',  kind: 'render', label: 'Dropping panels onto rendered roof...',                       durationMs: 1900 },
-  { id: 'finalize',        phase: 'RENDER',  kind: 'render', label: 'Lighting · materials · contact shadows...',                  durationMs: 800  },
-  { id: 'ready',           phase: 'RENDER',  kind: 'render', label: 'Generating photoreal 3D building (Trellis-2)…',              durationMs: 0    },
+export const SEQUENCE: SeqStep[] = [
+  {
+    id: 'capture',
+    label: 'Capturing oblique aerial view',
+    sublabel: 'Cesium + Google Photorealistic 3D Tiles',
+    estDurationMs: 12_000,
+  },
+  {
+    id: 'clean',
+    label: 'Isolating the building',
+    sublabel: 'GPT Image 2 — strips trees / cars / neighbours',
+    estDurationMs: 25_000,
+  },
+  {
+    id: 'size',
+    label: 'Computing solar sizing & financial model',
+    sublabel: 'k-NN over 1,620 Reonic deliveries',
+    estDurationMs: 1_200,
+  },
+  {
+    id: 'model',
+    label: 'Reconstructing 3D building',
+    sublabel: 'fal-ai/trellis — image to GLB',
+    estDurationMs: 35_000,
+  },
 ];
+
+function resolveCoords(
+  selectedHouse: HouseId | 'custom' | null,
+  customLat?: number,
+  customLng?: number,
+): { lat: number; lng: number } | null {
+  if (!selectedHouse) return null;
+  if (selectedHouse === 'custom') {
+    if (customLat == null || customLng == null) return null;
+    return { lat: customLat, lng: customLng };
+  }
+  const c = HOUSE_COORDS[selectedHouse];
+  return c ? { lat: c.lat, lng: c.lng } : null;
+}
 
 export function Orchestrator() {
   const phase = useStore((s) => s.phase);
@@ -65,79 +80,154 @@ export function Orchestrator() {
   const customAddress = useStore((s) => s.customAddress);
   const setAgentSteps = useStore((s) => s.setAgentSteps);
   const updateStepStatus = useStore((s) => s.updateStepStatus);
+  const updateStepFields = useStore((s) => s.updateStepFields);
   const setPhase = useStore((s) => s.setPhase);
   const setDesign = useStore((s) => s.setDesign);
   const setCustomRoofGeometry = useStore((s) => s.setCustomRoofGeometry);
+  const setTrellisStatus = useStore((s) => s.setTrellisStatus);
+  const setGlbUrl = useStore((s) => s.setGlbUrl);
 
   useEffect(() => {
     if (phase !== 'agent-running' || !profile || !selectedHouse) return;
 
+    // Initial step list — all pending. AgentTrace renders directly off this.
     const steps: AgentStep[] = SEQUENCE.map((s) => ({
       id: s.id,
       label: s.label,
-      durationMs: s.durationMs,
+      sublabel: s.sublabel,
+      durationMs: s.estDurationMs,
       status: 'pending',
     }));
     setAgentSteps(steps);
+    setTrellisStatus('idle');
+    setGlbUrl(null);
 
     let cancelled = false;
+    const coords = resolveCoords(
+      selectedHouse,
+      customAddress?.lat,
+      customAddress?.lng,
+    );
 
-    // Build the request body — custom addresses ship lat/lng so the API can
-    // synthesise a plausible RoofGeometry on the fly (cf src/lib/customRoof.ts).
+    // ── Step "size" — fire /api/design in parallel with the imagery chain ──
     const body: Record<string, unknown> = { profile, houseId: selectedHouse };
     if (selectedHouse === 'custom' && customAddress) {
       body.lat = customAddress.lat;
       body.lng = customAddress.lng;
       body.address = customAddress.formatted;
     }
-
-    // Fire the real /api/design call in parallel — visible animation drives the UX,
-    // but the actual data lands in the store before phase=interactive.
-    const designPromise = fetch('/api/design', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-      .then((r) => (r.ok ? r.json() : null))
-      .catch(() => null);
-
-    (async () => {
-      // Animate every step EXCEPT the final 'ready' marker — we hold that one
-      // until the real Trellis 3D generation has actually completed, so the
-      // KPI / Evidence / Control overlays don't pop in over an empty scene.
-      const animatedSteps = steps.slice(0, -1);
-      const readyStep = steps[steps.length - 1];
-
-      for (const step of animatedSteps) {
-        if (cancelled) return;
-        updateStepStatus(step.id, 'running');
-        await new Promise((r) => setTimeout(r, step.durationMs));
-        updateStepStatus(step.id, 'done');
-      }
-      const design = await designPromise;
-      if (cancelled) return;
-      if (design) {
-        // Persist the synthesised geometry so HouseGeometryProvider can
-        // render the right footprint for custom addresses.
-        if (design.geometry) {
-          setCustomRoofGeometry(design.geometry);
+    const designPromise = (async () => {
+      updateStepStatus('size', 'running');
+      try {
+        const r = await fetch('/api/design', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const design = r.ok ? await r.json() : null;
+        if (cancelled) return null;
+        if (design?.geometry) setCustomRoofGeometry(design.geometry);
+        if (design) {
+          setDesign(design);
+          const totalKwp = Number(design.totalKwp);
+          const price = Number(design.totalPriceEur);
+          const payback = Number(design.paybackYears);
+          const summary =
+            Number.isFinite(totalKwp) && Number.isFinite(price) && Number.isFinite(payback)
+              ? `${totalKwp.toFixed(1)} kWp · €${price.toLocaleString()} · ${payback.toFixed(1)}y payback`
+              : undefined;
+          updateStepFields('size', { status: 'done', resultLine: summary });
+        } else {
+          updateStepFields('size', { status: 'error' });
         }
-        setDesign(design);
+        return design;
+      } catch {
+        if (cancelled) return null;
+        updateStepFields('size', { status: 'error' });
+        return null;
       }
-
-      // Wait for Trellis-2 to finish (it may already be done — the user could
-      // also have spent the full mocked 22s waiting on it).
-      if (readyStep) updateStepStatus(readyStep.id, 'running');
-      while (!cancelled) {
-        const t = useStore.getState().trellisStatus;
-        if (t === 'ready' || t === 'error') break;
-        await new Promise((r) => setTimeout(r, 200));
-      }
-      if (cancelled) return;
-      if (readyStep) updateStepStatus(readyStep.id, 'done');
-
-      setPhase('interactive');
     })();
+
+    // ── Steps capture → clean → model — sequential dependency chain ────────
+    const imageryPromise = (async () => {
+      if (!coords) return;
+
+      // Step 1: capture (browser fetch of /api/aerial doubles as the
+      // thumbnail load — we listen to <img> onLoad to know when it's done).
+      const aerialUrl = `/api/aerial?lat=${coords.lat}&lng=${coords.lng}&zoom=20&tilted=1`;
+      updateStepStatus('capture', 'running');
+      const captureOk = await new Promise<boolean>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          if (cancelled) return resolve(false);
+          updateStepFields('capture', { status: 'done', artifactUrl: aerialUrl });
+          resolve(true);
+        };
+        img.onerror = () => {
+          if (cancelled) return resolve(false);
+          updateStepFields('capture', { status: 'error' });
+          resolve(false);
+        };
+        img.src = aerialUrl;
+      });
+      if (!captureOk || cancelled) return;
+
+      // Step 2: clean (GPT Image 2). Server pulls /api/aerial again — the
+      // response is cache-control: public, max-age=300 so the second hit is
+      // typically warm.
+      updateStepStatus('clean', 'running');
+      let cleanedImageUrl: string;
+      try {
+        const r = await fetch('/api/clean-image', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ lat: coords.lat, lng: coords.lng }),
+        });
+        const j = (await r.json()) as { ok: boolean; imageUrl?: string; error?: string };
+        if (cancelled) return;
+        if (!j.ok || !j.imageUrl) {
+          updateStepFields('clean', { status: 'error' });
+          return;
+        }
+        cleanedImageUrl = j.imageUrl;
+        updateStepFields('clean', { status: 'done', artifactUrl: cleanedImageUrl });
+      } catch {
+        if (cancelled) return;
+        updateStepFields('clean', { status: 'error' });
+        return;
+      }
+
+      // Step 3: model (Trellis). Pass the cleaned fal-hosted URL straight
+      // through — no re-upload.
+      updateStepStatus('model', 'running');
+      setTrellisStatus('generating');
+      try {
+        const r = await fetch('/api/trellis', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ imageUrl: cleanedImageUrl }),
+        });
+        const j = (await r.json()) as { ok: boolean; glbUrl?: string; error?: string };
+        if (cancelled) return;
+        if (!j.ok || !j.glbUrl) {
+          updateStepFields('model', { status: 'error' });
+          setTrellisStatus('error');
+          return;
+        }
+        setGlbUrl(j.glbUrl);
+        setTrellisStatus('ready');
+        updateStepFields('model', { status: 'done', resultLine: 'GLB ready' });
+      } catch {
+        if (cancelled) return;
+        updateStepFields('model', { status: 'error' });
+        setTrellisStatus('error');
+      }
+    })();
+
+    // Flip to interactive once both lanes have settled.
+    Promise.all([designPromise, imageryPromise]).then(() => {
+      if (!cancelled) setPhase('interactive');
+    });
 
     return () => {
       cancelled = true;
@@ -149,14 +239,13 @@ export function Orchestrator() {
     customAddress,
     setAgentSteps,
     updateStepStatus,
+    updateStepFields,
     setPhase,
     setDesign,
     setCustomRoofGeometry,
+    setTrellisStatus,
+    setGlbUrl,
   ]);
 
   return null;
 }
-
-// Export for AgentTrace.tsx to read kind/phase metadata on each step
-export { SEQUENCE };
-export type { SeqStep };

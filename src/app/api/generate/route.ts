@@ -73,6 +73,29 @@ export async function POST(req: NextRequest) {
   }
 
   const houseId = body.houseId ?? 'custom';
+
+  // For ad-hoc "custom" generations, do NOT touch public/baked — return the
+  // payload inline as data URLs so nothing pollutes the repo. Persist on disk
+  // only for named houses (the demo set).
+  const dataUrl = (b: Uint8Array, mime: string): string =>
+    `data:${mime};base64,${Buffer.from(b).toString('base64')}`;
+
+  if (houseId === 'custom') {
+    return NextResponse.json({
+      ok: true,
+      lat,
+      lng,
+      glbUrl: dataUrl(result.glb, 'model/gltf-binary'),
+      rawUrl: dataUrl(result.raw, 'image/png'),
+      isolatedUrl: dataUrl(result.isolated, 'image/png'),
+      aiIsolatedUrl: result.aiIsolated ? dataUrl(result.aiIsolated, 'image/png') : null,
+      tiltedUrl: result.tilted ? dataUrl(result.tilted, 'image/png') : null,
+      analysis: result.analysis,
+      imageSize: result.imageSize,
+      metresPerPixel: result.metresPerPixel,
+    });
+  }
+
   const outDir = join(process.cwd(), 'public/baked');
   await mkdir(outDir, { recursive: true });
   const glbPath = join(outDir, `${houseId}-generated-latest.glb`);
@@ -80,10 +103,12 @@ export async function POST(req: NextRequest) {
   const rawPath = join(outDir, `${houseId}-generated-latest-raw.png`);
   const tiltedPath = join(outDir, `${houseId}-generated-latest-tilted.png`);
   const isolatedPath = join(outDir, `${houseId}-generated-latest-isolated.png`);
+  const aiIsolatedPath = join(outDir, `${houseId}-generated-latest-ai-isolated.png`);
   await writeFile(glbPath, result.glb);
   await writeFile(rawPath, result.raw);
   await writeFile(isolatedPath, result.isolated);
   if (result.tilted) await writeFile(tiltedPath, result.tilted);
+  if (result.aiIsolated) await writeFile(aiIsolatedPath, result.aiIsolated);
   await writeFile(
     jsonPath,
     JSON.stringify(
@@ -110,6 +135,9 @@ export async function POST(req: NextRequest) {
     glbUrl: `/baked/${houseId}-generated-latest.glb?ts=${ts}`,
     rawUrl: `/baked/${houseId}-generated-latest-raw.png?ts=${ts}`,
     isolatedUrl: `/baked/${houseId}-generated-latest-isolated.png?ts=${ts}`,
+    aiIsolatedUrl: result.aiIsolated
+      ? `/baked/${houseId}-generated-latest-ai-isolated.png?ts=${ts}`
+      : null,
     tiltedUrl: result.tilted ? `/baked/${houseId}-generated-latest-tilted.png?ts=${ts}` : null,
     analysis: result.analysis,
     imageSize: result.imageSize,

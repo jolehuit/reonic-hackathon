@@ -15,6 +15,7 @@ interface GenResult {
   rawUrl?: string;
   tiltedUrl?: string | null;
   isolatedUrl?: string;
+  aiIsolatedUrl?: string | null;
   analysis?: {
     roofType: string;
     ridgeAzimuthDeg: number;
@@ -142,14 +143,23 @@ export default function AerialPage() {
       {genResult?.ok && genResult.glbUrl && (
         <>
           {genResult.isolatedUrl && (
-            <div className="mt-6 w-full max-w-3xl">
-              <Pane title="Detected house (isolated by Gemini 2.5 Pro)">
+            <div className="mt-6 grid w-full max-w-6xl gap-4 md:grid-cols-2">
+              <Pane title="Detected house (polygon mask)">
                 <img
                   src={genResult.isolatedUrl}
                   alt="Isolated building"
                   className="h-full w-full object-contain bg-white"
                 />
               </Pane>
+              {genResult.aiIsolatedUrl && (
+                <Pane title="AI-isolated render (OpenRouter · Gemini Image)">
+                  <img
+                    src={genResult.aiIsolatedUrl}
+                    alt="AI-isolated building"
+                    className="h-full w-full object-contain bg-white"
+                  />
+                </Pane>
+              )}
             </div>
           )}
           <div className="mt-6 grid w-full max-w-6xl gap-4 md:grid-cols-2">
@@ -165,7 +175,7 @@ export default function AerialPage() {
             )}
             <Pane title="Generated 3D model">
               <div className="relative h-full w-full">
-                <GeneratedHouseViewer houseId="custom" bust={extractTs(genResult.glbUrl)} />
+                <GeneratedHouseViewer houseId="custom" />
               </div>
             </Pane>
             {genResult.analysis && (
@@ -194,10 +204,4 @@ function Pane({ title, children }: { title: string; children: React.ReactNode })
 
 function buildAerialUrl(lat: number, lng: number, tilted = false): string {
   return `/api/aerial?lat=${lat}&lng=${lng}&zoom=20${tilted ? '&tilted=1' : ''}`;
-}
-
-function extractTs(url: string | undefined): string | undefined {
-  if (!url) return undefined;
-  const m = url.match(/[?&]ts=([^&]+)/);
-  return m?.[1];
 }
