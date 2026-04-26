@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "3dad6a9f8d56",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/components/Scene3D/Battery.tsx",
+    "src/components/Scene3D/Inverter.tsx",
+    "src/components/Scene3D/Wallbox.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/3d/ad6a9f8d56/0/metadata.json",
+      "transcript": "/3d/ad6a9f8d56/0/full.jsonl",
+      "content_hash": "/3d/ad6a9f8d56/0/content_hash.txt",
+      "prompt": "/3d/ad6a9f8d56/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 72,
+    "cache_creation_tokens": 482987,
+    "cache_read_tokens": 14804415,
+    "output_tokens": 20860,
+    "api_call_count": 33
+  }
+}

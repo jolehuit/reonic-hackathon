@@ -1,0 +1,16 @@
+commit et push tout
+
+---
+
+il manque des api key ou pas ?
+
+---
+
+est ce que cette desc est vraie ou pas :
+Type any address. Iconic captures the building from Google Photorealistic 3D Tiles, isolates it with GPT Image 2, reconstructs a textured mesh with Hunyuan 3D Pro, then sizes the PV / storage / heat-pump bundle against 1,620 real Iconic deliveries and exports a quick-offer PDF.
+
+---
+
+[Image #6] probleme de sizing et disposition regarde comment le wallbox est petit et il rentre dans la batterie
+
+et le bloc noir sur le côté ya quoi ? c ça qui est censé etre la batterie non ? dcp ya un doublon ?
