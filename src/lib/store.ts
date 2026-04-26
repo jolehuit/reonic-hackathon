@@ -231,6 +231,16 @@ interface AppState {
   captureSnapshot: (() => string | null) | null;
   setCaptureSnapshot: (fn: (() => string | null) | null) => void;
 
+  /** IDs of agent steps whose centre-screen popup has finished showing.
+   *  AgentTrace adds to it when each popup's hold timer fires; the
+   *  Orchestrator awaits the matching id before kicking off the next
+   *  pipeline stage so the user sees the previous popup land before
+   *  the next loader spins up. Stored as an array (not Set) for
+   *  Zustand subscribe equality. */
+  popupShownIds: string[];
+  markPopupShown: (id: string) => void;
+  clearPopupShown: () => void;
+
   // Roof geometry — usually loaded from /baked/{houseId}-analysis.json by
   // HouseGeometryProvider. For custom addresses, /api/design synthesises one
   // and we stash it here so the Scene3D consumes it directly.
@@ -372,6 +382,15 @@ export const useStore = create<AppState>((set) => ({
 
   captureSnapshot: null,
   setCaptureSnapshot: (captureSnapshot) => set({ captureSnapshot }),
+
+  popupShownIds: [],
+  markPopupShown: (id) =>
+    set((s) =>
+      s.popupShownIds.includes(id)
+        ? s
+        : { popupShownIds: [...s.popupShownIds, id] },
+    ),
+  clearPopupShown: () => set({ popupShownIds: [] }),
 
   customRoofGeometry: null,
   setCustomRoofGeometry: (customRoofGeometry) => set({ customRoofGeometry }),

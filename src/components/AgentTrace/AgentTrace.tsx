@@ -6,7 +6,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
 import type { AgentStep } from '@/lib/types';
 
@@ -29,20 +29,25 @@ export function AgentTrace() {
   // Single-popup queue: ensures popups always appear in top-down step order,
   // even if `size` (parallel lane) finishes before `capture`/`clean`. When
   // the active popup closes after POPUP_HOLD_MS, the next eligible step's
-  // popup opens. `shownIds` powers two things: the queue's "already done"
-  // check, and gating each card's in-slot artifact so it only appears once
-  // the morph is ready to land (not during the upstream wait).
-  const [shownIds, setShownIds] = useState<Set<string>>(new Set());
+  // popup opens.
+  //
+  // shownIds is mirrored into the Zustand store as `popupShownIds` so the
+  // Orchestrator can await each popup's completion before kicking off the
+  // next pipeline stage. Local state also kept for synchronous access.
+  const popupShownIdsStore = useStore((s) => s.popupShownIds);
+  const markPopupShown = useStore((s) => s.markPopupShown);
+  const clearPopupShown = useStore((s) => s.clearPopupShown);
+  const shownIds = useMemo(() => new Set(popupShownIdsStore), [popupShownIdsStore]);
   const [activePopupId, setActivePopupId] = useState<string | null>(null);
 
   // Reset memory when the pipeline restarts.
   useEffect(() => {
     const anyDone = steps.some((s) => s.status === 'done');
     if (!anyDone && (shownIds.size > 0 || activePopupId)) {
-      setShownIds(new Set());
+      clearPopupShown();
       setActivePopupId(null);
     }
-  }, [steps, shownIds, activePopupId]);
+  }, [steps, shownIds, activePopupId, clearPopupShown]);
 
   // Queue: when no popup is active, pick the next eligible step — but
   // wait POPUP_GAP_MS first so the previous popup's exit animation has
@@ -73,15 +78,11 @@ export function AgentTrace() {
     if (!activePopupId) return;
     const id = activePopupId;
     const t = setTimeout(() => {
-      setShownIds((prev) => {
-        const updated = new Set(prev);
-        updated.add(id);
-        return updated;
-      });
+      markPopupShown(id);
       setActivePopupId(null);
     }, POPUP_HOLD_MS);
     return () => clearTimeout(t);
-  }, [activePopupId]);
+  }, [activePopupId, markPopupShown]);
 
   const totalDone = steps.filter((s) => s.status === 'done').length;
   const totalErr = steps.filter((s) => s.status === 'error').length;

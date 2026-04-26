@@ -100,6 +100,7 @@ export function Orchestrator() {
   const setTrellisStatus = useStore((s) => s.setTrellisStatus);
   const setGlbUrl = useStore((s) => s.setGlbUrl);
   const setPlacedCount = useStore((s) => s.setPlacedCount);
+  const clearPopupShown = useStore((s) => s.clearPopupShown);
 
   useEffect(() => {
     if (phase !== 'agent-running' || !profile || !selectedHouse) return;
@@ -115,6 +116,7 @@ export function Orchestrator() {
     setAgentSteps(steps);
     setTrellisStatus('idle');
     setGlbUrl(null);
+    clearPopupShown();
     // Reset placement animation: panels stay hidden until both pipeline lanes
     // settle, at which point we tick up placedCount in the .then() below.
     setPlacedCount(0);
@@ -125,6 +127,25 @@ export function Orchestrator() {
       customAddress?.lat,
       customAddress?.lng,
     );
+
+    // Block until AgentTrace's centre-screen popup for `stepId` has
+    // finished its hold (POPUP_HOLD_MS). Ensures the next pipeline
+    // stage's loader doesn't start spinning while the previous stage's
+    // celebration is still on screen — the user reads the trace one
+    // beat at a time. Resolves immediately if cancelled.
+    const waitForPopupShown = (stepId: string): Promise<void> =>
+      new Promise<void>((resolve) => {
+        if (cancelled) return resolve();
+        if (useStore.getState().popupShownIds.includes(stepId)) {
+          return resolve();
+        }
+        const unsub = useStore.subscribe((state) => {
+          if (cancelled || state.popupShownIds.includes(stepId)) {
+            unsub();
+            resolve();
+          }
+        });
+      });
 
     // ── /api/design fires immediately (HTTP request is parallel for speed)
     //    but the *step state* is intentionally NOT touched here. We flip
@@ -236,6 +257,12 @@ export function Orchestrator() {
       });
       if (!captureOk || cancelled) return;
 
+      // Hold here until the capture popup has finished. The next loader
+      // (clean) only flips to 'running' afterwards so the trace reads one
+      // beat at a time.
+      await waitForPopupShown('capture');
+      if (cancelled) return;
+
       // Step 2: clean (GPT Image 2). Server pulls /api/aerial again — the
       // response is cache-control: public, max-age=300 so the second hit is
       // typically warm.
@@ -261,9 +288,17 @@ export function Orchestrator() {
         return;
       }
 
+      // Wait for the clean popup to land before moving on.
+      await waitForPopupShown('clean');
+      if (cancelled) return;
+
       // Step 3: size — fold the (already in-flight) /api/design result into
       // the trace before kicking off the model step.
       await finalizeSizeStep();
+      if (cancelled) return;
+
+      // Hold for the size KPI popup as well.
+      await waitForPopupShown('size');
       if (cancelled) return;
 
       // Step 4: model (Trellis). Pass the cleaned fal-hosted URL straight
