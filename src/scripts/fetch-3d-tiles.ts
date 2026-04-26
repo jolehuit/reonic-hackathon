@@ -45,9 +45,21 @@ if (!g.document) {
 }
 // 3d-tiles-renderer's Scheduler uses rAF for off-main-thread work pacing.
 // In Node, fall back to setImmediate (ticks asap, no 16ms gating).
+// Guard cancelAnimationFrame against sentinel values (-1, 0, null) the lib
+// stores when nothing is scheduled — clearImmediate would otherwise throw
+// "Cannot create property '_destroyed' on number '-1'".
 if (!g.requestAnimationFrame) {
-  g.requestAnimationFrame = (cb: (t: number) => void) => setImmediate(() => cb(performance.now())) as unknown as number;
-  g.cancelAnimationFrame = (id: number) => clearImmediate(id as unknown as NodeJS.Immediate);
+  g.requestAnimationFrame = (cb: (t: number) => void) =>
+    setImmediate(() => cb(performance.now())) as unknown as number;
+  g.cancelAnimationFrame = (id: unknown) => {
+    if (id && typeof id === 'object') {
+      try {
+        clearImmediate(id as NodeJS.Immediate);
+      } catch {
+        /* not a real Immediate handle — ignore */
+      }
+    }
+  };
 }
 // GLTFExporter uses FileReader to convert images to data URIs. Stub it —
 // our exported GLB only carries geometry, no embedded images.
@@ -96,9 +108,14 @@ interface DemoHouse {
 }
 
 const HOUSES: DemoHouse[] = [
-  { id: 'brandenburg', lat: 52.408718770055735, lng: 12.963106383979836, label: 'Test address 3 multi-level Potsdam-Golm 14476, DE' },
-  { id: 'hamburg', lat: 53.55, lng: 9.99, label: 'Hamburg, DE' },
-  { id: 'ruhr', lat: 51.5135, lng: 7.4653, label: 'Dortmund (Ruhr), DE' },
+  // The three demo houses surfaced in the UI. Coords MUST match the
+  // addresses shown in src/lib/houses.ts::HOUSE_LOCATION — otherwise the
+  // sidebar lies about which building the analysis was run on. Earlier
+  // placeholder coords (Hamburg=53.55,9.99, Ruhr=Dortmund city centre)
+  // captured multiple buildings and produced absurd panel counts (1053+).
+  { id: 'brandenburg', lat: 52.4530, lng: 13.2868, label: 'Thielallee 36, Berlin' },
+  { id: 'hamburg', lat: 52.408257, lng: 12.964409, label: 'Test address 2 Potsdam-Golm 14476, DE' },
+  { id: 'ruhr', lat: 52.616457, lng: 13.485022, label: 'Schönerlinder Weg 83, Berlin Karow' },
   // Independent test houseIds so subagents can run in parallel without file
   // collisions (each houseId namespaces its own photogrammetry / analysis files).
   { id: 'test1', lat: 52.4083205, lng: 12.9658936, label: 'Ritterstraße 33, Golm, Potsdam 14476, DE' },
