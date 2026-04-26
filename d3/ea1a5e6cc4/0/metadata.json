@@ -1,0 +1,91 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "d3ea1a5e6cc4",
+  "session_id": "592c8232-c44e-46aa-a6ba-214a6e51a0e8",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T10:30:37.972747Z",
+  "branch": "main",
+  "checkpoints_count": 5,
+  "files_touched": [
+    "next.config.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-7[1m]",
+  "turn_id": "8d0302debf35",
+  "token_usage": {
+    "input_tokens": 81,
+    "cache_creation_tokens": 92554,
+    "cache_read_tokens": 2750317,
+    "output_tokens": 16041,
+    "api_call_count": 41
+  },
+  "session_metrics": {
+    "turn_count": 5
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T10:30:37.960431Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 3,
+    "human_removed": 7,
+    "total_committed": 0,
+    "total_lines_changed": 10,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 183,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "src/app/oblique/ObliqueTiles.tsx": 164,
+        "src/app/oblique/page.tsx": 19
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 184,
+      "agent_lines_removed": 1
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 3,
+      "user_lines_removed": 10,
+      "agent_lines_added": 1,
+      "agent_lines_removed": 1,
+      "user_added_per_file": {
+        "next.config.ts": 3
+      },
+      "user_removed_per_file": {
+        "next.config.ts": 10
+      }
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1,
+      "agent_lines_removed": 1
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1,
+      "agent_lines_removed": 1
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1,
+      "agent_lines_removed": 1
+    }
+  ]
+}

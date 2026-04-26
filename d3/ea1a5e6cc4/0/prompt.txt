@@ -1,0 +1,137 @@
+Fais un diagramme mermaid de notre architecture
+
+---
+
+25Connecting to 'blob:<URL>' violates the following Content Security Policy directive: "connect-src 'self' <URL> <URL> <URL> <URL> <URL> <URL> <URL>". The action has been blocked.
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/ac9a57ba-cde7-476b-b692-baae573ed5f8. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/d67d7e5b-c8c3-41d0-b6fe-770bd887dbcc. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/ac9a57ba-cde7-476b-b692-baae573ed5f8
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/d67d7e5b-c8c3-41d0-b6fe-770bd887dbcc
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1 THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
+eO @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Connecting to 'https://raw.githack.com/pmndrs/drei-assets/456060a26bbeb8fdf79326f224b6d99b8bcce736/hdri/lebombo_1k.hdr' violates the following Content Security Policy directive: "connect-src 'self' https://*.googleapis.com https://maps.gstatic.com https://*.fal.media https://*.fal.ai https://generativelanguage.googleapis.com https://api.tavily.com https://tile.googleapis.com". The action has been blocked.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load https://raw.githack.com/pmndrs/drei-assets/456060a26bbeb8fdf79326f224b6d99b8bcce736/hdri/lebombo_1k.hdr. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/4b40c46f-5fe3-4853-ab06-2214ed304cd8. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/4b40c46f-5fe3-4853-ab06-2214ed304cd8
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/5ee423f5-b76d-44ac-ac24-839b3bed7075. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/257b0cc0-a35c-4e40-8db8-0e9b7985154c. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/a2e4a677-a5e1-4805-9741-5e0093b02201. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/e0d051cc-d6c4-4cf6-b7f3-3e4f13c70dc9. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/7f0555c4-e6d6-47e7-8438-943335604e67. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/77fd51d6-d31f-4f64-a341-9fe4dd6ef3b6. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/1ec8dc6d-9ad9-45f4-bcf9-7d190472e095. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/60b83461-15eb-4d8e-a6b0-305762d99ab5. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/1503464a-faa7-432d-b7c0-773279e0afcc. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/2a29143f-b3d8-4579-907e-58a0567b9f21. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/0dd6edcf-4c41-45fc-87c4-b9a004336848. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/1c0fc6a7-8d05-43e5-ae83-9a1440c08839. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/7882ecb8-6e6d-481c-8333-50511c682ff5. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/a18f4c06-f706-4616-acab-5d14c50cda5a. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/e4c56a07-8854-4b6c-82f7-57156f639941. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/d7f8c4db-43a6-4841-9009-648f7f8dd121. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/d9a87cff-ebce-4b0c-b332-922ca606853d. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/5eb2039e-e16d-4d30-89b2-ccc6b3be1203. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/258dc18b-c2c7-45ed-8b0e-ea15f1aa326d. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/3f7d9d4c-44a8-4607-b06c-7e14b16bd361. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/72f4a2fc-88b3-4924-bc24-b2efe1edb130. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1 Fetch API cannot load blob:https://iconic.haus/b2e1d2f6-bf57-4024-a3b2-e00142288c45. Refused to connect because it violates the document's Content Security Policy.
+load @ 0bwox0ssuacdg.js:1
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/5ee423f5-b76d-44ac-ac24-839b3bed7075
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/257b0cc0-a35c-4e40-8db8-0e9b7985154c
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/a2e4a677-a5e1-4805-9741-5e0093b02201
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/e0d051cc-d6c4-4cf6-b7f3-3e4f13c70dc9
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/7f0555c4-e6d6-47e7-8438-943335604e67
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/77fd51d6-d31f-4f64-a341-9fe4dd6ef3b6
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/1ec8dc6d-9ad9-45f4-bcf9-7d190472e095
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/60b83461-15eb-4d8e-a6b0-305762d99ab5
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/1503464a-faa7-432d-b7c0-773279e0afcc
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/2a29143f-b3d8-4579-907e-58a0567b9f21
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/0dd6edcf-4c41-45fc-87c4-b9a004336848
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/1c0fc6a7-8d05-43e5-ae83-9a1440c08839
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/7882ecb8-6e6d-481c-8333-50511c682ff5
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/a18f4c06-f706-4616-acab-5d14c50cda5a
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/e4c56a07-8854-4b6c-82f7-57156f639941
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/d7f8c4db-43a6-4841-9009-648f7f8dd121
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/d9a87cff-ebce-4b0c-b332-922ca606853d
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/5eb2039e-e16d-4d30-89b2-ccc6b3be1203
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/258dc18b-c2c7-45ed-8b0e-ea15f1aa326d
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/3f7d9d4c-44a8-4607-b06c-7e14b16bd361
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/72f4a2fc-88b3-4924-bc24-b2efe1edb130
+(anonymous) @ 0bwox0ssuacdg.js:1537
+0bwox0ssuacdg.js:1537 THREE.GLTFLoader: Couldn't load texture blob:https://iconic.haus/b2e1d2f6-bf57-4024-a3b2-e00142288c45
+(anonymous) @ 0bwox0ssuacdg.js:1537
+20bwox0ssuacdg.js:382 Uncaught Error: Could not load lebombo_1k.hdr: Failed to fetch
+    at Object.onError (0bwox0ssuacdg.js:382:63341)
+    at 0bwox0ssuacdg.js:1:260388
+0bwox0ssuacdg.js:1 THREE.WebGLRenderer: Context Lost.
+favicon.ico:1  Failed to load resource: the server responded with a status of 404 () on a full erreurs comme ça
+pourquoi
+
+---
+
+non. pull les modifs et explique les moi
+
+---
+
+pull master sur main
+
+---
+
+non je veux que tu merge wsh calme toi
+
+---
+
+t'as rien cassé hein ?
+
+---
+
+push
