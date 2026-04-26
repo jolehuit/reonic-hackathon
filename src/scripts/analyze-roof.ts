@@ -38,7 +38,15 @@ import type { RoofFace, Obstruction, RoofGeometry } from '../lib/types';
 import { placePanelsOnFace, type ShadeSampler } from './place-panels';
 import { fetchMSBuildingFootprint } from '../lib/ms-building-footprints';
 
-const HOUSES = ['brandenburg', 'hamburg', 'ruhr'] as const;
+const HOUSES = [
+  'brandenburg', 'hamburg', 'ruhr',
+  'test1', 'test2', 'test3', 'test4',
+  'bench-koeln1', 'bench-koeln2', 'bench-meerbusch', 'bench-leipzig',
+  'bench-dresden1', 'bench-dresden2', 'bench-bochum', 'bench-hamburg2',
+  'bench-berlin1', 'bench-berlin2', 'bench-uckermark',
+  'b3-zehlendorf', 'b3-wannsee', 'b3-kladow', 'b3-mahlsdorf', 'b3-karow',
+  'b3-lichterfelde', 'b3-hermsdorf', 'b3-mahlsdorf2', 'b3-hermsdorf2', 'b3-wannsee2',
+] as const;
 
 const BAKED_DIR = path.join(process.cwd(), 'public/baked');
 const FALLBACK_DIR = path.join(process.cwd(), 'public/models');
@@ -88,6 +96,7 @@ const VARIANT_CONCAVE_HULL_CONCAVITY = numEnv('VARIANT_CONCAVE_HULL_CONCAVITY', 
 // the target point. Helps Reihenhäuser where OSM is drawn tight to the wall.
 const VARIANT_USE_MS_FOOTPRINT = flagEnv('VARIANT_USE_MS_FOOTPRINT');
 const VARIANT_MS_VS_OSM_MIN_RATIO = numEnv('VARIANT_MS_VS_OSM_MIN_RATIO', 1.1);
+const VARIANT_MS_FORCE_IGNORE_CONTAINS = flagEnv('VARIANT_MS_FORCE_IGNORE_CONTAINS');
 // Per-pavilion decomposition: spatial DBSCAN on triangle XZ centroids → keep
 // only the largest cluster (dominant pavilion). Fixes multi-wing institutional
 // buildings where the OSM polygon spans several disconnected roof sections.
@@ -1044,7 +1053,7 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
         })();
         try {
           const ms = await fetchMSBuildingFootprint(origin.lat, origin.lng);
-          if (ms && ms.containsTarget) {
+          if (ms && (ms.containsTarget || VARIANT_MS_FORCE_IGNORE_CONTAINS)) {
             const ratio = ms.approxAreaM2 / Math.max(osmAreaXZ, 1);
             if (ratio >= VARIANT_MS_VS_OSM_MIN_RATIO) {
               const msPoly = ms.polygon.map((p) => latLngToLocalXZ(p, origin));

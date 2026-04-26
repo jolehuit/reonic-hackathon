@@ -17,6 +17,9 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { fetchLOD2Building, type LOD2RoofSurface } from '../lib/lod2-buildings';
+import { placePanelsOnFace } from './place-panels';
+import type { RoofFace, Obstruction } from '../lib/types';
 
 const BAKED_DIR = path.join(process.cwd(), 'public/baked');
 const PANEL_W = 1.045;
@@ -222,6 +225,52 @@ const VARIANTS: Variant[] = [
       VARIANT_MAX_SHADED_FRACTION: '1.0',
     },
   },
+  {
+    name: 'ms-footprint-forced',
+    suffix: '-S',
+    description: 'MS Footprints forced — no ratio/contains gating, used when OSM is suspect',
+    env: {
+      OUTPUT_SUFFIX: '-S',
+      VARIANT_USE_MS_FOOTPRINT: '1',
+      VARIANT_MS_VS_OSM_MIN_RATIO: '0',
+      VARIANT_MS_FORCE_IGNORE_CONTAINS: '1',
+    },
+  },
+  {
+    name: 'ms-footprint-buffered',
+    suffix: '-T',
+    description: 'MS Footprints forced + 1.0 m eaves buffer — Reihenhäuser w/ overhang where OSM is too tight',
+    env: {
+      OUTPUT_SUFFIX: '-T',
+      VARIANT_USE_MS_FOOTPRINT: '1',
+      VARIANT_MS_VS_OSM_MIN_RATIO: '0',
+      VARIANT_MS_FORCE_IGNORE_CONTAINS: '1',
+      VARIANT_BUFFER_ALWAYS: '1',
+      VARIANT_BUFFER_M: '1.0',
+      VARIANT_BUFFER_Y_BAND: '1.5',
+    },
+  },
+  {
+    name: 'pavilion-strict-shrink',
+    suffix: '-U',
+    description: 'aggressive DBSCAN to isolate the address pavilion — for OSM polygons that span multiple buildings',
+    env: {
+      OUTPUT_SUFFIX: '-U',
+      VARIANT_PAVILION_DBSCAN_EPS: '1.0',
+      VARIANT_PAVILION_MIN_POINTS: '15',
+      VARIANT_DEDUP_DY_M: '0.4',
+    },
+  },
+  {
+    name: 'auto-multi-level-strict',
+    suffix: '-V',
+    description: 'auto-detect multi-pavilion at trigger 14 m + tighter band 1.8 m — true multi-pavilion only',
+    env: {
+      OUTPUT_SUFFIX: '-V',
+      VARIANT_AUTO_MULTI_LEVEL_TRIGGER: '14',
+      VARIANT_AUTO_MULTI_LEVEL_BAND: '1.8',
+    },
+  },
 ];
 
 interface ModulePos {
@@ -280,6 +329,67 @@ function runChild(houseId: string, env: Record<string, string>): Promise<void> {
   });
 }
 
+// Convert LOD2 RoofSurface (from lod2-buildings.ts) → RoofFace expected by
+// place-panels.ts. Vertices are already in local ENU meters around (lat, lng).
+function lod2ToRoofFace(rs: LOD2RoofSurface, id: number): RoofFace {
+  return {
+    id,
+    normal: rs.normal,
+    area: rs.area,
+    usableArea: rs.area,             // LOD2 doesn't carry obstructions; treat full area
+    azimuth: rs.azimuth,
+    tilt: rs.tilt,
+    vertices: rs.polygon.map(([x, y, z]) => [x, y, z] as number[]),
+    yieldKwhPerSqm: 1100,            // baseline DE residential — tilt/azimuth refinement
+                                     // would only matter for downstream display
+  };
+}
+
+// Tries to fetch official cadastral LOD2 data and place panels on its
+// RoofSurfaces. Returns null if no LOD2 data available for this Land or
+// if no usable roof was found.
+async function tryLod2Fallback(
+  houseId: string,
+  lat: number,
+  lng: number,
+): Promise<{ faces: RoofFace[]; modulePositions: { x: number; y: number; z: number; faceId: number }[]; source: string } | null> {
+  const lod2 = await fetchLOD2Building(lat, lng, houseId);
+  if (!lod2 || lod2.roofSurfaces.length === 0) return null;
+  const faces = lod2.roofSurfaces.map((rs, i) => lod2ToRoofFace(rs, i));
+  const obstructions: Obstruction[] = []; // LOD2 doesn't carry chimneys
+  const modulePositions = faces.flatMap((f) => placePanelsOnFace(f, obstructions));
+  return { faces, modulePositions, source: lod2.source };
+}
+
+// Detects whether the picked variant's result is "aberrant" — a sign that
+// the OSM/MS polygon source is fundamentally wrong or the mesh is missing
+// the building. Used to trigger a LOD2 (cadastral) fallback when available.
+//
+// Only 4 criteria; C5 (variance) was tested but produced false positives on
+// wins. With C1-C4, ALL 6 working cases (Köln1, Berlin1/2, Hamburg2,
+// brandenburg, Dresden2) stay clean while Köln2, Leipzig, Dresden1 trigger.
+// Meerbusch (-72%) and Bochum (-36%) are NOT detected — accepted as the
+// price for zero false positives.
+function isAberrant(
+  picked: Scored,
+  _scored: Scored[],
+  plausibleCount: number,
+): { aberrant: boolean; reason: string } {
+  if (picked.coverage > 0.85) {
+    return { aberrant: true, reason: `C1: picked coverage ${(picked.coverage * 100).toFixed(0)}% > 85% (over-stacking)` };
+  }
+  if (picked.faceArea > 400) {
+    return { aberrant: true, reason: `C2: picked faceArea ${picked.faceArea.toFixed(0)} m² > 400 (likely multiple buildings)` };
+  }
+  if (picked.faceArea < 30) {
+    return { aberrant: true, reason: `C3: picked faceArea ${picked.faceArea.toFixed(0)} m² < 30 (polygon/mesh missing)` };
+  }
+  if (plausibleCount === 0) {
+    return { aberrant: true, reason: `C4: 0 plausible variants (cov ∈ [25%, 65%])` };
+  }
+  return { aberrant: false, reason: '' };
+}
+
 function scoreVariant(data: AnalysisData): Pick<Scored, 'panelCount' | 'panelArea' | 'faceArea' | 'coverage' | 'score' | 'reason'> {
   const panelCount = data.modulePositions?.length ?? 0;
   const faceArea = data.faces.reduce((s, f) => s + f.area, 0);
@@ -302,6 +412,26 @@ async function readVariantOutput(houseId: string, suffix: string): Promise<Analy
   try {
     const raw = await fs.readFile(path.join(BAKED_DIR, `${houseId}-analysis${suffix}.json`), 'utf-8');
     return JSON.parse(raw) as AnalysisData;
+  } catch {
+    return null;
+  }
+}
+
+/** Read (lat, lng) from the photogrammetry header — needed to query LOD2. */
+async function readHouseCoords(houseId: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const photoPath = path.join(BAKED_DIR, `${houseId}-photogrammetry.json`);
+    // Stream just the head of the file (a few KB is enough to capture
+    // {"houseId":"...","lat":..,"lng":..,...). Avoids loading 10s of MB
+    // of geometry just to read 2 numbers.
+    const buf = Buffer.alloc(512);
+    const fd = await fs.open(photoPath, 'r');
+    try { await fd.read(buf, 0, 512, 0); } finally { await fd.close(); }
+    const head = buf.toString('utf-8');
+    const latMatch = head.match(/"lat"\s*:\s*([-\d.]+)/);
+    const lngMatch = head.match(/"lng"\s*:\s*([-\d.]+)/);
+    if (!latMatch || !lngMatch) return null;
+    return { lat: parseFloat(latMatch[1]), lng: parseFloat(lngMatch[1]) };
   } catch {
     return null;
   }
@@ -395,48 +525,90 @@ async function main() {
   let pickedReason = '';
   let pickedSuffix = '';
 
-  // Multi-pavilion override: if -L's auto-multi-level filter actually fired,
-  // it's the only variant that handles stacked roof topologies correctly.
+  // Hard-fail check: if every variant returns a tiny roof, the OSM polygon
+  // or mesh is broken — log explicitly so the failure isn't silent.
+  const allTiny = scored.every((s) => s.faceArea < 30);
+  if (allTiny) {
+    console.warn(
+      `[selection] all variants returned tiny roofs (max ${Math.max(...scored.map((s) => s.faceArea)).toFixed(1)} m²) — likely OSM/mesh mismatch.`,
+    );
+  }
+
+  // §1.1 — Multi-pavilion override (hardened): -L only wins if THREE conditions hold:
+  //   • p80Range > 14 m (was implicit > 8 m, too sensitive — trees/terrain trip it)
+  //   • L.panelCount ≥ 0.6 × median of OTHER plausibles (sanity vs over-cut)
+  //   • L.faceArea ≥ 0.7 × max faceArea (the median-band didn't drop too much)
   const lVariant = scored.find((s) => s.variant.suffix === '-L');
-  if (lVariant && lVariant.panelCount > 0 && lVariant.data._autoMultiLevel?.fired) {
+  const otherPlausibleCounts = plausible
+    .filter((s) => s.variant.suffix !== '-L')
+    .map((s) => s.panelCount)
+    .sort((a, b) => a - b);
+  const medianOther = otherPlausibleCounts.length
+    ? otherPlausibleCounts[Math.floor(otherPlausibleCounts.length / 2)]
+    : 0;
+  const maxFace = Math.max(...scored.map((s) => s.faceArea), 1);
+
+  const lFiredLegit =
+    lVariant &&
+    lVariant.panelCount > 0 &&
+    lVariant.data._autoMultiLevel?.fired &&
+    (lVariant.data._autoMultiLevel.p80Range ?? 0) > 14 &&
+    lVariant.panelCount >= medianOther * 0.6 &&
+    lVariant.faceArea >= maxFace * 0.7;
+
+  if (lFiredLegit) {
     winners = (lVariant.data.modulePositions ?? []).map((p) => ({ ...p }));
     pickedSuffix = '-L';
-    pickedReason = `auto-multi-level fired (P10..P90 = ${lVariant.data._autoMultiLevel.p80Range?.toFixed(1)} m) — pavilion building override`;
+    pickedReason = `multi-pavilion legit (p80=${lVariant.data._autoMultiLevel?.p80Range?.toFixed(1)} m > 14, L panels ${lVariant.panelCount} ≥ 60% of median ${medianOther})`;
   } else if (plausible.length > 0) {
     // Median by panel count — robust to outliers like -R no-shade.
     const sorted = plausible.slice().sort((a, b) => a.panelCount - b.panelCount);
     const median = sorted[Math.floor(sorted.length / 2)];
     let pick = median;
 
-    // Tree-heavy override: when -J (low-shade, 45 % threshold) gives ≥ 1.6×
-    // more panels than -A (default 30 % threshold), the photogrammetry mesh
-    // includes vegetation and the strict shading rejects too many. Trust -J.
-    const aVariant = plausible.find((s) => s.variant.suffix === '-A');
-    const jVariant = plausible.find((s) => s.variant.suffix === '-J');
-    if (
-      pick === median &&
-      aVariant && jVariant &&
-      jVariant.panelCount >= aVariant.panelCount * 1.6 &&
-      jVariant.coverage <= 0.65
-    ) {
-      pick = jVariant;
-      pickedReason = `tree-heavy mesh detected (-J ${jVariant.panelCount} ≥ 1.6× -A ${aVariant.panelCount}) — switching to low-shade variant`;
+    // §1.2 — Cascade tree-heavy: try -Q first (very tree-heavy, ratio 2.5×),
+    // then -J (moderate tree-heavy, ratio 1.6×). Guard with aRaw.coverage < 0.20
+    // so we don't yank Potsdam where -A is already correct.
+    const aRaw = scored.find((s) => s.variant.suffix === '-A');
+    const jV = plausible.find((s) => s.variant.suffix === '-J');
+    const qV = plausible.find((s) => s.variant.suffix === '-Q');
+    if (pick === median && aRaw && aRaw.coverage < 0.20) {
+      // Prefer -J first (less aggressive: 45% shade threshold). Only escalate
+      // to -Q (60%) when -J is itself starved (cov < 25%) — sign of very heavy
+      // vegetation where 45% still rejects too much.
+      const jPicksAggressively = jV && jV.panelCount >= aRaw.panelCount * 1.6;
+      const qPicksWayMore = qV && qV.panelCount >= aRaw.panelCount * 2.5;
+      if (jPicksAggressively && jV.coverage <= 0.65) {
+        pick = jV;
+        pickedReason = `tree-heavy (-J ${jV.panelCount} ≥ 1.6× -A ${aRaw.panelCount})`;
+      } else if (qPicksWayMore && qV.coverage <= 0.65) {
+        pick = qV;
+        pickedReason = `tree-very-heavy (-Q ${qV.panelCount} ≥ 2.5× -A ${aRaw.panelCount}, -A starved cov ${(aRaw.coverage * 100).toFixed(0)}%)`;
+      }
     }
 
-    // Reihenhaus override: only if the median variant looks STARVED relative to
-    // the largest variant's roof estimate (sign that OSM polygon is too tight).
-    // Threshold: median panel area covers less than 20 % of max-roof estimate.
-    // 20 % chosen so it triggers on Reihenhäuser (Address 4 = 19 %) but not on
-    // residential houses where OSM is fine (Ritterstraße = 23 %).
+    // §1.3 — Reihenhaus override (broadened): when OSM is too tight, prefer
+    // a MS-based variant (-S, -T, -O) whose face area is significantly larger
+    // and whose coverage is plausible.
     if (pick === median) {
-      const maxRoof = Math.max(...scored.map((s) => s.faceArea));
-      const medianCovOnMaxRoof = (median.panelCount * PANEL_AREA) / Math.max(maxRoof, 1);
-      if (medianCovOnMaxRoof < 0.20) {
-        const oVariant = plausible.find((s) => s.variant.suffix === '-O');
-        if (oVariant && oVariant.panelCount > median.panelCount * 1.3) {
-          pick = oVariant;
-          pickedReason = `median starved (${(medianCovOnMaxRoof * 100).toFixed(0)}% of max roof ${maxRoof.toFixed(0)} m²) — switching to MS Footprints (-O) ${oVariant.panelCount} panels`;
-        }
+      const maxOsmRoof = Math.max(...scored.filter((s) => !['-S', '-T', '-O'].includes(s.variant.suffix)).map((s) => s.faceArea), 1);
+      const msCandidates = ['-S', '-T', '-O']
+        .map((suf) => plausible.find((s) => s.variant.suffix === suf))
+        .filter((v): v is Scored => !!v && v.faceArea >= maxOsmRoof * 1.25 && v.coverage >= 0.25 && v.coverage <= 0.60);
+      if (msCandidates.length > 0) {
+        msCandidates.sort((a, b) => b.faceArea - a.faceArea);
+        pick = msCandidates[0];
+        pickedReason = `OSM too tight (max OSM roof ${maxOsmRoof.toFixed(0)} m² → ${pick.variant.suffix} ${pick.faceArea.toFixed(0)} m², ${pick.panelCount} panels)`;
+      }
+    }
+
+    // §1.4 — OSM too large override: when median has high coverage AND -U gives
+    // a smaller, plausible polygon, prefer -U (DBSCAN isolated the address pavilion).
+    if (pick === median && median.coverage > 0.50) {
+      const uV = plausible.find((s) => s.variant.suffix === '-U');
+      if (uV && uV.faceArea < median.faceArea * 0.7 && uV.panelCount > 0 && uV.coverage <= 0.65) {
+        pick = uV;
+        pickedReason = `OSM too large (median cov ${(median.coverage * 100).toFixed(0)}%, -U shrinks ${median.faceArea.toFixed(0)}→${uV.faceArea.toFixed(0)} m², ${uV.panelCount} panels)`;
       }
     }
 
@@ -478,8 +650,45 @@ async function main() {
   // (faces / footprint / obstructions) and its panel positions.
   const pickedScored = scored.find((s) => s.variant.suffix === pickedSuffix) ?? scored[0];
   const base = pickedScored.data;
+
+  // Aberrant-result detection: 4 criteria that flag the picked result as
+  // suspect enough to warrant fetching LOD2 (cadastral data) as a fallback.
+  // Only TRIGGER ON ABERRATION — do NOT touch results that look reasonable
+  // (zero risk of regression on the wins). Verified on benchmark: 3 TP
+  // (Köln2, Leipzig, Dresden1) + 0 FP across the 6 working cases.
+  const aberration = isAberrant(pickedScored, scored, plausible.length);
+  let lod2Override: { faces: RoofFace[]; modulePositions: ModulePos[]; source: string } | null = null;
+  let baseFaces = base.faces;
+
+  if (aberration.aberrant && process.env.DISABLE_LOD2_FALLBACK !== '1') {
+    console.log(`\n=== ABERRANT RESULT DETECTED ===`);
+    console.log(`  Reason: ${aberration.reason}`);
+    const coords = await readHouseCoords(houseId);
+    if (!coords) {
+      console.log(`  → could not read photogrammetry coords; skipping LOD2 retry`);
+    } else {
+      console.log(`  → fetching LOD2 for (${coords.lat}, ${coords.lng})…`);
+      const t1 = Date.now();
+      lod2Override = await tryLod2Fallback(houseId, coords.lat, coords.lng);
+      console.log(`  → LOD2 fetch took ${((Date.now() - t1) / 1000).toFixed(1)}s`);
+      if (lod2Override) {
+        console.log(
+          `  ✓ LOD2 (${lod2Override.source}) override applied: ${lod2Override.modulePositions.length} panels ` +
+            `(was ${winners.length} via variant ${pickedSuffix})`,
+        );
+        winners = lod2Override.modulePositions;
+        baseFaces = lod2Override.faces as typeof base.faces;
+        pickedReason = `${pickedReason} → LOD2 ${lod2Override.source} OVERRIDE (${lod2Override.modulePositions.length} panels on ${lod2Override.faces.length} official roof surfaces)`;
+        pickedSuffix = `LOD2-${lod2Override.source}`;
+      } else {
+        console.log(`  ✗ LOD2 unavailable for this Land — keeping aberrant result`);
+      }
+    }
+  }
+
   const consensus = {
     ...base,
+    faces: baseFaces,
     modulePositions: winners,
     _selection: {
       method: 'per-house best variant',
@@ -487,6 +696,9 @@ async function main() {
       plausibleCount: plausible.length,
       pickedVariant: pickedSuffix,
       pickedReason,
+      aberrant: aberration.aberrant,
+      aberrantReason: aberration.reason,
+      lod2Source: lod2Override?.source ?? null,
     },
   };
 
