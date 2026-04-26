@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "5838ca283e00",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/components/Scene3D/Orchestrator.tsx",
+    "src/components/Scene3D/Panels.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/58/38ca283e00/0/metadata.json",
+      "transcript": "/58/38ca283e00/0/full.jsonl",
+      "content_hash": "/58/38ca283e00/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 37,
+    "cache_creation_tokens": 36380,
+    "cache_read_tokens": 10191001,
+    "output_tokens": 15806,
+    "api_call_count": 37
+  }
+}
