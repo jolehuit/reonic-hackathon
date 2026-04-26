@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "9fa605b859c1",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/components/AutoFillForm/AddressSearch.tsx",
+    "src/lib/__tests__/coords.test.ts",
+    "src/lib/coords.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/9f/a605b859c1/0/metadata.json",
+      "transcript": "/9f/a605b859c1/0/full.jsonl",
+      "content_hash": "/9f/a605b859c1/0/content_hash.txt",
+      "prompt": "/9f/a605b859c1/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 25,
+    "cache_creation_tokens": 17020,
+    "cache_read_tokens": 8403848,
+    "output_tokens": 11019,
+    "api_call_count": 15
+  }
+}
