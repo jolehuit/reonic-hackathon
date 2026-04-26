@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useStore, type CustomAddress } from '@/lib/store';
+import { parseCoordinateString } from '@/lib/coords';
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -108,6 +109,59 @@ export function AddressSearch() {
       : 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY missing — set it in .env.local to enable autocomplete.',
   );
   const [picked, setPicked] = useState<CustomAddress | null>(null);
+
+  // Coordinate-paste fallback. Google Places Autocomplete only matches
+  // street addresses / POI names — pasting raw GPS coordinates (DMS or
+  // decimal) returned no suggestions and the "Design my system" button
+  // stayed disabled. This separate input parses the coords client-side
+  // and reverse-geocodes them server-side via /api/aerial to recover a
+  // friendly address string for display.
+  const [coordsInput, setCoordsInput] = useState('');
+  const [coordsBusy, setCoordsBusy] = useState(false);
+  const [coordsError, setCoordsError] = useState<string | null>(null);
+
+  const handleCoordsSubmit = async () => {
+    setCoordsError(null);
+    const parsed = parseCoordinateString(coordsInput);
+    if (!parsed) {
+      setCoordsError(
+        'Could not parse — try "53°18\'55.8"N 9°51\'37.3"E" or "53.31550, 9.86036".',
+      );
+      return;
+    }
+    setCoordsBusy(true);
+    let formatted = `${parsed.lat.toFixed(5)}, ${parsed.lng.toFixed(5)}`;
+    let countryCode: string | undefined;
+    try {
+      const r = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${parsed.lat},${parsed.lng}&key=${API_KEY}`,
+      );
+      if (r.ok) {
+        const j = (await r.json()) as {
+          status?: string;
+          results?: Array<{
+            formatted_address?: string;
+            address_components?: Array<{ short_name?: string; types?: string[] }>;
+          }>;
+        };
+        if (j.status === 'OK' && j.results?.[0]) {
+          formatted = j.results[0].formatted_address ?? formatted;
+          countryCode = j.results[0].address_components?.find((c) =>
+            c.types?.includes('country'),
+          )?.short_name;
+        }
+      }
+    } catch {
+      // reverse-geocode is best-effort — fall back to the decimal string.
+    }
+    setCoordsBusy(false);
+    setPicked({
+      formatted,
+      lat: parsed.lat,
+      lng: parsed.lng,
+      countryCode,
+    });
+  };
 
   useEffect(() => {
     if (!API_KEY) return;
@@ -245,6 +299,37 @@ export function AddressSearch() {
             {picked.lat.toFixed(4)}, {picked.lng.toFixed(4)}
           </span>
         </div>
+      )}
+
+      {/* GPS coordinates fallback — accepts Google's DMS copy-paste
+          ("53°18'55.8\"N 9°51'37.3\"E") or plain decimal. */}
+      <div className="mt-4 flex items-center gap-2">
+        <span className="text-[11px] uppercase tracking-[0.12em] text-zinc-400">
+          Or
+        </span>
+        <input
+          type="text"
+          value={coordsInput}
+          onChange={(e) => {
+            setCoordsInput(e.target.value);
+            if (coordsError) setCoordsError(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !coordsBusy) handleCoordsSubmit();
+          }}
+          placeholder={`paste GPS coordinates — e.g. 53°18'55.8"N 9°51'37.3"E`}
+          className="flex-1 rounded-lg border border-zinc-200 bg-zinc-50/60 px-3 py-2 text-[12.5px] font-mono text-zinc-700 placeholder:text-zinc-400 focus:border-blue-300 focus:bg-white focus:outline-none"
+        />
+        <button
+          onClick={handleCoordsSubmit}
+          disabled={coordsBusy || !coordsInput.trim()}
+          className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-[12px] font-semibold text-zinc-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {coordsBusy ? 'Resolving…' : 'Use'}
+        </button>
+      </div>
+      {coordsError && (
+        <div className="mt-2 text-[11.5px] text-amber-700">{coordsError}</div>
       )}
 
       {error && (
