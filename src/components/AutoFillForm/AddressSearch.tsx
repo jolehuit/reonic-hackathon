@@ -204,7 +204,9 @@ export function AddressSearch() {
         </span>
       </div>
       <p className="mb-4 text-[13px] text-zinc-500">
-        We&apos;ll use Google Solar + your roof geometry to design a system tailored to your house.
+        Iconic captures your building from Google Photorealistic 3D Tiles, isolates it with
+        GPT Image 2, reconstructs a textured 3D mesh with Hunyuan 3D Pro, then sizes the system
+        with our k-NN engine over 1,620 real Iconic deliveries.
       </p>
 
       <div className="flex flex-col gap-3 sm:flex-row">

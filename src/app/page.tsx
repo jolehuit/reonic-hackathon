@@ -94,10 +94,10 @@ export default function Home() {
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                onClick={() => setAddressOpen(true)}
+                onClick={() => setDemoOpen(true)}
                 className="group inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-[14.5px] font-semibold text-white shadow-sm transition hover:bg-emerald-700"
               >
-                Type your address
+                Try a demo house
                 <svg className="h-4 w-4 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
@@ -105,13 +105,13 @@ export default function Home() {
               </button>
               <button
                 type="button"
-                onClick={() => setDemoOpen(true)}
+                onClick={() => setAddressOpen(true)}
                 className="group inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-6 py-3 text-[14.5px] font-semibold text-zinc-800 shadow-sm transition hover:border-zinc-400 hover:bg-zinc-50"
               >
-                Try a demo house
+                Type your address
                 <svg className="h-4 w-4 text-zinc-400 transition group-hover:text-zinc-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 10.5L12 3l9 7.5" />
-                  <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
                 </svg>
               </button>
             </div>
