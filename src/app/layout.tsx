@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Iconic — AI Designer for renewable energy systems",
+  title: "Iconic",
   description:
     "From an address to a complete photovoltaic + storage + heat-pump design in 30 seconds, validated against 1,620 real Iconic deliveries.",
 };
