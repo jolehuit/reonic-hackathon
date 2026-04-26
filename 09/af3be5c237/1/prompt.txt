@@ -285,3 +285,7 @@ enregistre dans le cache les maisons qui seront génerés pour les 3 examples co
 ---
 
 le cache est dispo que sur mon ordi ou sur n'importe quel ordi qui lance le projet ?
+
+---
+
+oui je veux que les autres puissent avoir le cache
