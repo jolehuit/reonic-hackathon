@@ -16,15 +16,15 @@ const HOUSES: {
 }[] = [
   {
     id: 'brandenburg',
-    label: 'Brandenburg',
+    label: 'Thielallee 36, Berlin',
     size: '140 m²',
     heating: 'Gas heating · 3 inhabitants',
-    highlight: 'EV included',
+    highlight: 'Medium roof',
     highlightTone: 'blue',
   },
   {
     id: 'hamburg',
-    label: 'Hamburg',
+    label: 'Test addr 2, Potsdam-Golm',
     size: '165 m²',
     heating: 'Oil heating · 4 inhabitants',
     highlight: 'Heat-pump candidate',
@@ -32,7 +32,7 @@ const HOUSES: {
   },
   {
     id: 'ruhr',
-    label: 'Ruhr',
+    label: 'Schönerlinder Weg 83, Berlin Karow',
     size: '190 m²',
     heating: 'Oil heating · 5 inhabitants',
     highlight: 'Large roof',

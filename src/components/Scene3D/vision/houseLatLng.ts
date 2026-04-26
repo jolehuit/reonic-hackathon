@@ -12,18 +12,18 @@ export interface HouseCoords {
 
 export const HOUSE_COORDS: Record<HouseId, HouseCoords> = {
   brandenburg: {
-    lat: 48.913527,
-    lng: 2.5149273,
-    address: '61 Bd Jean Moulin, 93190 Livry-Gargan, France',
+    lat: 52.4530,
+    lng: 13.2868,
+    address: 'Thielallee 36, Berlin, Germany',
   },
   hamburg: {
-    lat: 53.5511,
-    lng: 9.9937,
-    address: 'Hamburg, Germany',
+    lat: 52.40826,
+    lng: 12.96441,
+    address: 'Test addr 2, Potsdam-Golm, Germany',
   },
   ruhr: {
-    lat: 51.5135,
-    lng: 7.4653,
-    address: 'Essen, Ruhr, Germany',
+    lat: 52.616457,
+    lng: 13.485022,
+    address: 'Schönerlinder Weg 83, Berlin Karow, Germany',
   },
 };

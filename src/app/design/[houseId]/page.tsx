@@ -191,7 +191,7 @@ export default function DesignPage({ params }: Props) {
           phase === 'interactive' ||
           phase === 'reviewing' ||
           phase === 'approved') && (
-          <div className="pointer-events-auto absolute left-5 top-20 max-h-[calc(100vh-7rem)] w-[360px] overflow-hidden">
+          <div className="pointer-events-auto absolute left-5 top-20 max-h-[calc(100vh-6rem)] overflow-y-auto">
             <AgentTrace />
           </div>
         )}

@@ -1,14 +1,26 @@
 // Top-down (default) or 3D-tilted (?tilted=1) satellite view for a lat/lng or
 // street address. Top-down → Google Static Maps proxy. Tilted → Cesium +
 // Google Photorealistic 3D Tiles rendered headlessly via Playwright.
+//
+// Disk cache: the rendered PNG is written to public/cache/aerial/{key}.png
+// keyed on (lat, lng, zoom, tilted). Subsequent requests serve from disk —
+// important because the tilted path takes ~10–15s to regenerate.
 
 import { NextResponse, type NextRequest } from 'next/server';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 export const runtime = 'nodejs';
 
 const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY ?? '';
 const GEOCODE_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
 const STATIC_URL = 'https://maps.googleapis.com/maps/api/staticmap';
+const CACHE_DIR = join(process.cwd(), 'public', 'cache', 'aerial');
+
+function cacheKey(lat: number, lng: number, zoom: number, tilted: boolean): string {
+  return `${lat.toFixed(6)}_${lng.toFixed(6)}_z${zoom}_t${tilted ? 1 : 0}.png`;
+}
 
 export async function GET(req: NextRequest) {
   if (!MAPS_KEY) {
@@ -45,6 +57,23 @@ export async function GET(req: NextRequest) {
     resolvedAddress = json.results[0].formatted_address;
   } else {
     return NextResponse.json({ error: 'Provide lat & lng OR address' }, { status: 400 });
+  }
+
+  // ── Disk cache lookup ───────────────────────────────────────────────────
+  const cachePath = join(CACHE_DIR, cacheKey(lat, lng, zoom, tilted));
+  if (existsSync(cachePath)) {
+    const cached = await readFile(cachePath);
+    return new NextResponse(new Uint8Array(cached), {
+      status: 200,
+      headers: {
+        'content-type': 'image/png',
+        'cache-control': 'public, max-age=300',
+        'x-cache': 'HIT',
+        'x-resolved-lat': String(lat),
+        'x-resolved-lng': String(lng),
+        'x-resolved-address': resolvedAddress,
+      },
+    });
   }
 
   let buf: Buffer;
@@ -125,11 +154,20 @@ export async function GET(req: NextRequest) {
     buf = Buffer.from(await imgRes.arrayBuffer());
   }
 
+  // ── Persist to disk cache (best-effort, never blocks the response) ──────
+  try {
+    await mkdir(CACHE_DIR, { recursive: true });
+    await writeFile(cachePath, buf);
+  } catch (err) {
+    console.warn('[/api/aerial] failed to write cache:', err);
+  }
+
   return new NextResponse(new Uint8Array(buf), {
     status: 200,
     headers: {
       'content-type': 'image/png',
       'cache-control': 'public, max-age=300',
+      'x-cache': 'MISS',
       'x-resolved-lat': String(lat),
       'x-resolved-lng': String(lng),
       'x-resolved-address': resolvedAddress,
