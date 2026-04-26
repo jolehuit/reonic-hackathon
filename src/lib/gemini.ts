@@ -20,7 +20,7 @@ export function streamDesignExplanation(profile: CustomerProfile, design: Design
   return streamText({
     model: MODEL_FAST,
     system:
-      'You are a concise solar design expert at Reonic. Speak in clear, friendly German with mixed English technical terms (keep brands/units in English). Cite the Reonic dataset matches when relevant.',
+      'You are a concise solar design expert at Iconic. Speak in clear, friendly German with mixed English technical terms (keep brands/units in English). Cite the Iconic dataset matches when relevant.',
     prompt: buildExplanationPrompt(profile, design),
     maxOutputTokens: 200,
   });
@@ -30,9 +30,9 @@ function buildExplanationPrompt(p: CustomerProfile, d: DesignResult): string {
   return [
     `Customer: ${p.annualConsumptionKwh} kWh/yr, ${p.inhabitants} inhabitants, EV: ${p.hasEv ? 'yes' : 'no'}, heating: ${p.heatingType}, ${p.houseSizeSqm} m².`,
     `Designed system: ${d.totalKwp} kWp · ${d.batteryCapacityKwh ?? 'no'} kWh battery · ${d.heatPumpModel ?? 'no'} HP.`,
-    `Reference: median of ${d.similarProjects.length} similar Reonic projects = ${(d.totalKwp + d.deltaVsMedian.kwp).toFixed(1)} kWp.`,
+    `Reference: median of ${d.similarProjects.length} similar Iconic projects = ${(d.totalKwp + d.deltaVsMedian.kwp).toFixed(1)} kWp.`,
     `Total: €${d.totalPriceEur.toLocaleString('de-DE')}, payback ${d.paybackYears} years, ${d.co2SavedTonsPer25y}t CO₂ saved over 25y.`,
-    `Explain in <80 words why this sizing fits the customer profile, mentioning the Reonic match if relevant.`,
+    `Explain in <80 words why this sizing fits the customer profile, mentioning the Iconic match if relevant.`,
   ].join('\n');
 }
 

@@ -42,7 +42,7 @@ const HOUSES: {
 
 const FEATURES = [
   'Photovoltaic system, energy storage and electric car',
-  'Profitability analysis on 1 620 real Reonic deliveries',
+  'Profitability analysis on 1 620 real Iconic deliveries',
   'CO₂ savings + 1-page PDF quick-offer',
 ];
 
@@ -62,18 +62,11 @@ export default function Home() {
             </p>
           </div>
           <div className="flex items-center gap-2.5 pt-1">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-50">
-              <svg className="h-6 w-6 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <circle cx="12" cy="6" r="1.6" fill="currentColor" stroke="none" />
-                <path d="M12 8v2M9.5 9l-1 1M14.5 9l1 1" strokeLinecap="round" />
-                <rect x="6" y="11" width="12" height="9" rx="0.6" />
-                <path d="M6 14h12M6 17h12M9 11v9M12 11v9M15 11v9" />
-              </svg>
-            </div>
-            <div className="flex flex-col leading-tight">
-              <span className="text-[13px] font-bold text-zinc-900">Reonic</span>
-              <span className="text-[11px] text-zinc-500">AI Designer</span>
-            </div>
+            {/* Iconic logo (PNG, transparent bg). Height matches the height
+                we used for the previous icon-pill so the header doesn't shift. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/iconic-logo.png" alt="Iconic" className="h-9 w-auto" />
+            <span className="text-[11px] text-zinc-500">AI Designer</span>
           </div>
         </header>
 
@@ -136,7 +129,7 @@ export default function Home() {
                 Or try a demo house
               </h3>
               <p className="mt-0.5 text-[13px] text-zinc-500">
-                3 pre-validated buildings from the 1 620-project Reonic dataset.
+                3 pre-validated buildings from the 1 620-project Iconic dataset.
               </p>
             </div>
             <span className="hidden text-[12px] font-medium text-zinc-400 md:block">
@@ -200,7 +193,7 @@ export default function Home() {
             <span className="cursor-pointer hover:text-zinc-600">Data protection</span>
           </div>
           <div className="font-medium text-zinc-500">
-            Built on <span className="text-blue-600">1 620</span> real Reonic deliveries
+            Built on <span className="text-blue-600">1 620</span> real Iconic deliveries
           </div>
         </footer>
       </div>
