@@ -146,11 +146,17 @@ function MorphingBuilding({
         </group>
       )}
 
-      {/* GLB: fades in during the morph window, full opacity afterwards. */}
+      {/* GLB: fades in during the morph window, full opacity afterwards.
+          `key={status.glbUrl}` forces a clean unmount/remount when the URL
+          changes (e.g. cache hit on second visit returns the local URL
+          instead of the fal-hosted one). Without it React reconciled the
+          two LoadedGlb instances into one, briefly rendering a ghost
+          mesh on top of the new one. */}
       {status.kind === 'ready' && (
         <Suspense fallback={null}>
           <group scale={glbScale}>
             <LoadedGlb
+              key={status.glbUrl}
               url={status.glbUrl}
               width={glbWidth}
               depth={glbDepth}
@@ -320,11 +326,13 @@ function LoadedGlb({
     setGlbLoaded(true);
     return () => {
       // When the URL changes (new run), reset the flag so the next pipeline
-      // start doesn't see a stale `true`.
+      // start doesn't see a stale `true`. Don't null glbHeight here — its
+      // last-known value drives panel positions in HouseGeometry, and
+      // nulling it briefly during a URL swap (cache hit on revisit, e.g.)
+      // caused a cascade of re-renders that flickered the roof KPI.
       setGlbLoaded(false);
-      setGlbHeight(null);
     };
-  }, [url, setGlbLoaded, setGlbHeight]);
+  }, [url, setGlbLoaded]);
 
   const { scale, offset, scaledHeight, scaledWidth, scaledDepth, roofAreaM2 } = useMemo(() => {
     const box = new Box3().setFromObject(scene);
@@ -385,10 +393,32 @@ function LoadedGlb({
   // Publish the rendered roof height + footprint + roof area so downstream
   // consumers (HouseGeometryProvider, Panels packer, KPISidebar) can size
   // panels and coverage relative to the actual GLB.
+  //
+  // Two stabilisation guards:
+  //  • Skip publishing zero/NaN values — those leak through as "1 m²" or
+  //    "0 m²" KPI flickers when the GLTF parse hasn't fully populated its
+  //    bbox yet on the first render.
+  //  • Compare against the live store value before writing. Without this,
+  //    Strict Mode's double-render in dev pumps the same number twice
+  //    through the publish path and downstream useMemos re-fire for nothing.
   useEffect(() => {
-    setGlbHeight(scaledHeight);
-    setGlbBboxXZ({ width: scaledWidth, depth: scaledDepth });
-    setGlbRoofAreaM2(roofAreaM2);
+    if (!Number.isFinite(scaledHeight) || scaledHeight <= 0) return;
+    if (!Number.isFinite(scaledWidth) || scaledWidth <= 0) return;
+    if (!Number.isFinite(scaledDepth) || scaledDepth <= 0) return;
+    if (!Number.isFinite(roofAreaM2) || roofAreaM2 <= 0) return;
+    const s = useStore.getState();
+    if (s.glbHeight !== scaledHeight) setGlbHeight(scaledHeight);
+    const prevBbox = s.glbBboxXZ;
+    if (
+      !prevBbox ||
+      Math.abs(prevBbox.width - scaledWidth) > 0.01 ||
+      Math.abs(prevBbox.depth - scaledDepth) > 0.01
+    ) {
+      setGlbBboxXZ({ width: scaledWidth, depth: scaledDepth });
+    }
+    if (Math.abs((s.glbRoofAreaM2 ?? 0) - roofAreaM2) > 0.5) {
+      setGlbRoofAreaM2(roofAreaM2);
+    }
   }, [
     scaledHeight,
     scaledWidth,
