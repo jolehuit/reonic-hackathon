@@ -122,7 +122,10 @@ export function Orchestrator() {
       customAddress?.lng,
     );
 
-    // ── Step "size" — fire /api/design in parallel with the imagery chain ──
+    // ── /api/design fires immediately (HTTP request is parallel for speed)
+    //    but the *step state* is intentionally NOT touched here. We flip
+    //    `size` to running/done from inside the imagery chain, between
+    //    `clean` and `model`, so the trace progresses strictly top-down.
     const body: Record<string, unknown> = { profile, houseId: selectedHouse };
     if (selectedHouse === 'custom' && customAddress) {
       body.lat = customAddress.lat;
@@ -130,7 +133,6 @@ export function Orchestrator() {
       body.address = customAddress.formatted;
     }
     const designPromise = (async () => {
-      updateStepStatus('size', 'running');
       try {
         const r = await fetch('/api/design', {
           method: 'POST',
@@ -140,26 +142,32 @@ export function Orchestrator() {
         const design = r.ok ? await r.json() : null;
         if (cancelled) return null;
         if (design?.geometry) setCustomRoofGeometry(design.geometry);
-        if (design) {
-          setDesign(design);
-          const totalKwp = Number(design.totalKwp);
-          const price = Number(design.totalPriceEur);
-          const payback = Number(design.paybackYears);
-          const summary =
-            Number.isFinite(totalKwp) && Number.isFinite(price) && Number.isFinite(payback)
-              ? `${totalKwp.toFixed(1)} kWp · €${price.toLocaleString()} · ${payback.toFixed(1)}y payback`
-              : undefined;
-          updateStepFields('size', { status: 'done', resultLine: summary });
-        } else {
-          updateStepFields('size', { status: 'error' });
-        }
+        if (design) setDesign(design);
         return design;
       } catch {
-        if (cancelled) return null;
-        updateStepFields('size', { status: 'error' });
         return null;
       }
     })();
+
+    // Flips the `size` step done with a summary, derived from the design
+    // result. Called from the imagery chain at the right moment.
+    const finalizeSizeStep = async () => {
+      updateStepStatus('size', 'running');
+      const design = await designPromise;
+      if (cancelled) return;
+      if (!design) {
+        updateStepFields('size', { status: 'error' });
+        return;
+      }
+      const totalKwp = Number(design.totalKwp);
+      const price = Number(design.totalPriceEur);
+      const payback = Number(design.paybackYears);
+      const summary =
+        Number.isFinite(totalKwp) && Number.isFinite(price) && Number.isFinite(payback)
+          ? `${totalKwp.toFixed(1)} kWp · €${price.toLocaleString()} · ${payback.toFixed(1)}y payback`
+          : undefined;
+      updateStepFields('size', { status: 'done', resultLine: summary });
+    };
 
     // ── Steps capture → clean → model — sequential dependency chain ────────
     const imageryPromise = (async () => {
@@ -167,23 +175,35 @@ export function Orchestrator() {
 
       // Demo-house cache short-circuit: if `pnpm bake:houses` has been run,
       // public/cache/houses/manifest.json holds pre-baked aerial / clean / GLB
-      // URLs for each demo house. Skip the (slow + paid) live pipeline.
+      // URLs for each demo house. Skip the (slow + paid) live pipeline. We
+      // add small randomized fake delays so the trace doesn't snap to "done"
+      // instantly — the user still sees the steps animate in sequence.
       if (selectedHouse && selectedHouse !== 'custom') {
         const cached = await loadCachedHouse(selectedHouse).catch(() => null);
         if (cached && !cancelled) {
+          const jitter = (lo: number, hi: number) =>
+            new Promise((r) => setTimeout(r, lo + Math.random() * (hi - lo)));
+
           updateStepStatus('capture', 'running');
-          await new Promise((r) => setTimeout(r, 300));
+          await jitter(2800, 4200);
           if (cancelled) return;
           updateStepFields('capture', { status: 'done', artifactUrl: cached.aerialUrl });
 
           updateStepStatus('clean', 'running');
-          await new Promise((r) => setTimeout(r, 300));
+          await jitter(3400, 4800);
           if (cancelled) return;
           updateStepFields('clean', { status: 'done', artifactUrl: cached.cleanUrl });
 
+          // Step 3: size (k-NN sizing) — fake delay; the real fetch is in
+          // flight via designPromise so awaiting it should resolve instantly.
+          await jitter(1500, 2400);
+          if (cancelled) return;
+          await finalizeSizeStep();
+          if (cancelled) return;
+
           updateStepStatus('model', 'running');
           setTrellisStatus('generating');
-          await new Promise((r) => setTimeout(r, 400));
+          await jitter(3800, 5400);
           if (cancelled) return;
           setGlbUrl(cached.glbUrl);
           setTrellisStatus('ready');
@@ -237,7 +257,12 @@ export function Orchestrator() {
         return;
       }
 
-      // Step 3: model (Trellis). Pass the cleaned fal-hosted URL straight
+      // Step 3: size — fold the (already in-flight) /api/design result into
+      // the trace before kicking off the model step.
+      await finalizeSizeStep();
+      if (cancelled) return;
+
+      // Step 4: model (Trellis). Pass the cleaned fal-hosted URL straight
       // through — no re-upload.
       updateStepStatus('model', 'running');
       setTrellisStatus('generating');

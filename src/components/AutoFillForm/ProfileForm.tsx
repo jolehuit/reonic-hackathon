@@ -35,9 +35,9 @@ const HOUSE_PROFILES: Record<HouseId, CustomerProfile> = {
 };
 
 const HOUSE_LOCATION: Record<HouseId, string> = {
-  brandenburg: '12 Lindenstraße, 14467 Brandenburg, Germany',
-  hamburg: '8 Elbchaussee, 22587 Hamburg, Germany',
-  ruhr: '5 Bochumer Straße, 44866 Bochum, Germany',
+  brandenburg: 'Thielallee 36, Berlin, Germany',
+  hamburg: 'Test addr 2, Potsdam-Golm, Germany',
+  ruhr: 'Schönerlinder Weg 83, Berlin Karow, Germany',
 };
 
 type CustomMode = 'choosing' | 'auto' | 'manual';
@@ -179,21 +179,27 @@ function DemoAutoFill({
   const [revealed, setRevealed] = useState(0);
   const fired = useRef(false);
 
+  // Stash onReady in a ref so the typewriter effect doesn't re-fire each
+  // time the parent re-renders with a fresh arrow-function reference (which
+  // used to relaunch the whole autofill animation a second time).
+  const onReadyRef = useRef(onReady);
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  }, [onReady]);
+
   // Typewriter: reveal one field every 600ms. As soon as the last field
   // appears, hand the profile back to the parent.
   useEffect(() => {
     if (!target) return;
-    fired.current = false;
+    if (fired.current) return; // already completed for this mount/target
     const start = Date.now();
-    // Defer the first paint so the very first setState lands in a fresh
-    // microtask rather than directly inside the effect body.
     const reset = setTimeout(() => setRevealed(0), 0);
     const interval = setInterval(() => {
       const next = Math.min(FIELD_KEYS.length, Math.floor((Date.now() - start) / 600) + 1);
       setRevealed(next);
       if (next >= FIELD_KEYS.length && !fired.current) {
         fired.current = true;
-        onReady(target);
+        onReadyRef.current(target);
         clearInterval(interval);
       }
     }, 80);
@@ -201,7 +207,7 @@ function DemoAutoFill({
       clearTimeout(reset);
       clearInterval(interval);
     };
-  }, [target, onReady]);
+  }, [target]);
 
   const address =
     houseId !== null ? HOUSE_LOCATION[houseId] : customAddress ?? '';
