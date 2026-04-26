@@ -110,20 +110,22 @@ export default function Home() {
           </div>
         </section>
 
-        {/* House chips */}
+        {/* House chips — Reonic-style "Live demo" section: dotted eyebrow,
+            big bold heading, supporting paragraph wider than the chips. */}
         <section id="houses" className="mb-12 scroll-mt-10">
-          <div className="mb-5 flex items-end justify-between">
-            <div>
-              <h3 className="text-[20px] font-bold tracking-tight text-zinc-900">
-                Or try a demo house
-              </h3>
-              <p className="mt-0.5 text-[13px] text-zinc-500">
-                3 pre-validated buildings from the 1 620-project Iconic dataset.
-              </p>
+          <div className="mb-7">
+            <div className="mb-3 inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-emerald-600">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Live demo
             </div>
-            <span className="hidden text-[12px] font-medium text-zinc-400 md:block">
-              ~30 s · auto-fill → AI design → quick-offer
-            </span>
+            <h3 className="mb-2 text-[34px] font-bold leading-[1.1] tracking-[-0.02em] text-zinc-900">
+              Try Iconic on a real building.
+            </h3>
+            <p className="max-w-[640px] text-[15px] leading-relaxed text-zinc-500">
+              Three pre-validated houses from the 1,620-project Iconic dataset.
+              Auto-fills the customer profile, runs the AI agent, and exports a
+              quick-offer PDF — end to end in about 30 seconds.
+            </p>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {HOUSES.map((h, i) => (
