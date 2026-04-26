@@ -127,22 +127,22 @@ const CLEAN_BUILDING_PROMPT = [
 ].join(' ');
 
 /**
- * Sends the oblique screenshot to GPT Image 2 with a "clean & isolate"
- * prompt. Returns a fal-hosted URL pointing at the cleaned image, ready to
- * feed straight into the Trellis queue.
+ * Sends the oblique screenshot to OpenAI's GPT Image 2 (edit mode) with a
+ * "clean & isolate" prompt. Returns a fal-hosted URL pointing at the cleaned
+ * image, ready to feed straight into the Trellis queue. Only passes the
+ * required input — everything else falls back to fal defaults
+ * (image_size=auto, quality=high, num_images=1, output_format=png).
  */
 export async function cleanBuildingImage(image: Buffer): Promise<{ imageUrl: string }> {
   const dataUri = `data:image/png;base64,${image.toString('base64')}`;
   const { output } = await runFalModel<unknown, GptImage2Output>('openai/gpt-image-2/edit', {
     prompt: CLEAN_BUILDING_PROMPT,
     image_urls: [dataUri],
-    image_size: 'auto',
-    quality: 'high',
-    num_images: 1,
-    output_format: 'png',
   });
   const imageUrl = output.images?.[0]?.url;
-  if (!imageUrl) throw new Error(`gpt-image-2 returned no image url: ${JSON.stringify(output)}`);
+  if (!imageUrl) {
+    throw new Error(`gpt-image-2 returned no image url: ${JSON.stringify(output)}`);
+  }
   return { imageUrl };
 }
 
