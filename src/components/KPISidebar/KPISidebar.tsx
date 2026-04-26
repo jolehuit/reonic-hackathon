@@ -21,10 +21,16 @@ export function KPISidebar() {
   const design = useStore((s) => s.design);
   const profile = useStore((s) => s.profile);
   // panelTargetCount = MAX number of panels DevD's algorithm could physically
-  // fit on the roof (used for the variant cascade upper bound). The customer-
-  // facing count is DevB's `design.moduleCount` from k-NN sizing — the
-  // efficient install matched against 1 620 historical Reonic deliveries.
+  // fit on the roof (variant cascade upper bound). DevB's `design.moduleCount`
+  // is the k-NN-sized count (matched against 1 620 historical Reonic
+  // deliveries) — the customer-facing default. Once the user enters
+  // edit-layout mode, `editedPanels.length` overrides both.
+  const editedPanels = useStore((s) => s.editedPanels);
   const efficientPanelCount = design?.moduleCount ?? 0;
+  const liveCount = editedPanels?.length ?? efficientPanelCount;
+  const setPanelEditMode = useStore((s) => s.setPanelEditMode);
+  const phase = useStore((s) => s.phase);
+  const canEdit = phase === 'interactive';
   const glbRoofAreaM2 = useStore((s) => s.glbRoofAreaM2);
   const selectedHouse = useStore((s) => s.selectedHouse);
   const customAddress = useStore((s) => s.customAddress);
@@ -43,7 +49,7 @@ export function KPISidebar() {
   const evKwh = Math.round(evKm * 0.18);
   const residentialKwh = Math.max(0, consumption - evKwh);
 
-  const panelArea = efficientPanelCount * PANEL_AREA_M2;
+  const panelArea = liveCount * PANEL_AREA_M2;
   const roofCoveragePct =
     glbRoofAreaM2 && glbRoofAreaM2 > 0
       ? Math.min(100, Math.round((panelArea / glbRoofAreaM2) * 100))
@@ -120,15 +126,32 @@ export function KPISidebar() {
         {battery > 0 && (
           <CompactKpi icon={<BatteryIcon />} tone="emerald" label="Battery" value={battery} suffix=" kWh" decimals={1} />
         )}
-        {glbRoofAreaM2 != null && efficientPanelCount > 0 && (
-          <CompactKpi
-            icon={<RoofIcon />}
-            tone="blue"
-            label={`Roof · ${efficientPanelCount} panels (${roofCoveragePct}%)`}
-            value={panelArea}
-            suffix={` / ${glbRoofAreaM2.toFixed(0)} m²`}
-            decimals={1}
-          />
+        {glbRoofAreaM2 != null && liveCount > 0 && (
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <CompactKpi
+                icon={<RoofIcon />}
+                tone="blue"
+                label={`Roof · ${liveCount} panels (${roofCoveragePct}%)`}
+                value={panelArea}
+                suffix={` / ${glbRoofAreaM2.toFixed(0)} m²`}
+                decimals={1}
+              />
+            </div>
+            {canEdit && (
+              <button
+                onClick={() => setPanelEditMode(true)}
+                title="Edit panel layout"
+                className="flex h-7 items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 text-[11px] font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+              >
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+                Edit
+              </button>
+            )}
+          </div>
         )}
         <CompactKpi icon={<LeafIcon />} tone="emerald" label="CO₂ saved · 25 yrs" value={co2} suffix=" tons" decimals={1} />
       </div>

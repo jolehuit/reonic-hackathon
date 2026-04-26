@@ -21,17 +21,18 @@
 
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import {
   Box3,
   Group,
+  Mesh,
   Object3D,
   Quaternion,
   Raycaster,
   Vector3,
 } from 'three';
-import { useStore } from '@/lib/store';
+import { useStore, type EditablePanel } from '@/lib/store';
 import { useHouseGeometry } from './HouseGeometry';
 
 // Real-world panel SKU catalogue. Each variant is a market-available form
@@ -599,31 +600,84 @@ export function Panels() {
     setPanelTargetCount(projectedPositions?.length ?? 0);
   }, [projectedPositions, setPanelTargetCount]);
 
+  // Edit-mode state. Once the drop animation completes we hydrate
+  // `editedPanels` from the auto layout and switch to the interactive renderer
+  // (delete on click, drag to reposition, click on roof to add).
+  const editedPanels = useStore((s) => s.editedPanels);
+  const setEditedPanels = useStore((s) => s.setEditedPanels);
+  const panelEditMode = useStore((s) => s.panelEditMode);
+
+  const animationDone =
+    !!projectedPositions &&
+    projectedPositions.length > 0 &&
+    placedCount >= projectedPositions.length;
+
+  useEffect(() => {
+    if (!animationDone || !projectedPositions) return;
+    if (editedPanels !== null) return;
+    setEditedPanels(
+      projectedPositions.map((p, i) => ({
+        id: `auto_${i}`,
+        x: p.x,
+        y: p.y,
+        z: p.z,
+        normal: p.normal,
+      })),
+    );
+  }, [animationDone, projectedPositions, editedPanels, setEditedPanels]);
+
   if (!projectedPositions || projectedPositions.length === 0) return null;
 
-  // The variant cascade already trimmed to the right count (target kWp /
-  // variant.wattPeak). Just slice by the animation cadence.
-  const visible = projectedPositions.slice(
-    0,
-    Math.min(placedCount, projectedPositions.length),
-  );
+  // Animation phase: render the existing drop choreography from the auto
+  // layout, sliced by `placedCount`. No edit affordances yet.
+  if (!animationDone) {
+    const visible = projectedPositions.slice(0, Math.max(0, placedCount));
+    return (
+      <group>
+        {visible.map((p, i) => {
+          const lx = p.x + p.normal[0] * PANEL_LIFT_M;
+          const ly = p.y + p.normal[1] * PANEL_LIFT_M;
+          const lz = p.z + p.normal[2] * PANEL_LIFT_M;
+          return (
+            <DroppingPanel
+              key={`${p.faceId}_${p.x.toFixed(3)}_${p.z.toFixed(3)}_${i}`}
+              finalPos={[lx, ly, lz]}
+              normal={p.normal}
+              quaternion={p.quaternion}
+              size={panelSize}
+            />
+          );
+        })}
+      </group>
+    );
+  }
+
+  // Static / edit phase. Source of truth is `editedPanels` once hydrated; for
+  // the brief render between animation-done and the hydration useEffect, fall
+  // back to a synthesised view of the auto layout (same IDs as the hydration
+  // payload, so meshes don't re-mount).
+  const renderList: EditablePanel[] =
+    editedPanels ??
+    projectedPositions.map((p, i) => ({
+      id: `auto_${i}`,
+      x: p.x,
+      y: p.y,
+      z: p.z,
+      normal: p.normal,
+    }));
 
   return (
     <group>
-      {visible.map((p, i) => {
-        const lx = p.x + p.normal[0] * PANEL_LIFT_M;
-        const ly = p.y + p.normal[1] * PANEL_LIFT_M;
-        const lz = p.z + p.normal[2] * PANEL_LIFT_M;
-        return (
-          <DroppingPanel
-            key={`${p.faceId}_${p.x.toFixed(3)}_${p.z.toFixed(3)}_${i}`}
-            finalPos={[lx, ly, lz]}
-            normal={p.normal}
-            quaternion={p.quaternion}
-            size={panelSize}
-          />
-        );
-      })}
+      {renderList.map((p) => (
+        <PlacedPanel
+          key={p.id}
+          panel={p}
+          size={panelSize}
+          editMode={panelEditMode}
+          others={renderList}
+        />
+      ))}
+      {panelEditMode && <RoofPickAdder size={panelSize} others={renderList} />}
     </group>
   );
 }
@@ -640,11 +694,14 @@ interface DroppingPanelProps {
 // noop early-return.
 function DroppingPanel({ finalPos, normal, quaternion, size }: DroppingPanelProps) {
   const groupRef = useRef<Group>(null);
-  const mountedAtRef = useRef<number>(performance.now());
+  // Lazily initialised on first frame — `performance.now()` is impure so we
+  // can't seed it during render.
+  const mountedAtRef = useRef<number | null>(null);
   const settledRef = useRef(false);
 
   useFrame(() => {
     if (settledRef.current || !groupRef.current) return;
+    if (mountedAtRef.current === null) mountedAtRef.current = performance.now();
     const elapsed = performance.now() - mountedAtRef.current;
     const t = Math.min(1, elapsed / DROP_DURATION_MS);
     const eased = 1 - Math.pow(1 - t, 3);
@@ -677,7 +734,7 @@ function DroppingPanel({ finalPos, normal, quaternion, size }: DroppingPanelProp
       quaternion={quaternion}
     >
       {/* Aluminium frame — full module footprint */}
-      <mesh castShadow>
+      <mesh castShadow userData={{ isPanel: true }}>
         <boxGeometry args={size} />
         <meshToonMaterial color={PANEL_FRAME_COLOR} />
       </mesh>
@@ -694,4 +751,422 @@ function DroppingPanel({ finalPos, normal, quaternion, size }: DroppingPanelProp
       </mesh>
     </group>
   );
+}
+
+// Locates the GLB root (tagged with userData.isGlbRoof by <LoadedGlb/>) and
+// returns it once. Forces world-matrix update so raycasts use the post-morph
+// transform.
+function useGlbRoot(): Object3D | null {
+  const sceneRoot = useThree((s) => s.scene);
+  const glbStable = useStore((s) => s.glbStable);
+  return useMemo(() => {
+    if (!glbStable) return null;
+    let root: Object3D | null = null;
+    sceneRoot.traverse((o) => {
+      if (!root && o.userData?.isGlbRoof) root = o;
+    });
+    if (root) (root as Object3D).updateMatrixWorld(true);
+    return root;
+  }, [sceneRoot, glbStable]);
+}
+
+// Reusable validator for new / dragged panels. Mirrors the constraint checks
+// from `packForVariant` so manual edits respect the same rules: panel must
+// land on a roof-like face, no overhang, no straddling pitches, no obstacle
+// protrusion, no overlap with other panels, no baked obstruction.
+function useRoofValidator(panelSize: [number, number, number]) {
+  const glb = useGlbRoot();
+  const { obstructions } = useHouseGeometry();
+  const halfW = panelSize[0] / 2;
+  const halfH = panelSize[2] / 2;
+  const minDist =
+    Math.min(panelSize[0], panelSize[2]) * PANEL_OVERLAP_FACTOR;
+  const minDistSq = minDist * minDist;
+
+  const obstructionRadii = useMemo(
+    () =>
+      obstructions.map((ob) => ({
+        x: ob.position[0],
+        z: ob.position[2],
+        r: ob.radius + OBSTRUCTION_MARGIN_M,
+      })),
+    [obstructions],
+  );
+
+  const projectAt = useCallback(
+    (
+      x: number,
+      z: number,
+    ): { point: Vector3; normal: Vector3 } | null => {
+      if (!glb) return null;
+      const ray = new Raycaster(
+        new Vector3(x, RAY_ORIGIN_Y, z),
+        new Vector3(0, -1, 0),
+      );
+      const hits = ray.intersectObject(glb, true);
+      if (hits.length === 0) return null;
+      const hit = hits[0];
+      if (!hit.face) return null;
+      const worldNormal = hit.face.normal
+        .clone()
+        .transformDirection(hit.object.matrixWorld)
+        .normalize();
+      if (worldNormal.y < ROOF_NORMAL_Y_MIN) return null;
+      return { point: hit.point.clone(), normal: worldNormal };
+    },
+    [glb],
+  );
+
+  const validateAt = useCallback(
+    (
+      point: Vector3,
+      normal: Vector3,
+      others: EditablePanel[],
+      ignoreId?: string,
+    ): boolean => {
+      // (a) overlap with existing panels (XZ distance, fast).
+      for (const p of others) {
+        if (ignoreId && p.id === ignoreId) continue;
+        const dx = point.x - p.x;
+        const dz = point.z - p.z;
+        if (dx * dx + dz * dz < minDistSq) return false;
+      }
+      // (b) baked obstruction (chimney / dormer / vent).
+      for (const ob of obstructionRadii) {
+        const dx = point.x - ob.x;
+        const dz = point.z - ob.z;
+        if (dx * dx + dz * dz < ob.r * ob.r) return false;
+      }
+      // (c) 8-probe validation: all corners + edge midpoints must hit the
+      // same roof slope at roughly the same height.
+      let uAxis = new Vector3(1, 0, 0).sub(
+        normal.clone().multiplyScalar(normal.x),
+      );
+      if (uAxis.lengthSq() < 1e-6) uAxis = new Vector3(0, 0, 1);
+      uAxis.normalize();
+      const vAxis = new Vector3().crossVectors(normal, uAxis).normalize();
+      const u = halfW + OBSTACLE_PROBE_MARGIN_M;
+      const v = halfH + OBSTACLE_PROBE_MARGIN_M;
+      const probes: [number, number][] = [
+        [u, v],
+        [u, -v],
+        [-u, v],
+        [-u, -v],
+        [u, 0],
+        [-u, 0],
+        [0, v],
+        [0, -v],
+      ];
+      for (const [pu, pv] of probes) {
+        const pw = new Vector3()
+          .copy(point)
+          .addScaledVector(uAxis, pu)
+          .addScaledVector(vAxis, pv);
+        const cp = projectAt(pw.x, pw.z);
+        if (!cp) return false;
+        if (cp.normal.dot(normal) < SAME_PITCH_DOT) return false;
+        const delta = cp.point.clone().sub(point).dot(normal);
+        if (delta > OBSTACLE_Y_DELTA_M) return false;
+      }
+      return true;
+    },
+    [halfW, halfH, minDistSq, obstructionRadii, projectAt],
+  );
+
+  return { glb, projectAt, validateAt };
+}
+
+interface PlacedPanelProps {
+  panel: EditablePanel;
+  size: [number, number, number];
+  editMode: boolean;
+  others: EditablePanel[];
+}
+
+// Static (or interactive) panel. In edit mode, click-to-delete and pointer-
+// down → drag-to-reposition. On invalid drag positions the mesh tints red
+// so the user gets immediate feedback; release reverts to the original spot
+// if invalid.
+function PlacedPanel({ panel, size, editMode, others }: PlacedPanelProps) {
+  const meshRef = useRef<Mesh>(null);
+  const groupRef = useRef<Group>(null);
+  const removeEditedPanel = useStore((s) => s.removeEditedPanel);
+  const updateEditedPanel = useStore((s) => s.updateEditedPanel);
+  const editedPanels = useStore((s) => s.editedPanels);
+  const { gl, camera, raycaster, pointer } = useThree();
+
+  const { validateAt, glb } = useRoofValidator(size);
+  const dragRef = useRef<{
+    pointerId: number;
+    origin: { x: number; y: number; z: number; normal: [number, number, number] };
+    moved: boolean;
+    lastValid: boolean;
+  } | null>(null);
+  const [invalid, setInvalid] = useState(false);
+
+  // Quaternion + lifted position derived from the panel's stored normal.
+  const quaternion = useMemo(() => {
+    const n = new Vector3(panel.normal[0], panel.normal[1], panel.normal[2]);
+    return new Quaternion().setFromUnitVectors(UP, n);
+  }, [panel.normal]);
+  const liftedPos = useMemo<[number, number, number]>(
+    () => [
+      panel.x + panel.normal[0] * PANEL_LIFT_M,
+      panel.y + panel.normal[1] * PANEL_LIFT_M,
+      panel.z + panel.normal[2] * PANEL_LIFT_M,
+    ],
+    [panel.x, panel.y, panel.z, panel.normal],
+  );
+
+  const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    if (!editMode) return;
+    e.stopPropagation();
+    if (!editedPanels) return;
+    // Capture pointer on the canvas so we still get move/up after the cursor
+    // leaves the small panel mesh.
+    try {
+      gl.domElement.setPointerCapture(e.pointerId);
+    } catch {
+      /* no-op */
+    }
+    dragRef.current = {
+      pointerId: e.pointerId,
+      origin: {
+        x: panel.x,
+        y: panel.y,
+        z: panel.z,
+        normal: panel.normal,
+      },
+      moved: false,
+      lastValid: true,
+    };
+  };
+
+  // Use native canvas pointer move/up so we keep receiving events after the
+  // cursor leaves the panel mesh during a drag (R3F drops events when the
+  // raycast no longer hits the original object).
+  useEffect(() => {
+    if (!editMode) return;
+    const dom = gl.domElement;
+    const onMove = (e: PointerEvent) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== e.pointerId) return;
+      if (!glb) return;
+      // Rebuild raycaster from the current pointer (R3F has updated it).
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObject(glb, true);
+      if (hits.length === 0) return;
+      const hit = hits[0];
+      if (!hit.face) return;
+      const worldNormal = hit.face.normal
+        .clone()
+        .transformDirection(hit.object.matrixWorld)
+        .normalize();
+      if (worldNormal.y < ROOF_NORMAL_Y_MIN) return;
+      const pt = hit.point.clone();
+      const ok = validateAt(pt, worldNormal, others, panel.id);
+      drag.moved = true;
+      drag.lastValid = ok;
+      setInvalid(!ok);
+      // Move the rendered group directly each frame (no re-render). We commit
+      // to the store on pointer-up so a drag is a single state transition.
+      const lx = pt.x + worldNormal.x * PANEL_LIFT_M;
+      const ly = pt.y + worldNormal.y * PANEL_LIFT_M;
+      const lz = pt.z + worldNormal.z * PANEL_LIFT_M;
+      if (groupRef.current) {
+        groupRef.current.position.set(lx, ly, lz);
+        groupRef.current.quaternion.setFromUnitVectors(UP, worldNormal);
+      }
+    };
+    const onUp = (e: PointerEvent) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== e.pointerId) return;
+      try {
+        if (gl.domElement.hasPointerCapture(e.pointerId)) {
+          gl.domElement.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        /* no-op */
+      }
+      dragRef.current = null;
+      setInvalid(false);
+      if (!drag.moved) {
+        // Treated as a click → delete the panel.
+        removeEditedPanel(panel.id);
+        return;
+      }
+      // Commit the new position from the rendered transform — or revert if
+      // the drop point is invalid.
+      if (!drag.lastValid || !groupRef.current) {
+        if (groupRef.current) {
+          groupRef.current.position.set(...liftedPos);
+          groupRef.current.quaternion.copy(quaternion);
+        }
+        return;
+      }
+      const pos = groupRef.current.position;
+      // Recover the surface point by undoing the lift along the dragged normal.
+      const q = groupRef.current.quaternion;
+      const nv = new Vector3(0, 1, 0).applyQuaternion(q).normalize();
+      const surfaceX = pos.x - nv.x * PANEL_LIFT_M;
+      const surfaceY = pos.y - nv.y * PANEL_LIFT_M;
+      const surfaceZ = pos.z - nv.z * PANEL_LIFT_M;
+      updateEditedPanel(panel.id, {
+        x: surfaceX,
+        y: surfaceY,
+        z: surfaceZ,
+        normal: [nv.x, nv.y, nv.z],
+      });
+    };
+    dom.addEventListener('pointermove', onMove);
+    dom.addEventListener('pointerup', onUp);
+    dom.addEventListener('pointercancel', onUp);
+    return () => {
+      dom.removeEventListener('pointermove', onMove);
+      dom.removeEventListener('pointerup', onUp);
+      dom.removeEventListener('pointercancel', onUp);
+    };
+  }, [
+    editMode,
+    gl,
+    camera,
+    raycaster,
+    pointer,
+    glb,
+    validateAt,
+    others,
+    panel.id,
+    removeEditedPanel,
+    updateEditedPanel,
+    liftedPos,
+    quaternion,
+  ]);
+
+  // Match the upstream DroppingPanel material breakdown: aluminium frame
+  // body + slightly inset PV cell sheet 1 mm above. In edit mode an invalid
+  // drop tints both red so feedback is clearly visible regardless of which
+  // surface the cursor is over.
+  const FRAME_INSET = 0.045;
+  const CELL_AREA_OFFSET_Y = 0.001;
+  const cellSize: [number, number, number] = [
+    Math.max(0.05, size[0] - FRAME_INSET * 2),
+    0.002,
+    Math.max(0.05, size[2] - FRAME_INSET * 2),
+  ];
+
+  return (
+    <group ref={groupRef} position={liftedPos} quaternion={quaternion}>
+      <mesh
+        ref={meshRef}
+        castShadow
+        userData={{ isPanel: true, panelId: panel.id }}
+        onPointerDown={handlePointerDown}
+        onPointerOver={(e) => {
+          if (!editMode) return;
+          e.stopPropagation();
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          if (!editMode) return;
+          document.body.style.cursor = '';
+        }}
+      >
+        <boxGeometry args={size} />
+        <meshToonMaterial color={invalid ? '#c0392b' : PANEL_FRAME_COLOR} />
+      </mesh>
+      <mesh
+        position={[0, size[1] / 2 + CELL_AREA_OFFSET_Y, 0]}
+        userData={{ isPanel: true, panelId: panel.id }}
+      >
+        <boxGeometry args={cellSize} />
+        <meshToonMaterial color={invalid ? '#e74c3c' : PANEL_COLOR} />
+      </mesh>
+      {editMode && (
+        <mesh position={[0, size[1] * 0.5 + 0.006, 0]}>
+          <boxGeometry args={[size[0] * 1.04, 0.005, size[2] * 1.04]} />
+          <meshBasicMaterial
+            color={invalid ? '#e74c3c' : '#3498db'}
+            transparent
+            opacity={0.55}
+          />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
+interface RoofPickAdderProps {
+  size: [number, number, number];
+  others: EditablePanel[];
+}
+
+// Listens for click events on the canvas and, if the click hits the GLB roof
+// (not an existing panel), validates and adds a new panel at that position.
+// Drag clicks (pointer moved while down) are ignored so panel-drag operations
+// don't accidentally drop a new panel where the drag ended.
+function RoofPickAdder({ size, others }: RoofPickAdderProps) {
+  const { gl, camera, raycaster, pointer, scene } = useThree();
+  const { validateAt } = useRoofValidator(size);
+  const addEditedPanel = useStore((s) => s.addEditedPanel);
+
+  useEffect(() => {
+    const dom = gl.domElement;
+    let downX = 0;
+    let downY = 0;
+    let downId = -1;
+    const onDown = (e: PointerEvent) => {
+      downX = e.clientX;
+      downY = e.clientY;
+      downId = e.pointerId;
+    };
+    const onUp = (e: PointerEvent) => {
+      if (e.pointerId !== downId) return;
+      // Treat pointer-moves greater than a few px as drags (camera orbit /
+      // panel drag) — never spawn a panel from those.
+      if (Math.hypot(e.clientX - downX, e.clientY - downY) > 4) return;
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObject(scene, true);
+      if (hits.length === 0) return;
+      // Walk the first hit's ancestry: if a panel is in front, it owns the
+      // click (delete handler already fired). Only act if the topmost hit is
+      // on the GLB roof.
+      let node: Object3D | null = hits[0].object;
+      let onRoof = false;
+      while (node) {
+        if (node.userData?.isPanel) return;
+        if (node.userData?.isGlbRoof) {
+          onRoof = true;
+          break;
+        }
+        node = node.parent;
+      }
+      if (!onRoof) return;
+      const hit = hits[0];
+      if (!hit.face) return;
+      const worldNormal = hit.face.normal
+        .clone()
+        .transformDirection(hit.object.matrixWorld)
+        .normalize();
+      if (worldNormal.y < ROOF_NORMAL_Y_MIN) return;
+      const point = hit.point.clone();
+      if (!validateAt(point, worldNormal, others)) return;
+      addEditedPanel({
+        id: `manual_${Date.now().toString(36)}_${Math.random()
+          .toString(36)
+          .slice(2, 6)}`,
+        x: point.x,
+        y: point.y,
+        z: point.z,
+        normal: [worldNormal.x, worldNormal.y, worldNormal.z],
+      });
+    };
+    dom.addEventListener('pointerdown', onDown);
+    dom.addEventListener('pointerup', onUp);
+    return () => {
+      dom.removeEventListener('pointerdown', onDown);
+      dom.removeEventListener('pointerup', onUp);
+    };
+  }, [gl, camera, raycaster, pointer, scene, validateAt, others, addEditedPanel]);
+
+  return null;
 }

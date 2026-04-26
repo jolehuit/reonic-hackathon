@@ -56,6 +56,7 @@ function ProceduralCanvas({ houseId }: { houseId: HouseId | 'custom' }) {
   const refinements = useStore((s) => s.refinements);
   const design = useStore((s) => s.design);
   const phase = useStore((s) => s.phase);
+  const panelEditMode = useStore((s) => s.panelEditMode);
   const showComponents =
     phase === 'interactive' || phase === 'reviewing' || phase === 'approved';
 
@@ -104,6 +105,12 @@ function ProceduralCanvas({ houseId }: { houseId: HouseId | 'custom' }) {
         maxPolarAngle={Math.PI / 2.1}
         minDistance={6}
         maxDistance={40}
+        // In panel-edit mode the user clicks/drags panels and clicks bare
+        // roof to add — orbit + zoom would steal those gestures, so we lock
+        // panning/rotation while editing. Wheel zoom stays enabled so the
+        // user can still close in on a tight roof.
+        enableRotate={!panelEditMode}
+        enablePan={!panelEditMode}
       />
 
       <EffectComposer multisampling={4} enableNormalPass={false}>

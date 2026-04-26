@@ -67,6 +67,18 @@ export interface ManualInputs {
 
 export type TrellisStatus = 'idle' | 'generating' | 'ready' | 'error';
 
+/** A user-editable panel. After auto-placement settles, <Panels/> hydrates
+ *  `editedPanels` from the computed layout, then the user can add / remove /
+ *  drag panels in edit mode. `quaternion` is recomputed from `normal` at
+ *  render time so we don't need to serialise it. */
+export interface EditablePanel {
+  id: string;
+  x: number;
+  y: number;
+  z: number;
+  normal: [number, number, number];
+}
+
 interface AppState {
   // Phase
   phase: AppPhase;
@@ -167,6 +179,22 @@ interface AppState {
    */
   placedCount: number;
   setPlacedCount: (n: number) => void;
+
+  /** Manual-edit overlay over the auto-generated layout. `null` means "use
+   *  the auto layout as-is". Once the user touches the layout (toggles edit
+   *  mode, adds/removes/drags a panel) <Panels/> hydrates this with the
+   *  auto-generated panels and switches to rendering from this list. */
+  editedPanels: EditablePanel[] | null;
+  setEditedPanels: (p: EditablePanel[] | null) => void;
+  addEditedPanel: (p: EditablePanel) => void;
+  removeEditedPanel: (id: string) => void;
+  updateEditedPanel: (id: string, patch: Partial<Omit<EditablePanel, 'id'>>) => void;
+  resetEditedPanels: () => void;
+
+  /** When true, panels are interactive: click to delete, drag to reposition,
+   *  click on bare roof to add. <Panels/> reads this; <ControlPanel/> writes it. */
+  panelEditMode: boolean;
+  setPanelEditMode: (v: boolean) => void;
 
   // Roof geometry — usually loaded from /baked/{houseId}-analysis.json by
   // HouseGeometryProvider. For custom addresses, /api/design synthesises one
@@ -275,10 +303,31 @@ export const useStore = create<AppState>((set) => ({
     set((s) => ({ refinements: { ...s.refinements, [key]: value } })),
 
   design: null,
-  setDesign: (design) => set({ design }),
+  setDesign: (design) => set({ design, editedPanels: null }),
 
   placedCount: 0,
   setPlacedCount: (placedCount) => set({ placedCount }),
+
+  editedPanels: null,
+  setEditedPanels: (editedPanels) => set({ editedPanels }),
+  addEditedPanel: (p) =>
+    set((s) => ({ editedPanels: [...(s.editedPanels ?? []), p] })),
+  removeEditedPanel: (id) =>
+    set((s) => ({
+      editedPanels: s.editedPanels
+        ? s.editedPanels.filter((p) => p.id !== id)
+        : s.editedPanels,
+    })),
+  updateEditedPanel: (id, patch) =>
+    set((s) => ({
+      editedPanels: s.editedPanels
+        ? s.editedPanels.map((p) => (p.id === id ? { ...p, ...patch } : p))
+        : s.editedPanels,
+    })),
+  resetEditedPanels: () => set({ editedPanels: null }),
+
+  panelEditMode: false,
+  setPanelEditMode: (panelEditMode) => set({ panelEditMode }),
 
   customRoofGeometry: null,
   setCustomRoofGeometry: (customRoofGeometry) => set({ customRoofGeometry }),
@@ -318,5 +367,7 @@ export const useStore = create<AppState>((set) => ({
       panelTargetCount: 0,
       glbRoofAreaM2: null,
       glbBboxXZ: null,
+      editedPanels: null,
+      panelEditMode: false,
     }),
 }));
