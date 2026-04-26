@@ -1,0 +1,1 @@
+faut changer les url des trucs demo aussi parce que ça fait hardcodé et ça colle pas aux noms réels des adresses demo

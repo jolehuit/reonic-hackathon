@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "8925f9d7e564",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/app/api/design/route.ts",
+    "src/app/design/[houseId]/page.tsx",
+    "src/app/page.tsx",
+    "src/components/AutoFillForm/ProfileForm.tsx",
+    "src/components/Scene3D/HouseGeometry.tsx",
+    "src/lib/__tests__/design-coherence.test.ts",
+    "src/lib/houses.ts",
+    "src/lib/types.ts",
+    "src/scripts/analyze-multi.ts",
+    "src/scripts/analyze-roof.ts",
+    "src/scripts/fetch-3d-tiles.ts",
+    "src/scripts/test-solar-api.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/89/25f9d7e564/0/metadata.json",
+      "transcript": "/89/25f9d7e564/0/full.jsonl",
+      "content_hash": "/89/25f9d7e564/0/content_hash.txt",
+      "prompt": "/89/25f9d7e564/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 35,
+    "cache_creation_tokens": 20897,
+    "cache_read_tokens": 16040032,
+    "output_tokens": 13242,
+    "api_call_count": 30
+  }
+}

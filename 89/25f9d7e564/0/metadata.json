@@ -1,0 +1,59 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "8925f9d7e564",
+  "session_id": "74d1e193-f7b0-4a73-84eb-1daf77f7e760",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T08:58:08.889421Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/lib/types.ts",
+    "src/lib/houses.ts",
+    "src/scripts/analyze-roof.ts",
+    "src/scripts/fetch-3d-tiles.ts",
+    "src/app/page.tsx",
+    "src/app/design/[houseId]/page.tsx",
+    "src/components/Scene3D/HouseGeometry.tsx",
+    "src/components/AutoFillForm/ProfileForm.tsx",
+    "src/scripts/analyze-multi.ts",
+    "src/scripts/test-solar-api.ts",
+    "src/lib/__tests__/design-coherence.test.ts",
+    "src/app/api/design/route.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-7[1m]",
+  "turn_id": "184397d0fd20",
+  "checkpoint_transcript_start": 1552,
+  "transcript_lines_at_start": 1552,
+  "token_usage": {
+    "input_tokens": 35,
+    "cache_creation_tokens": 20897,
+    "cache_read_tokens": 16040032,
+    "output_tokens": 13242,
+    "api_call_count": 30
+  },
+  "session_metrics": {
+    "turn_count": 25
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T08:58:08.817025Z",
+    "agent_lines": 40,
+    "agent_removed": 36,
+    "human_added": 3139,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 3179,
+    "total_lines_changed": 6354,
+    "agent_percentage": 1.196096946805162,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}
