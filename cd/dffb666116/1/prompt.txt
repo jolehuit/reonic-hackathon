@@ -159,3 +159,7 @@ enregistre dans le cache les maisons qui seront génerés pour les 3 examples co
 utilise ces eexamples à la place de ceux existant : ±0% ✓    Thielallee 36, Berlin    52.4530, 13.2868    73    73    -M
 +3% ✓    Test addr 2, Potsdam-Golm    52.40826, 12.96441    39    40    -R
 +3% ✓    Schönerlinder Weg 83, Berlin Karow    52.616457, 13.485022    35    36    -L
+
+---
+
+push
