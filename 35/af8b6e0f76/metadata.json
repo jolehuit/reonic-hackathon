@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "35af8b6e0f76",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".env.local.example",
+    "src/app/api/export/route.ts",
+    "src/lib/report.ts",
+    "src/lib/tavily.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/35/af8b6e0f76/0/metadata.json",
+      "transcript": "/35/af8b6e0f76/0/full.jsonl",
+      "content_hash": "/35/af8b6e0f76/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 27,
+    "cache_creation_tokens": 21318,
+    "cache_read_tokens": 11594566,
+    "output_tokens": 13375,
+    "api_call_count": 27
+  }
+}
