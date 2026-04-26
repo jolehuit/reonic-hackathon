@@ -1,0 +1,24 @@
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.15.199:3000
+- Environments: .env.local
+✓ Ready in 258ms
+
+ GET / 200 in 295ms (next.js: 118ms, application-code: 176ms)
+ GET /design/brandenburg 200 in 292ms (next.js: 261ms, application-code: 31ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+[sizing] Loaded 823 projects (out of 1619 status-quo rows)
+ POST /api/design 200 in 150ms (next.js: 67ms, application-code: 83ms)
+[browser] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=40&height=50&elev=102.85757446289062 200 in 72ms (next.js: 16ms, application-code: 56ms)
+ GET /api/aerial?lat=48.913527&lng=2.5149273&zoom=20&tilted=1 200 in 63s (next.js: 21ms, application-code: 63s)
+ GET /oblique?lat=48.913527&lng=2.5149273&zoom=20&heading=0&tilt=40&height=50&elev=102.85757446289062 200 in 32ms (next.js: 2ms, application-code: 30ms)
+ rien ne se lance coté fal c normal ?
+
+---
+
+xai/grok-imagine-image/edit
+remplace gpt image 2 par ça
