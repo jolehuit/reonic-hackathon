@@ -1,7 +1,7 @@
 // Thin wrappers over the raw fal queue API for the two models we use:
-//   - openai/gpt-image-2/edit  → cleans the oblique screenshot down to just
-//                                 the target building on a white background.
-//   - fal-ai/trellis            → image-to-3D reconstruction (GLB).
+//   - openai/gpt-image-2/edit                  → cleans the oblique
+//     screenshot down to just the target building on a white background.
+//   - fal-ai/hunyuan-3d/v3.1/pro/image-to-3d   → image-to-3D mesh (GLB).
 //
 // We bypass @fal-ai/client because some of its endpoints (storage upload,
 // subscribe wrapper) return 403 Forbidden for keys the underlying REST
@@ -12,8 +12,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const QUEUE_BASE = 'https://queue.fal.run';
-// Generous polling window — Trellis can take 30-60s, GPT Image 2 can take
-// 20-40s for high-quality edits.
+// Generous polling window — Hunyuan 3D Pro can take 60-120s for a 500k-face
+// mesh, GPT Image 2 can take 20-40s for high-quality edits.
 const MAX_POLL_MS = 240_000;
 const POLL_INTERVAL_MS = 2_000;
 
@@ -146,24 +146,30 @@ export async function cleanBuildingImage(image: Buffer): Promise<{ imageUrl: str
   return { imageUrl };
 }
 
-// ─── fal-ai/trellis ────────────────────────────────────────────────────────
+// ─── fal-ai/hunyuan-3d/v3.1/pro/image-to-3d ────────────────────────────────
 
-interface TrellisOutput {
-  model_mesh?: { url?: string };
+interface Hunyuan3dOutput {
   model_glb?: { url?: string };
+  model_urls?: { glb?: { url?: string } };
+  thumbnail?: { url?: string };
+  seed?: number;
 }
 
 /**
- * Submits a hosted image URL to fal-ai/trellis (NOT trellis-2) and returns
- * the resulting GLB URL.
+ * Submits a hosted image URL to fal-ai/hunyuan-3d/v3.1/pro/image-to-3d and
+ * returns the resulting GLB URL. Function name is kept as
+ * `generateTrellisGlb` for backwards compatibility with existing call sites
+ * — both routes (/api/trellis + /aerial's house-generator) just need a GLB
+ * out of an image, regardless of which model produces it.
  */
 export async function generateTrellisGlb(imageUrl: string): Promise<{ glbUrl: string; requestId: string }> {
-  const { output, requestId } = await runFalModel<unknown, TrellisOutput>('fal-ai/trellis', {
-    image_url: imageUrl,
-  });
-  // fal-ai/trellis returns model_mesh in older payloads, model_glb in newer
-  // ones — accept whichever shows up.
-  const glbUrl = output.model_mesh?.url ?? output.model_glb?.url;
-  if (!glbUrl) throw new Error(`fal-ai/trellis returned no mesh url: ${JSON.stringify(output)}`);
+  const { output, requestId } = await runFalModel<unknown, Hunyuan3dOutput>(
+    'fal-ai/hunyuan-3d/v3.1/pro/image-to-3d',
+    { input_image_url: imageUrl },
+  );
+  // Prefer the top-level model_glb (always present), fall back to the
+  // alternate model_urls.glb shape just in case.
+  const glbUrl = output.model_glb?.url ?? output.model_urls?.glb?.url;
+  if (!glbUrl) throw new Error(`hunyuan-3d returned no glb url: ${JSON.stringify(output)}`);
   return { glbUrl, requestId };
 }

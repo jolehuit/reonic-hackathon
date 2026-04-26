@@ -1,6 +1,8 @@
-// POST /api/trellis — image-to-3D reconstruction via fal-ai/trellis (NOT
-// trellis-2). Expects a hosted PNG/JPEG URL (typically the output of
-// /api/clean-image, hosted on fal.media).
+// POST /api/trellis — image-to-3D reconstruction via
+// fal-ai/hunyuan-3d/v3.1/pro/image-to-3d. Expects a hosted PNG/JPEG URL
+// (typically the cleaned-building output of /api/clean-image, hosted on
+// fal.media). Route name kept as `/api/trellis` to avoid churning callers
+// — only the underlying model changed.
 //
 // Body: { imageUrl: string }
 // Resp: { ok: true, glbUrl, requestId } | { ok: false, error }
@@ -28,9 +30,9 @@ export async function POST(req: NextRequest) {
     const { glbUrl, requestId } = await generateTrellisGlb(imageUrl);
     return NextResponse.json({ ok: true, glbUrl, requestId });
   } catch (err) {
-    console.error('[/api/trellis] fal-ai/trellis failed:', err);
+    console.error('[/api/trellis] hunyuan-3d failed:', err);
     return NextResponse.json(
-      { ok: false, error: err instanceof Error ? err.message : 'trellis failed' },
+      { ok: false, error: err instanceof Error ? err.message : 'hunyuan-3d failed' },
       { status: 502 },
     );
   }

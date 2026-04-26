@@ -54,8 +54,8 @@ export const SEQUENCE: SeqStep[] = [
   {
     id: 'model',
     label: 'Reconstructing 3D building',
-    sublabel: 'fal-ai/trellis — image to GLB',
-    estDurationMs: 35_000,
+    sublabel: 'Hunyuan 3D Pro — image to GLB',
+    estDurationMs: 60_000,
   },
 ];
 
