@@ -21,7 +21,7 @@
 
 'use client';
 
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import {
   Box3,
@@ -34,19 +34,39 @@ import {
 import { useStore } from '@/lib/store';
 import { useHouseGeometry } from './HouseGeometry';
 
-// Real-world panel dimensions per brand (manufacturer datasheets).
-// The GLB is rendered at metric scale because <LoadedGlb/> uniformly scales
-// it so its XZ bbox matches the baked buildingFootprint width/depth (which
-// are in meters). So 1 GLB unit ≈ 1 real meter and using real datasheet
-// dimensions here makes panels visually consistent with the actual roof
-// surface area.
-const PANEL_SIZES: Record<'AIKO' | 'Trina', [number, number, number]> = {
-  // AIKO Comet 1/2 N-type bifacial 470 W — 1722 × 30 × 1134 mm.
-  AIKO: [1.722, 0.03, 1.134],
-  // Trina Vertex S+ NEG9R — 1762 × 30 × 1134 mm.
-  Trina: [1.762, 0.03, 1.134],
+// Real-world panel SKU catalogue. Each variant is a market-available form
+// factor; the placement algorithm tries the full-size variant first and
+// falls back to compact / mini if the roof can't fit the target count.
+//   • AIKO Comet / Trina Vertex S+ — full residential 470-475 W.
+//   • Half-cell 220 W — compact module for tight roof zones.
+//   • Mini 120 W — fills the leftover slivers between dormers / chimneys.
+// Wattage is what's used to convert the kWp target into a panel count,
+// so smaller panels naturally produce a denser layout.
+interface PanelVariant {
+  name: string;
+  size: [number, number, number];
+  wattPeak: number;
+}
+const PANEL_VARIANT_FULL_AIKO: PanelVariant = {
+  name: 'AIKO 475 W',
+  size: [1.722, 0.03, 1.134],
+  wattPeak: 475,
 };
-const DEFAULT_PANEL_SIZE: [number, number, number] = PANEL_SIZES.AIKO;
+const PANEL_VARIANT_FULL_TRINA: PanelVariant = {
+  name: 'Trina 475 W',
+  size: [1.762, 0.03, 1.134],
+  wattPeak: 475,
+};
+const PANEL_VARIANT_COMPACT: PanelVariant = {
+  name: 'Half-cell 220 W',
+  size: [1.10, 0.03, 0.70],
+  wattPeak: 220,
+};
+const PANEL_VARIANT_MINI: PanelVariant = {
+  name: 'Mini 120 W',
+  size: [0.78, 0.03, 0.55],
+  wattPeak: 120,
+};
 // Distance from the raycast hit point (roof surface) to the panel mesh
 // CENTRE along the surface normal. Real photovoltaic panels sit on rail
 // systems that lift them 10-15 cm above the tile. Half-thickness of the
@@ -60,15 +80,32 @@ const DROP_DURATION_MS = 550;
  *  recentred GLB height). */
 const RAY_ORIGIN_Y = 60;
 /** Reject hits whose normal Y is below this threshold (= not roof-like:
- *  walls, ground plane, vertical surfaces). Kept permissive (0.2) so
- *  shallow Hunyuan slopes still register as roof. */
-const ROOF_NORMAL_Y_MIN = 0.2;
-/** Minimum number of corners (out of 4) that must land on roof for the
- *  panel to be accepted. Tolerant of edge gaps in the AI-reconstructed
- *  mesh — only completely overhanging panels are rejected. */
-const MIN_CORNERS_ON_ROOF = 2;
-/** Extra margin around analysis.json obstructions. */
-const OBSTRUCTION_MARGIN_M = 0.4;
+ *  walls, ground plane, vertical surfaces). Kept moderate (0.3) so shallow
+ *  Hunyuan slopes register as roof but vertical faces don't. */
+const ROOF_NORMAL_Y_MIN = 0.3;
+/** Two probe hits are considered to be on the same pitch if their normals
+ *  agree by at least this dot product. Below ~0.85 means the angle between
+ *  them exceeds ~30° — almost certainly different surfaces (dormer side,
+ *  chimney face, window frame). */
+const SAME_PITCH_DOT = 0.85;
+/** A probe is considered an OBSTACLE relative to the candidate centre if
+ *  the GLB surface at that probe is more than this much higher (along the
+ *  panel normal) — picks up chimneys, dormer cubes, antennas, skylight
+ *  frames protruding above the roof tiles. */
+const OBSTACLE_Y_DELTA_M = 0.25;
+/** Extra margin around the panel footprint when probing for obstacles —
+ *  guarantees adjacent obstacles still flag the panel even if the corner
+ *  itself was clean. */
+const OBSTACLE_PROBE_MARGIN_M = 0.18;
+/** Extra margin around analysis.json obstructions (chimneys, dormers, vents). */
+const OBSTRUCTION_MARGIN_M = 0.45;
+/** Overlap factor — panels can be ALMOST flush (12 % gap of the short
+ *  side) but never sit on top of each other. */
+const PANEL_OVERLAP_FACTOR = 0.88;
+/** Sampling grid step as a fraction of panel size. Smaller = denser grid =
+ *  more candidates but slower (each cell = one raycast). 0.55 packs ~2
+ *  samples per panel footprint, enough to find every viable position. */
+const GRID_STEP_RATIO = 0.55;
 const UP = new Vector3(0, 1, 0);
 
 interface ProjectedPanel {
@@ -78,6 +115,11 @@ interface ProjectedPanel {
   z: number;
   normal: [number, number, number];
   quaternion: Quaternion;
+}
+
+interface PanelLayout {
+  panels: ProjectedPanel[];
+  variant: PanelVariant;
 }
 
 export function Panels() {
@@ -93,52 +135,62 @@ export function Panels() {
     useHouseGeometry();
   const sceneRoot = useThree((s) => s.scene);
 
-  // Pick datasheet dimensions for the brand the k-NN sizer recommended.
-  // Falls back to AIKO when /api/design hasn't responded yet.
-  const panelSize: [number, number, number] = design?.moduleBrand
-    ? PANEL_SIZES[design.moduleBrand] ?? DEFAULT_PANEL_SIZE
-    : DEFAULT_PANEL_SIZE;
-  // Two panels are considered overlapping if their XZ centres are closer
-  // than the SHORTER side of the panel — that's the conservative bound that
-  // guarantees no overlap regardless of how each panel is rotated on the
-  // roof slope (the panel is wider than tall, so the short side is the
-  // worst case for collision in the dedup XZ projection).
-  const minPanelDistance = Math.min(panelSize[0], panelSize[2]) * 1.0;
+  const glbRoofAreaM2 = useStore((s) => s.glbRoofAreaM2);
+
+  // Variant cascade: try the brand-recommended full-size first, then fall
+  // back to smaller form factors for tighter roofs. The algorithm uses the
+  // first variant that hits ≥ the target kWp.
+  const variants: PanelVariant[] = useMemo(() => {
+    const full =
+      design?.moduleBrand === 'Trina'
+        ? PANEL_VARIANT_FULL_TRINA
+        : PANEL_VARIANT_FULL_AIKO;
+    return [full, PANEL_VARIANT_COMPACT, PANEL_VARIANT_MINI];
+  }, [design?.moduleBrand]);
+
+  // Pre-pick the most appropriate variant given the actual roof area on the
+  // GLB. We compute, for each variant, the m² of roof needed to cover the
+  // k-NN target kWp; the first variant whose footprint fits within the
+  // packing-efficiency-adjusted roof area is the one we'll start with.
+  // Falls through to the smallest if none fit (rare on real homes).
+  // Packing efficiency 0.45 accounts for: only ~50% of the roof is south-
+  // facing, then 80-90% of THAT is reachable after edges & obstacles.
+  const PACKING_EFFICIENCY = 0.45;
+  const preferredVariant = useMemo<PanelVariant>(() => {
+    if (!design || !glbRoofAreaM2) return variants[0];
+    const targetKwp = design.totalKwp || 0;
+    const usableM2 = glbRoofAreaM2 * PACKING_EFFICIENCY;
+    for (const v of variants) {
+      const targetPanels = Math.max(1, Math.ceil((targetKwp * 1000) / v.wattPeak));
+      const areaNeeded = targetPanels * v.size[0] * v.size[2];
+      if (areaNeeded <= usableM2) return v;
+    }
+    return variants[variants.length - 1];
+  }, [design, glbRoofAreaM2, variants]);
 
   // Recompute projected positions whenever the GLB is (re)loaded or its
   // measured height changes. We re-find the GLB root each time because the
   // R3F scene tree mutates around the morph animation.
-  const projectedPositions = useMemo<ProjectedPanel[] | null>(() => {
+  const layout = useMemo<PanelLayout | null>(() => {
     if (!glbStable) return null;
     if (!design) return null;
 
-    // Source positions are the recentred baked ones (or design's, for
-    // synthesised geometries that bypass the recentring path).
-    const source =
-      recenteredPositions.length > 0
-        ? recenteredPositions
-        : design.modulePositions;
-    if (source.length === 0) return null;
-
-    // Locate the GLB root in the R3F scene. It's flagged with
-    // `userData.isGlbRoof = true` by <LoadedGlb/> after the GLTFLoader runs.
+    // Locate the GLB root in the R3F scene. Flagged with userData.isGlbRoof
+    // by <LoadedGlb/>. Forces world matrix update so raycasts use the post-
+    // morph (scale 1.0) transform.
     let glbRoot: Object3D | null = null;
     sceneRoot.traverse((o) => {
       if (!glbRoot && o.userData?.isGlbRoof) glbRoot = o;
     });
     if (!glbRoot) return null;
-    (glbRoot as Object3D).updateMatrixWorld(true);
+    const glb = glbRoot as Object3D;
+    glb.updateMatrixWorld(true);
 
     const raycaster = new Raycaster();
     const downRay = new Vector3(0, -1, 0);
 
-    const glb = glbRoot as Object3D;
-
-    // Cast a single downward ray and return the world-space hit point and
-    // normal, or null if it misses or hits a non-roof surface (wall, ground,
-    // vertical face). The sun-facing bias is handled upstream by the baked
-    // sizing pipeline (south-ish faces only) — re-enforcing it here was
-    // discarding too many valid candidates.
+    // Cast a single downward ray onto the GLB. Returns null on miss or on
+    // non-roof hit (vertical wall, ground plane).
     const projectPoint = (x: number, z: number) => {
       raycaster.set(new Vector3(x, RAY_ORIGIN_Y, z), downRay);
       const hits = raycaster.intersectObject(glb, true);
@@ -153,100 +205,175 @@ export function Panels() {
       return { point: hit.point.clone(), normal: worldNormal };
     };
 
-    // Step 1 — project every candidate onto the GLB roof, validating that
-    // ALL FOUR corners of the panel footprint also land on roof. This
-    // prevents panels from clipping into walls or overhanging the eave —
-    // the centre might be on roof, but a corner just past the ridge would
-    // be hanging in the air.
-    const halfW = panelSize[0] / 2;
-    const halfH = panelSize[2] / 2;
-    const projected: ProjectedPanel[] = [];
-    for (const p of source) {
-      const centre = projectPoint(p.x, p.z);
-      if (!centre) continue;
+    const glbBox = new Box3().setFromObject(glb);
+    const targetKwp = design.totalKwp || 0;
+    const obstructionRadii = obstructions.map((ob) => ({
+      x: ob.position[0],
+      z: ob.position[2],
+      r: ob.radius + OBSTRUCTION_MARGIN_M,
+    }));
 
-      // Build a face-local frame from the centre's normal to project the
-      // four corners along the same slope (not along world-X/Z, which
-      // would put corners higher than the slope on a tilted face).
-      const n = centre.normal;
-      // Pick an in-plane reference: world X projected onto the slope.
-      let uAxis = new Vector3(1, 0, 0).sub(n.clone().multiplyScalar(n.x));
-      if (uAxis.lengthSq() < 1e-6) uAxis = new Vector3(0, 0, 1);
-      uAxis.normalize();
-      const vAxis = new Vector3().crossVectors(n, uAxis).normalize();
+    // Greedy packer for ONE variant. Returns the panels it could fit.
+    const packForVariant = (variant: PanelVariant): ProjectedPanel[] => {
+      const stepX = variant.size[0] * GRID_STEP_RATIO;
+      const stepZ = variant.size[2] * GRID_STEP_RATIO;
+      const halfW = variant.size[0] / 2;
+      const halfH = variant.size[2] / 2;
+      const xStart = glbBox.min.x + halfW + 0.05;
+      const xEnd = glbBox.max.x - halfW - 0.05;
+      const zStart = glbBox.min.z + halfH + 0.05;
+      const zEnd = glbBox.max.z - halfH - 0.05;
 
-      const corners = [
-        new Vector3()
-          .copy(centre.point)
-          .addScaledVector(uAxis, halfW)
-          .addScaledVector(vAxis, halfH),
-        new Vector3()
-          .copy(centre.point)
-          .addScaledVector(uAxis, halfW)
-          .addScaledVector(vAxis, -halfH),
-        new Vector3()
-          .copy(centre.point)
-          .addScaledVector(uAxis, -halfW)
-          .addScaledVector(vAxis, halfH),
-        new Vector3()
-          .copy(centre.point)
-          .addScaledVector(uAxis, -halfW)
-          .addScaledVector(vAxis, -halfH),
-      ];
-
-      // Require at least MIN_CORNERS_ON_ROOF (=2) of 4 corners to land on
-      // roof. This accepts panels that hang slightly over the eave (which
-      // is fine in real installations: panels are mounted with rails that
-      // extend a bit past the roof edge) while still rejecting panels in
-      // free-fall over open air.
-      let cornersOnRoof = 0;
-      for (const c of corners) {
-        if (projectPoint(c.x, c.z)) cornersOnRoof++;
+      // Sample the GLB roof at panel-pitch resolution.
+      interface Candidate {
+        point: Vector3;
+        normal: Vector3;
+        score: number;
       }
-      if (cornersOnRoof < MIN_CORNERS_ON_ROOF) continue;
-
-      const q = new Quaternion().setFromUnitVectors(UP, n);
-      projected.push({
-        faceId: p.faceId,
-        x: centre.point.x,
-        y: centre.point.y,
-        z: centre.point.z,
-        normal: [n.x, n.y, n.z],
-        quaternion: q,
-      });
-    }
-
-    // Step 2 — drop overlaps. Greedy: keep candidates in baked order, skip
-    // any whose XZ centre is within minPanelDistance of one already kept.
-    const dedup: ProjectedPanel[] = [];
-    const minDistSq = minPanelDistance * minPanelDistance;
-    for (const cur of projected) {
-      let overlapsKept = false;
-      for (const k of dedup) {
-        const dx = cur.x - k.x;
-        const dz = cur.z - k.z;
-        if (dx * dx + dz * dz < minDistSq) {
-          overlapsKept = true;
-          break;
+      const candidates: Candidate[] = [];
+      for (let x = xStart; x <= xEnd + 1e-6; x += stepX) {
+        for (let z = zStart; z <= zEnd + 1e-6; z += stepZ) {
+          const hit = projectPoint(x, z);
+          if (!hit) continue;
+          const tiltDeg =
+            (Math.acos(Math.max(0, Math.min(1, hit.normal.y))) * 180) / Math.PI;
+          const tiltScore = Math.max(0, 1 - Math.abs(tiltDeg - 32) / 50);
+          candidates.push({
+            point: hit.point,
+            normal: hit.normal,
+            score: hit.normal.y * (0.5 + 0.5 * tiltScore),
+          });
         }
       }
-      if (!overlapsKept) dedup.push(cur);
+      candidates.sort((a, b) => b.score - a.score);
+
+      const minDist =
+        Math.min(variant.size[0], variant.size[2]) * PANEL_OVERLAP_FACTOR;
+      const minDistSq = minDist * minDist;
+      const targetCount = Math.max(
+        1,
+        Math.round((targetKwp * 1000) / variant.wattPeak),
+      );
+
+      const placed: ProjectedPanel[] = [];
+      for (const cand of candidates) {
+        if (placed.length >= targetCount) break;
+
+        // (a) overlap with previously placed panels
+        let overlaps = false;
+        for (const p of placed) {
+          const dx = cand.point.x - p.x;
+          const dz = cand.point.z - p.z;
+          if (dx * dx + dz * dz < minDistSq) {
+            overlaps = true;
+            break;
+          }
+        }
+        if (overlaps) continue;
+
+        // (b) on a baked obstruction (chimney / dormer / vent)
+        let onObstruction = false;
+        for (const ob of obstructionRadii) {
+          const dx = cand.point.x - ob.x;
+          const dz = cand.point.z - ob.z;
+          if (dx * dx + dz * dz < ob.r * ob.r) {
+            onObstruction = true;
+            break;
+          }
+        }
+        if (onObstruction) continue;
+
+        // (c) 8-PROBE validation: corners + edge midpoints + slightly-outside
+        // probes. Every probe must (1) hit the GLB, (2) match the centre's
+        // pitch (no overhang, no straddling), and (3) NOT be significantly
+        // higher than the centre (= adjacent chimney / dormer / skylight
+        // frame). If any probe fails, we skip the candidate AND apply a
+        // safety margin around obstacles by virtue of OBSTACLE_PROBE_MARGIN.
+        const n = cand.normal;
+        let uAxis = new Vector3(1, 0, 0).sub(n.clone().multiplyScalar(n.x));
+        if (uAxis.lengthSq() < 1e-6) uAxis = new Vector3(0, 0, 1);
+        uAxis.normalize();
+        const vAxis = new Vector3().crossVectors(n, uAxis).normalize();
+
+        const u = halfW + OBSTACLE_PROBE_MARGIN_M;
+        const v = halfH + OBSTACLE_PROBE_MARGIN_M;
+        // 4 corners (with margin) + 4 edge midpoints (with margin).
+        const probes = [
+          [u, v],
+          [u, -v],
+          [-u, v],
+          [-u, -v],
+          [u, 0],
+          [-u, 0],
+          [0, v],
+          [0, -v],
+        ];
+
+        let valid = true;
+        for (const [pu, pv] of probes) {
+          const pw = new Vector3()
+            .copy(cand.point)
+            .addScaledVector(uAxis, pu)
+            .addScaledVector(vAxis, pv);
+          const cp = projectPoint(pw.x, pw.z);
+          if (!cp) {
+            // Probe missed → panel overhangs the eave / ridge.
+            valid = false;
+            break;
+          }
+          if (cp.normal.dot(n) < SAME_PITCH_DOT) {
+            // Probe on a different pitch → adjacent dormer face / wall.
+            valid = false;
+            break;
+          }
+          // Project the height delta along the centre's normal — protrusion
+          // of an obstacle is measured ALONG the panel's slope, not world Y.
+          const delta = cp.point.clone().sub(cand.point).dot(n);
+          if (delta > OBSTACLE_Y_DELTA_M) {
+            // Probe is markedly higher than the centre → chimney / dormer
+            // body / skylight frame sticking up adjacent to the panel.
+            valid = false;
+            break;
+          }
+        }
+        if (!valid) continue;
+
+        placed.push({
+          faceId: 0,
+          x: cand.point.x,
+          y: cand.point.y,
+          z: cand.point.z,
+          normal: [n.x, n.y, n.z],
+          quaternion: new Quaternion().setFromUnitVectors(UP, n),
+        });
+      }
+      return placed;
+    };
+
+    // Try preferredVariant first (chosen above based on roof area), then
+    // fall back to the rest of the cascade if it under-delivers.
+    const orderedVariants = [
+      preferredVariant,
+      ...variants.filter((v) => v !== preferredVariant),
+    ];
+    let bestLayout: PanelLayout | null = null;
+    let bestKwpDelivered = -1;
+    for (const variant of orderedVariants) {
+      const panels = packForVariant(variant);
+      const deliveredKwp = (panels.length * variant.wattPeak) / 1000;
+      if (deliveredKwp > bestKwpDelivered) {
+        bestKwpDelivered = deliveredKwp;
+        bestLayout = { panels, variant };
+      }
+      // Acceptable: this variant covers ≥ 90 % of target — stop cascading.
+      if (deliveredKwp >= targetKwp * 0.9 || deliveredKwp >= targetKwp) {
+        bestLayout = { panels, variant };
+        bestKwpDelivered = deliveredKwp;
+        break;
+      }
     }
 
-    // Step 3 — exclude anything sitting on an obstruction (chimneys,
-    // dormers, vents — already in GLB-aligned space because
-    // HouseGeometryProvider recentred them with the same transform).
-    const cleaned = dedup.filter((p) => {
-      for (const ob of obstructions) {
-        const dx = p.x - ob.position[0];
-        const dz = p.z - ob.position[2];
-        const minDist = ob.radius + OBSTRUCTION_MARGIN_M;
-        if (dx * dx + dz * dz < minDist * minDist) return false;
-      }
-      return true;
-    });
-
-    return cleaned;
+    return bestLayout;
   }, [
     glbStable,
     glbHeight,
@@ -254,21 +381,28 @@ export function Panels() {
     recenteredPositions,
     obstructions,
     sceneRoot,
-    panelSize,
-    minPanelDistance,
+    variants,
+    preferredVariant,
   ]);
+
+  const projectedPositions = layout?.panels ?? null;
+  const panelSize = layout?.variant.size ?? PANEL_VARIANT_FULL_AIKO.size;
+
+  // Publish the actual placement count so the orchestrator's drop-animation
+  // loop can size itself correctly (the variant cascade may pick compact
+  // panels and produce more than design.modulePositions.length).
+  const setPanelTargetCount = useStore((s) => s.setPanelTargetCount);
+  useEffect(() => {
+    setPanelTargetCount(projectedPositions?.length ?? 0);
+  }, [projectedPositions, setPanelTargetCount]);
 
   if (!projectedPositions || projectedPositions.length === 0) return null;
 
-  // Trim to the count chosen by the k-NN sizer in /api/design, then by the
-  // animation slice (placedCount drives the reveal cadence).
-  const targetCount = Math.min(
-    design?.modulePositions.length ?? projectedPositions.length,
-    projectedPositions.length,
-  );
+  // The variant cascade already trimmed to the right count (target kWp /
+  // variant.wattPeak). Just slice by the animation cadence.
   const visible = projectedPositions.slice(
     0,
-    Math.min(placedCount, targetCount),
+    Math.min(placedCount, projectedPositions.length),
   );
 
   return (

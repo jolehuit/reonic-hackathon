@@ -4,9 +4,17 @@ import { motion, useSpring, useTransform } from 'framer-motion';
 import { useEffect } from 'react';
 import { useStore } from '@/lib/store';
 
+// Real-world panel surface area, used to translate the placed panel count
+// into m² of roof covered. Defaults to AIKO 475 W (~1.95 m²) — the cascade
+// in <Panels/> picks compact / mini for tight roofs but the area tends to
+// land in the same ballpark since smaller panels need higher counts.
+const PANEL_AREA_M2 = 1.722 * 1.134;
+
 export function KPISidebar() {
   const design = useStore((s) => s.design);
   const profile = useStore((s) => s.profile);
+  const panelTargetCount = useStore((s) => s.panelTargetCount);
+  const glbRoofAreaM2 = useStore((s) => s.glbRoofAreaM2);
 
   const totalKwp = design?.totalKwp ?? 0;
   const battery = design?.batteryCapacityKwh ?? 0;
@@ -17,6 +25,12 @@ export function KPISidebar() {
   const evKm = profile?.hasEv ? profile.evAnnualKm ?? 0 : 0;
   const evKwh = Math.round(evKm * 0.18);
   const residentialKwh = Math.max(0, consumption - evKwh);
+
+  const panelArea = panelTargetCount * PANEL_AREA_M2;
+  const roofCoveragePct =
+    glbRoofAreaM2 && glbRoofAreaM2 > 0
+      ? Math.min(100, Math.round((panelArea / glbRoofAreaM2) * 100))
+      : 0;
 
   const ownConsumptionPct = 62;
 
@@ -77,6 +91,16 @@ export function KPISidebar() {
         <CompactKpi icon={<SunIcon />} tone="blue" label="System power" value={totalKwp} suffix=" kWp" decimals={1} />
         {battery > 0 && (
           <CompactKpi icon={<BatteryIcon />} tone="emerald" label="Battery" value={battery} suffix=" kWh" decimals={1} />
+        )}
+        {glbRoofAreaM2 != null && panelTargetCount > 0 && (
+          <CompactKpi
+            icon={<RoofIcon />}
+            tone="blue"
+            label={`Roof · ${panelTargetCount} panels (${roofCoveragePct}%)`}
+            value={panelArea}
+            suffix={` / ${glbRoofAreaM2.toFixed(0)} m²`}
+            decimals={1}
+          />
         )}
         <CompactKpi icon={<LeafIcon />} tone="emerald" label="CO₂ saved · 25 yrs" value={co2} suffix=" tons" decimals={1} />
       </div>
@@ -199,6 +223,14 @@ function LeafIcon() {
     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19.2 2.5c1 1.5 1.8 4 1.8 6.5 0 6.5-5 11-10 11Z" />
       <path d="M2 21c0-3 1.85-5.36 5.08-6" />
+    </svg>
+  );
+}
+function RoofIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12 12 4l9 8" />
+      <path d="M5 11v9h14v-9" />
     </svg>
   );
 }

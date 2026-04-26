@@ -52,9 +52,12 @@ while (Date.now() - start < TIMEOUT_MS) {
     return {
       phase: s.phase,
       glbLoaded: s.glbLoaded,
+      glbStable: s.glbStable,
       glbHeight: s.glbHeight,
+      glbBbox: s.glbBboxXZ,
+      roofM2: s.glbRoofAreaM2,
       placedCount: s.placedCount,
-      target: s.design?.modulePositions?.length ?? 0,
+      target: s.panelTargetCount,
     };
   });
   if (!lastSnap) continue;
@@ -72,9 +75,12 @@ const state = await page.evaluate(() => {
   return {
     phase: store.phase,
     glbLoaded: store.glbLoaded,
+    glbStable: store.glbStable,
     glbHeight: store.glbHeight,
+    glbBboxXZ: store.glbBboxXZ,
+    glbRoofAreaM2: store.glbRoofAreaM2,
     placedCount: store.placedCount,
-    designModuleCount: store.design?.modulePositions?.length ?? 0,
+    panelTargetCount: store.panelTargetCount,
     designTotalKwp: store.design?.totalKwp ?? null,
   };
 });

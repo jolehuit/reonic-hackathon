@@ -104,6 +104,25 @@ interface AppState {
   glbHeight: number | null;
   setGlbHeight: (v: number | null) => void;
 
+  /** Total number of panels actually fitted on the GLB roof by the variant
+   *  cascade in <Panels/>. Published so the orchestrator's drop-animation
+   *  loop knows when to stop (k-NN's target count can differ from this if
+   *  the algorithm chose a compact variant for a tight roof). */
+  panelTargetCount: number;
+  setPanelTargetCount: (v: number) => void;
+
+  /** Total upward-facing roof area on the rendered GLB (sum of triangles
+   *  whose world normal Y > 0.5), in square meters. Computed once after the
+   *  GLB is in the scene so we can size panels relative to actual roof
+   *  capacity and report coverage in the KPI sidebar. */
+  glbRoofAreaM2: number | null;
+  setGlbRoofAreaM2: (v: number | null) => void;
+
+  /** Rendered XZ bbox of the GLB (post-scale), in meters. Lets the panel
+   *  packer know the world-space footprint to scan. */
+  glbBboxXZ: { width: number; depth: number } | null;
+  setGlbBboxXZ: (v: { width: number; depth: number } | null) => void;
+
   // House selection — either a demo HouseId or 'custom' for an arbitrary address.
   selectedHouse: HouseId | 'custom' | null;
   selectHouse: (id: HouseId | 'custom') => void;
@@ -218,6 +237,15 @@ export const useStore = create<AppState>((set) => ({
   glbHeight: null,
   setGlbHeight: (glbHeight) => set({ glbHeight }),
 
+  panelTargetCount: 0,
+  setPanelTargetCount: (panelTargetCount) => set({ panelTargetCount }),
+
+  glbRoofAreaM2: null,
+  setGlbRoofAreaM2: (glbRoofAreaM2) => set({ glbRoofAreaM2 }),
+
+  glbBboxXZ: null,
+  setGlbBboxXZ: (glbBboxXZ) => set({ glbBboxXZ }),
+
   selectedHouse: null,
   selectHouse: (id) =>
     set({ selectedHouse: id, phase: 'house-selected', trellisStatus: 'idle', glbUrl: null }),
@@ -287,5 +315,8 @@ export const useStore = create<AppState>((set) => ({
       glbLoaded: false,
       glbStable: false,
       glbHeight: null,
+      panelTargetCount: 0,
+      glbRoofAreaM2: null,
+      glbBboxXZ: null,
     }),
 }));

@@ -320,8 +320,22 @@ export function Orchestrator() {
       await new Promise<void>((res) => setTimeout(res, 450));
       if (cancelled) return;
 
-      const total = useStore.getState().design?.modulePositions.length ?? 0;
-      const stepMs = total > 0 ? Math.max(80, Math.min(200, Math.round(2800 / total))) : 0;
+      // The actual count comes from <Panels/> (variant cascade may have
+      // chosen compact panels → more of them than design.modulePositions).
+      // Wait briefly for it to be published if the layout is still computing.
+      const TARGET_POLL_MS = 60;
+      const TARGET_TIMEOUT_MS = 5000;
+      const targetWaitStart = performance.now();
+      while (
+        useStore.getState().panelTargetCount === 0 &&
+        performance.now() - targetWaitStart < TARGET_TIMEOUT_MS
+      ) {
+        if (cancelled) return;
+        await new Promise<void>((res) => setTimeout(res, TARGET_POLL_MS));
+      }
+      const total = useStore.getState().panelTargetCount;
+      const stepMs =
+        total > 0 ? Math.max(80, Math.min(200, Math.round(2800 / total))) : 0;
       for (let i = 1; i <= total; i++) {
         if (cancelled) return;
         await new Promise<void>((res) => setTimeout(res, stepMs));

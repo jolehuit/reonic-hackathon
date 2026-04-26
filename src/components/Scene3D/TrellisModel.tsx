@@ -288,6 +288,8 @@ function LoadedGlb({
   const scene = useMemo(() => gltf.scene.clone(true), [gltf]);
   const setGlbLoaded = useStore((s) => s.setGlbLoaded);
   const setGlbHeight = useStore((s) => s.setGlbHeight);
+  const setGlbRoofAreaM2 = useStore((s) => s.setGlbRoofAreaM2);
+  const setGlbBboxXZ = useStore((s) => s.setGlbBboxXZ);
 
   // Tell the rest of the app (Orchestrator → panel drop animation) that the
   // GLB is in the scene. Done here rather than on `trellisStatus === 'ready'`
@@ -302,27 +304,78 @@ function LoadedGlb({
     };
   }, [url, setGlbLoaded, setGlbHeight]);
 
-  const { scale, offset, scaledHeight } = useMemo(() => {
+  const { scale, offset, scaledHeight, scaledWidth, scaledDepth, roofAreaM2 } = useMemo(() => {
     const box = new Box3().setFromObject(scene);
     const size = new Box3().setFromObject(scene).getSize(new Vector3());
     const center = box.getCenter(new Vector3());
     const targetXZ = Math.max(width, depth);
     const sourceXZ = Math.max(size.x, size.z, 0.001);
     const s = targetXZ / sourceXZ;
+
+    // Compute the upward-facing surface area of the GLB (= effective roof
+    // surface). Sum triangles whose world-Y normal component > 0.5, with
+    // the uniform scale factor `s` applied (linear → s², area → s²).
+    let roofA = 0;
+    const a = new Vector3();
+    const b = new Vector3();
+    const c = new Vector3();
+    const ab = new Vector3();
+    const ac = new Vector3();
+    const cross = new Vector3();
+    scene.traverse((obj) => {
+      const mesh = obj as Mesh;
+      if (!mesh.isMesh) return;
+      const geom = mesh.geometry;
+      if (!geom?.attributes?.position) return;
+      const idx = geom.index;
+      const pos = geom.attributes.position;
+      const triCount = idx ? idx.count / 3 : pos.count / 3;
+      for (let t = 0; t < triCount; t++) {
+        const i0 = idx ? idx.array[t * 3] : t * 3;
+        const i1 = idx ? idx.array[t * 3 + 1] : t * 3 + 1;
+        const i2 = idx ? idx.array[t * 3 + 2] : t * 3 + 2;
+        a.fromBufferAttribute(pos, i0);
+        b.fromBufferAttribute(pos, i1);
+        c.fromBufferAttribute(pos, i2);
+        ab.subVectors(b, a);
+        ac.subVectors(c, a);
+        cross.crossVectors(ab, ac);
+        const len = cross.length();
+        if (len > 1e-9 && cross.y / len > 0.5) {
+          roofA += len * 0.5;
+        }
+      }
+    });
+    // Scale linear dimensions by `s` ⇒ area scales by s².
+    const roofAreaScaled = roofA * s * s;
+
     return {
       scale: s,
       // Recenter to origin on XZ, drop Y so the model sits on y=0.
       offset: new Vector3(-center.x * s, -box.min.y * s, -center.z * s),
       scaledHeight: size.y * s,
+      scaledWidth: size.x * s,
+      scaledDepth: size.z * s,
+      roofAreaM2: roofAreaScaled,
     };
   }, [scene, width, depth]);
 
-  // Publish the rendered roof height so HouseGeometryProvider can rescale
-  // the baked panel positions to fit this specific GLB (each Trellis run
-  // produces a slightly different roof pitch).
+  // Publish the rendered roof height + footprint + roof area so downstream
+  // consumers (HouseGeometryProvider, Panels packer, KPISidebar) can size
+  // panels and coverage relative to the actual GLB.
   useEffect(() => {
     setGlbHeight(scaledHeight);
-  }, [scaledHeight, setGlbHeight]);
+    setGlbBboxXZ({ width: scaledWidth, depth: scaledDepth });
+    setGlbRoofAreaM2(roofAreaM2);
+  }, [
+    scaledHeight,
+    scaledWidth,
+    scaledDepth,
+    roofAreaM2,
+    setGlbHeight,
+    setGlbBboxXZ,
+    setGlbRoofAreaM2,
+  ]);
 
   // Cast/receive shadows on every mesh + flip materials transparent so the
   // opacity fade-in works during the morph.
