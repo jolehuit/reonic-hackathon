@@ -107,12 +107,6 @@ export function placePanelsOnFace(
     return { u: w.dot(tangent), v: w.dot(bitangent), r: o.radius + 0.2 };
   });
 
-  // Flux-based ranking: when the shade sampler can integrate annual direct-beam
-  // flux, score each candidate by its kWh/m²/yr instead of the cheap "v"
-  // heuristic. Matters when the caller passes `maxModules` (e.g. panel-density
-  // cap): ensures the BEST panels are kept, not the geometrically-highest ones.
-  // Only computed once per candidate.
-  const useFluxRanking = !!shadeSampler?.annualFlux;
   const candidates: { u: number; v: number; yieldScore: number }[] = [];
   for (let u = startU; u <= endU + 1e-6; u += stepU) {
     for (let v = startV; v <= endV + 1e-6; v += stepV) {
@@ -122,14 +116,8 @@ export function placePanelsOnFace(
         const w = toWorld(u, v);
         if (shadeSampler.shadedFraction(w.x, w.y, w.z) > MAX_SHADED_FRACTION) continue;
       }
-      let yieldScore: number;
-      if (useFluxRanking) {
-        const w = toWorld(u, v);
-        yieldScore = shadeSampler!.annualFlux!(w.x, w.y, w.z, [normal.x, normal.y, normal.z]);
-      } else {
-        // Higher v == closer to ridge → slightly higher yield (cheap heuristic).
-        yieldScore = v;
-      }
+      // Higher v == closer to ridge → slightly higher yield (cheap heuristic).
+      const yieldScore = v;
       candidates.push({ u, v, yieldScore });
     }
   }

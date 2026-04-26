@@ -627,7 +627,7 @@
   },
   "_selection": {
     "method": "per-house best variant",
-    "variantCount": 24,
+    "variantCount": 22,
     "plausibleCount": 2,
     "pickedVariant": "LOD2-NRW",
     "pickedReason": "tree-heavy (-J 160 ≥ 1.6× -A 52) → LOD2 NRW OVERRIDE (68 panels on 3 official roof surfaces)",

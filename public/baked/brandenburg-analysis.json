@@ -794,7 +794,7 @@
   },
   "_selection": {
     "method": "per-house best variant",
-    "variantCount": 24,
+    "variantCount": 22,
     "plausibleCount": 3,
     "pickedVariant": "-J",
     "pickedReason": "tree-heavy (-J 40 ≥ 1.6× -A 8)",

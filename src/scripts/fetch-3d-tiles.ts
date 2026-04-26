@@ -128,18 +128,6 @@ const HOUSES: DemoHouse[] = [
   { id: 'b3-mahlsdorf2', lat: 52.510851, lng: 13.591678, label: 'Myslowitzer Straße 4, Berlin Mahlsdorf' },
   { id: 'b3-hermsdorf2', lat: 52.634257, lng: 13.294468, label: 'Edelhofdamm 15, Berlin Hermsdorf' },
   { id: 'b3-wannsee2', lat: 52.415549, lng: 13.145374, label: 'Chausseestraße 12A, Berlin Wannsee' },
-  // Bench batch 4 — 11 detached houses Berlin (post-overnight benchmark)
-  { id: 'b4-konradshoehe', lat: 52.601041, lng: 13.218556, label: 'Elchdamm 195/23, Berlin Konradshöhe' },
-  { id: 'b4-pankow', lat: 52.574286, lng: 13.401480, label: 'Majakowskiring 32, Berlin Pankow' },
-  { id: 'b4-spandau2', lat: 52.561566, lng: 13.204243, label: 'Kornburger Weg 54, Berlin Spandau' },
-  { id: 'b4-tegel', lat: 52.573244, lng: 13.289252, label: 'Mescheder Weg 35, Berlin Tegel' },
-  { id: 'b4-steglitz', lat: 52.457773, lng: 13.300073, label: 'Königin-Luise-Str. 18, Berlin Steglitz' },
-  { id: 'b4-friedenau', lat: 52.471349, lng: 13.330701, label: 'Schmargendorfer Str. 24, Berlin Friedenau' },
-  { id: 'b4-pankow2', lat: 52.575386, lng: 13.401573, label: 'Majakowskiring 51, Berlin Pankow' },
-  { id: 'b4-rudow', lat: 52.436077, lng: 13.504005, label: 'Akeleiweg 4A, Berlin Rudow' },
-  { id: 'b4-steglitz2', lat: 52.463266, lng: 13.302781, label: 'Rohlfsstraße 14A, Berlin Steglitz' },
-  { id: 'b4-spandau', lat: 52.543836, lng: 13.208908, label: 'Wröhmännerstraße 19, Berlin Spandau' },
-  { id: 'b4-mariendorf', lat: 52.440018, lng: 13.384586, label: 'Alt-Mariendorf 46, Berlin Mariendorf' },
 ];
 
 // ~120 m radius around target — wide enough to overlap multiple Google tiles

@@ -133,7 +133,7 @@
   },
   "_selection": {
     "method": "per-house best variant",
-    "variantCount": 24,
+    "variantCount": 22,
     "plausibleCount": 0,
     "pickedVariant": "-A",
     "pickedReason": "no plausible / fallback to score leader (0 panels)",

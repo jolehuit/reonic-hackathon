@@ -632,18 +632,6 @@
       "faceId": 4
     },
     {
-      "x": -3.217748437575593,
-      "y": 78.12913367030356,
-      "z": -3.7627328964904216,
-      "faceId": 4
-    },
-    {
-      "x": -3.0395295655955543,
-      "y": 77.8889474665555,
-      "z": -4.7848745800153925,
-      "faceId": 4
-    },
-    {
       "x": -1.320442547352064,
       "y": 75.16901865651482,
       "z": 0.49243293532160404,
@@ -664,14 +652,15 @@
   },
   "_autoMultiLevel": {
     "fired": false,
-    "trigger": 0
+    "p80Range": 7.266662812481314,
+    "trigger": 14
   },
   "_selection": {
     "method": "per-house best variant",
-    "variantCount": 24,
+    "variantCount": 22,
     "plausibleCount": 19,
-    "pickedVariant": "-R",
-    "pickedReason": "median of 19 plausible variants (cov 45%)",
+    "pickedVariant": "-V",
+    "pickedReason": "median of 19 plausible variants (cov 40%)",
     "aberrant": false,
     "aberrantReason": "",
     "lod2Source": null

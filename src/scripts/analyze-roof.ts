@@ -46,8 +46,6 @@ const HOUSES = [
   'bench-berlin1', 'bench-berlin2', 'bench-uckermark',
   'b3-zehlendorf', 'b3-wannsee', 'b3-kladow', 'b3-mahlsdorf', 'b3-karow',
   'b3-lichterfelde', 'b3-hermsdorf', 'b3-mahlsdorf2', 'b3-hermsdorf2', 'b3-wannsee2',
-  'b4-konradshoehe', 'b4-pankow', 'b4-spandau2', 'b4-tegel', 'b4-steglitz',
-  'b4-friedenau', 'b4-pankow2', 'b4-rudow', 'b4-steglitz2', 'b4-spandau', 'b4-mariendorf',
 ] as const;
 
 const BAKED_DIR = path.join(process.cwd(), 'public/baked');
@@ -1261,7 +1259,6 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
     shadeSampler = await buildShadeSampler(photogrammetryJson, origin.lat, origin.lng);
   }
 
-  const PANEL_AREA_M2 = 1.045 * 1.879;
   let rawPanels = faces.flatMap((face) =>
     placePanelsOnFace(face, obstructions, undefined, shadeSampler ?? undefined),
   );
@@ -1321,53 +1318,12 @@ async function analyzeHouse(houseId: string): Promise<RoofGeometry> {
   }
   console.log(`[${houseId}] panels: ${rawPanels.length} raw → ${modulePositions.length} after dedup`);
 
-  // Global panel-density cap: total panels limited to
-  // floor(totalUsableArea * cap / panelArea). Panels are kept by best
-  // annual flux (so we drop the lowest-yield ones first). Targets multi-level
-  // / dormer roofs where the per-face dedup leaves stacked phantom panels.
-  // Only fires when VARIANT_PANEL_DENSITY_CAP < 1.0 (default 1.0 = disabled).
-  let cappedPositions = modulePositions;
-  if (VARIANT_PANEL_DENSITY_CAP > 0 && VARIANT_PANEL_DENSITY_CAP < 1.0) {
-    // Use face.area (gross) rather than usableArea (after-obstacle): the
-    // density cap is a coverage target across the *physical* roof surface,
-    // not the obstacle-discounted slice. usableArea was too aggressive on
-    // mahlsdorf-class roofs (146 m² usable vs 243 m² gross).
-    const totalArea = faces.reduce((s, f) => s + f.area, 0);
-    const cap = Math.max(1, Math.floor((totalArea * VARIANT_PANEL_DENSITY_CAP) / PANEL_AREA_M2));
-    if (modulePositions.length > cap) {
-      const faceNormals = new Map<number, [number, number, number]>();
-      for (const f of faces) faceNormals.set(f.id, f.normal);
-      const ranked = modulePositions.map((p) => {
-        let flux = 0;
-        if (shadeSampler?.annualFlux) {
-          const n = faceNormals.get(p.faceId);
-          if (n) flux = shadeSampler.annualFlux(p.x, p.y, p.z, n);
-        }
-        return { p, flux };
-      });
-      ranked.sort((a, b) => b.flux - a.flux);
-      cappedPositions = ranked.slice(0, cap).map((r) => r.p);
-      console.log(`[${houseId}] density cap (${VARIANT_PANEL_DENSITY_CAP} × ${totalArea.toFixed(0)} m² ÷ panel): ${modulePositions.length} → ${cappedPositions.length}`);
-    }
-  }
-
-  // Top-level summary fields (consumed by /api/design without parsing arrays)
-  const PANEL_AREA_M2 = 1.045 * 1.879;
-  const roofTotalAreaSqm = Math.round(faces.reduce((s, f) => s + f.area, 0) * 10) / 10;
-  const roofUsableAreaSqm = Math.round(faces.reduce((s, f) => s + f.usableArea, 0) * 10) / 10;
-  const modulesMax = cappedPositions.length;
-  const modulesMaxAreaSqm = Math.round(modulesMax * PANEL_AREA_M2 * 10) / 10;
-
   return {
     houseId: houseId as RoofGeometry['houseId'],
     faces,
     obstructions,
-    modulePositions: cappedPositions,
+    modulePositions,
     buildingFootprint,
-    modulesMax,
-    modulesMaxAreaSqm,
-    roofTotalAreaSqm,
-    roofUsableAreaSqm,
     _autoMultiLevel: {
       fired: autoMultiLevelFired,
       p80Range: autoMultiLevelP80Range,

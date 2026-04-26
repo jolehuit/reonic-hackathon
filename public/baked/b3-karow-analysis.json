@@ -977,13 +977,13 @@
   "_autoMultiLevel": {
     "fired": false,
     "p80Range": 7.817381704847023,
-    "trigger": 14
+    "trigger": 8
   },
   "_selection": {
     "method": "per-house best variant",
-    "variantCount": 24,
+    "variantCount": 22,
     "plausibleCount": 17,
-    "pickedVariant": "-V",
+    "pickedVariant": "-L",
     "pickedReason": "median of 17 plausible variants (cov 59%)",
     "aberrant": false,
     "aberrantReason": "",
