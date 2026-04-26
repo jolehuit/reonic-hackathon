@@ -18,30 +18,33 @@ const MAX_POLL_MS = 240_000;
 const POLL_INTERVAL_MS = 2_000;
 
 // ─── FAL_KEY resolution ────────────────────────────────────────────────────
-// Reads .env.local first because shell-exported FAL_KEY (in ~/.zshrc, etc.)
-// silently overrides .env.local in Next.js — easy to miss in dev.
+// In dev we additionally read .env.local off disk because a stale shell
+// export of FAL_KEY (~/.zshrc, etc.) would otherwise win over the project's
+// .env.local — Next gives precedence to process.env over .env files. In
+// prod we just read process.env (no .env.local on Cloud Run / Vercel).
 let cachedKey: string | null = null;
 function readFalKey(): string {
   if (cachedKey) return cachedKey;
-  try {
-    const envPath = resolve(process.cwd(), '.env.local');
-    const text = readFileSync(envPath, 'utf8');
-    const match = text.match(/^\s*FAL_KEY\s*=\s*(.+)$/m);
-    if (match) {
-      const v = match[1].trim().replace(/^['"]|['"]$/g, '');
-      if (v) {
-        cachedKey = v;
-        console.log(`[fal] using FAL_KEY from .env.local (starts ${v.slice(0, 8)}…)`);
-        return v;
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      const envPath = resolve(process.cwd(), '.env.local');
+      const text = readFileSync(envPath, 'utf8');
+      const match = text.match(/^\s*FAL_KEY\s*=\s*(.+)$/m);
+      if (match) {
+        const v = match[1].trim().replace(/^['"]|['"]$/g, '');
+        if (v) {
+          cachedKey = v;
+          console.log(`[fal] using FAL_KEY from .env.local (starts ${v.slice(0, 8)}…)`);
+          return v;
+        }
       }
+    } catch {
+      /* not present, fall through */
     }
-  } catch {
-    /* fall through */
   }
   const fallback = process.env.FAL_KEY;
-  if (!fallback) throw new Error('FAL_KEY not set (looked in .env.local and process.env)');
+  if (!fallback) throw new Error('FAL_KEY not set in process.env');
   cachedKey = fallback;
-  console.log(`[fal] using FAL_KEY from process.env (starts ${fallback.slice(0, 8)}…)`);
   return fallback;
 }
 

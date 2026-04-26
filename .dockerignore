@@ -1,0 +1,31 @@
+# Build artifacts that the Docker build re-creates from source.
+node_modules
+.next
+out
+build
+
+# Local env + secrets — provided via Cloud Run env vars at runtime.
+.env*
+!.env.example
+.env.local.example
+
+# Dev / IDE / VCS noise.
+.git
+.gitignore
+.github
+.vscode
+.idea
+.DS_Store
+*.log
+
+# Tests + bake outputs that don't need to ship.
+coverage
+.entire
+data
+
+# Don't ship the dev-only Cesium asset mirror or transient browser caches.
+public/cesium
+.cache
+
+# Memory dumps, screenshots committed for /aerial debugging only.
+public/screen
