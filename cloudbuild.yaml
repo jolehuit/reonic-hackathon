@@ -34,6 +34,18 @@ steps:
           || echo "no previous image to cache from — first build"
 
   # ─── 1) Build with BuildKit + cache-from + the public Maps key as build-arg
+  #
+  # ⚠ The Maps key is supplied via the Cloud Build substitution variable
+  # ${_NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}. Configure it once on the trigger:
+  #
+  #   gcloud builds triggers update <trigger> \
+  #     --substitutions=_NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIza...your-key
+  #
+  # The previous version had the literal key inlined here — GitHub's secret
+  # scanner picked it up. The exposed key has to be rotated in the GCP
+  # console (APIs & Services → Credentials → regenerate). The history of
+  # the old commit still carries it, so until rotation is done, that key
+  # is publicly compromised.
   - id: build
     name: gcr.io/cloud-builders/docker
     env: ['DOCKER_BUILDKIT=1']
@@ -43,7 +55,7 @@ steps:
       - --tag=europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/iconic:latest
       - --cache-from=europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/iconic:latest
       - --build-arg=BUILDKIT_INLINE_CACHE=1
-      - --build-arg=NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyBlXBoCxp1AU3Bq6awbEWfpfKPQ430uZII
+      - --build-arg=NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${_NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
       - .
     waitFor: ['cache-pull']
 
