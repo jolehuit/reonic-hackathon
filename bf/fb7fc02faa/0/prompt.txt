@@ -1,0 +1,152 @@
+1) bah moi je veux que l'étape d'après ne commence à charger qu'une fois que la popup précédente est rentrée
+et fix tout ça :
+
+Pro trial
+
+•
+Upgrade
+
+Feed
+
+Snoozed
+
+Ignored
+
+3
+Solved
+
+1
+AutoFix
+
+Assets
+
+Attack
+
+Domains & APIs
+1
+
+Pentests
+
+Protect
+
+Devices
+0
+
+Firewall
+0
+Add
+
+More
+
+Integrations
+
+Code Quality
+
+Reports
+
+Finish setup
+
+Repositories
+
+reonic-hackathon
+
+Docs
+reonic-hackathon
+7 issues
+
+Configure
+
+GitHub
+
+main
+
+Last scan 27 seconds ago 
+
+Search
+1 issue solved today
+Type
+
+Name
+
+Severity
+
+Location
+
+Fix time
+
+Status
+
+
+Content Security Policy (CSP) header not set
+
+
+Critical
+https://iconic.haus‎
+
+1 hr 30 min
+
+New
+HSTS header is missing
+
+
+High
+https://iconic.haus‎
+
+5 min
+
+New
+{
+JS
+}
+Potential file inclusion attack via reading file
+
+in capture-facades.mjs, lod2-buildings.ts and 3 others
+
+High
+reonic-hackathon‎
+
+16 hr
+
+View Fix
+{
+TS
+}
+HTTP request might enable SSRF attack
+
+in route.ts, bake-houses.ts and 3 others
+
+Medium
+reonic-hackathon‎
+
+6 hr
+
+New
+Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.
+
+in cloudbuild.yaml
+
+Medium
+reonic-hackathon‎
+
+1 hr
+
+New
+Missing Anti-clickjacking header
+
+
+Medium
+https://iconic.haus‎
+
+5 min
+
+New
+Server leaks info via 'X-Powered-By' HTTP header
+
+
+Medium
+https://iconic.haus‎
+
+5 min
+
+New
+We have no more issues to show
