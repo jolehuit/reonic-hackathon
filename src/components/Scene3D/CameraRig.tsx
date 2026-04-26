@@ -10,8 +10,8 @@ import { Vector3 } from 'three';
 import { useStore } from '@/lib/store';
 import gsap from 'gsap';
 
-const FOCUS_DISTANCE_M = 18;   // along the roof normal away from the centroid
-const FOCUS_HEIGHT_BIAS = 4;   // extra Y so we look slightly down on the array
+const FOCUS_DISTANCE_M = 28;   // along the roof normal away from the centroid
+const FOCUS_HEIGHT_BIAS = 9;   // extra Y so we look slightly down on the array
 
 export function CameraRig() {
   const { camera } = useThree();

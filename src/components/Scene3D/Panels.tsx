@@ -1062,7 +1062,10 @@ function PlacedPanel({ panel, size, editMode, others }: PlacedPanelProps) {
       // Snap to the nearest free grid slot — keeps drags aligned with the
       // auto layout, no off-grid panels possible.
       const slots = useStore.getState().roofGridSlots;
-      const occupiedR = Math.min(size[0], size[2]) * 0.5;
+      // Match useRoofValidator's overlap minDist so a slot we report as
+      // "free" is also accepted by validateAt — otherwise validator
+      // rejects with "non disponible" even on a clean grid slot.
+      const occupiedR = Math.min(size[0], size[2]) * PANEL_OVERLAP_FACTOR;
       const snap = findNearestFreeSlot(
         hit.point.x,
         hit.point.z,
@@ -1273,7 +1276,10 @@ function RoofPickAdder({ size, others }: RoofPickAdderProps) {
       // click, the add is silently rejected (better than a free-form
       // panel that breaks the array's grid).
       const slots = useStore.getState().roofGridSlots;
-      const occupiedR = Math.min(size[0], size[2]) * 0.5;
+      // Match useRoofValidator's overlap minDist so a slot we report as
+      // "free" is also accepted by validateAt — otherwise validator
+      // rejects with "non disponible" even on a clean grid slot.
+      const occupiedR = Math.min(size[0], size[2]) * PANEL_OVERLAP_FACTOR;
       const snap = findNearestFreeSlot(
         hit.point.x,
         hit.point.z,
