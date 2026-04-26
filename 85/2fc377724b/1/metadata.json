@@ -1,0 +1,62 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "852fc377724b",
+  "session_id": "fb0749b4-08d4-4c66-b098-7b452a71e4f1",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T06:52:18.915739Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/components/ControlPanel/ControlPanel.tsx",
+    "src/components/KPISidebar/KPISidebar.tsx",
+    "src/components/Scene3D/Panels.tsx",
+    "src/components/Scene3D/Scene3D.tsx",
+    "src/lib/store.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-7[1m]",
+  "turn_id": "d0574f294a43",
+  "token_usage": {
+    "input_tokens": 109,
+    "cache_creation_tokens": 189871,
+    "cache_read_tokens": 9434700,
+    "output_tokens": 52766,
+    "api_call_count": 90
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T06:52:18.898656Z",
+    "agent_lines": 315,
+    "agent_removed": 78,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 32,
+    "total_committed": 315,
+    "total_lines_changed": 425,
+    "agent_percentage": 92.47058823529412,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 659,
+      "user_lines_removed": 32,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "src/components/ControlPanel/ControlPanel.tsx": 91,
+        "src/components/KPISidebar/KPISidebar.tsx": 9,
+        "src/components/Scene3D/Panels.tsx": 500,
+        "src/components/Scene3D/Scene3D.tsx": 7,
+        "src/lib/store.ts": 52
+      },
+      "user_removed_per_file": {
+        "src/components/KPISidebar/KPISidebar.tsx": 6,
+        "src/components/Scene3D/Panels.tsx": 25,
+        "src/lib/store.ts": 1
+      }
+    }
+  ]
+}

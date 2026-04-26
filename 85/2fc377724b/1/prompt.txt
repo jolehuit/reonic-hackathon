@@ -1,0 +1,11 @@
+implémente l'édition manuelle des panneaux solaires après génération par rapport à la grille comme dans reonic.
+
+après le placement automatique on doit pouvoir ajuster le nombre de panneaux et les repositionner
+
+---
+
+commit et push pas
+
+---
+
+je suis dans http://localhost:3000/design/brandenburg tout est mis et je ne peux pas éditer
