@@ -37,6 +37,15 @@ public/baked/*-solar-api.test.json
 # Microsoft Building Footprints cache (~50-200 MB per quadkey, regenerable).
 data/ms-footprints/
 
+# LOD2 cadastral tiles cache (auto-downloaded from Land Vermessungsämter).
+# Brandenburg/Berlin: ~200 KB-30 MB per tile, regenerable.
+data/lod2-brandenburg/
+data/lod2-berlin/
+data/lod2-sachsen/
+
+# LOD2 per-house cache (regenerable from tiles).
+public/baked/*-lod2.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*

@@ -105,6 +105,29 @@ const HOUSES: DemoHouse[] = [
   { id: 'test2', lat: 52.408257, lng: 12.964409, label: 'Test address 2 Potsdam-Golm 14476, DE' },
   { id: 'test3', lat: 52.408718770055735, lng: 12.963106383979836, label: 'Test address 3 Potsdam-Golm (multi-level)' },
   { id: 'test4', lat: 52.411893, lng: 12.983772, label: 'Test address 4 Potsdam (Reihenhaus)' },
+  // Bench batch 2 — 10 detached houses across DE for benchmark validation.
+  { id: 'bench-koeln1', lat: 50.959561, lng: 6.922748, label: 'Eisheiligenstraße 30, Köln' },
+  { id: 'bench-koeln2', lat: 50.937618, lng: 6.926385, label: 'Aachener Straße 134, Köln' },
+  { id: 'bench-berlin2', lat: 52.515858, lng: 13.343253, label: 'Händelallee 43, Berlin Tiergarten' },
+  { id: 'bench-meerbusch', lat: 51.255416, lng: 6.713103, label: 'Niederlöricker Straße 48, Meerbusch' },
+  { id: 'bench-leipzig', lat: 51.310576, lng: 12.325513, label: 'Dieskaustraße 100, Leipzig' },
+  { id: 'bench-hamburg2', lat: 53.6223, lng: 9.9531, label: 'Tibarg 52, Hamburg' },
+  { id: 'bench-dresden1', lat: 51.044925, lng: 13.690627, label: 'Malterstraße 13, Dresden' },
+  { id: 'bench-dresden2', lat: 51.034203, lng: 13.748380, label: 'Strehlener Straße 77, Dresden' },
+  { id: 'bench-berlin1', lat: 52.4530, lng: 13.2868, label: 'Thielallee 36, Berlin' },
+  { id: 'bench-bochum', lat: 51.5067, lng: 7.1810, label: 'An den Klärbrunnen 4, Bochum' },
+  { id: 'bench-uckermark', lat: 53.30722475071542, lng: 13.545693641054664, label: 'Seegut Blaue Blume, Boitzenburger Land (Uckermark, Brandenburg)' },
+  // Bench batch 3 — 10 detached houses around Berlin metro
+  { id: 'b3-zehlendorf', lat: 52.438195, lng: 13.282944, label: 'Curtiusstraße 81, Berlin Zehlendorf' },
+  { id: 'b3-wannsee', lat: 52.416139, lng: 13.142791, label: 'Sommerfieldring 59, Berlin Wannsee' },
+  { id: 'b3-kladow', lat: 52.456313, lng: 13.105187, label: 'Nibelungenstraße 1, Berlin Kladow' },
+  { id: 'b3-mahlsdorf', lat: 52.499827, lng: 13.620289, label: 'Pilgramer Straße 303, Berlin Mahlsdorf' },
+  { id: 'b3-karow', lat: 52.616457, lng: 13.485022, label: 'Schönerlinder Weg 83, Berlin Karow' },
+  { id: 'b3-lichterfelde', lat: 52.424113, lng: 13.291262, label: 'Aarauer Straße 40, Berlin Lichterfelde' },
+  { id: 'b3-hermsdorf', lat: 52.625560, lng: 13.295742, label: 'Kurhausstraße 26, Berlin Hermsdorf' },
+  { id: 'b3-mahlsdorf2', lat: 52.510851, lng: 13.591678, label: 'Myslowitzer Straße 4, Berlin Mahlsdorf' },
+  { id: 'b3-hermsdorf2', lat: 52.634257, lng: 13.294468, label: 'Edelhofdamm 15, Berlin Hermsdorf' },
+  { id: 'b3-wannsee2', lat: 52.415549, lng: 13.145374, label: 'Chausseestraße 12A, Berlin Wannsee' },
 ];
 
 // ~120 m radius around target — wide enough to overlap multiple Google tiles
