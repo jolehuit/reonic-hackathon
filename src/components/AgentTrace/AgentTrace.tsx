@@ -289,9 +289,11 @@ function StepCard({
 
       <ResultPopup
         open={popupOpen}
+        stepId={step.id}
         artifactUrl={step.artifactUrl}
         resultLine={step.resultLine}
         label={step.label}
+        sublabel={step.sublabel}
         imgLayoutId={imgLayoutId}
         pillLayoutId={pillLayoutId}
       />
@@ -299,21 +301,40 @@ function StepCard({
   );
 }
 
+/** Parses the size step's resultLine ("8.6 kWp · €11,200 · 9.5y payback")
+ *  into three independent KPI values. Robust to slight formatting drifts. */
+function parseSizeKpis(line: string | undefined): { kwp: string; price: string; payback: string } | null {
+  if (!line) return null;
+  const m = line.match(/^([\d.,]+)\s*kWp\s*·\s*€\s*([\d.,]+)\s*·\s*([\d.,]+)\s*y\s*payback/i);
+  if (!m) return null;
+  return { kwp: m[1], price: m[2], payback: m[3] };
+}
+
 function ResultPopup({
   open,
+  stepId,
   artifactUrl,
   resultLine,
   label,
+  sublabel,
   imgLayoutId,
   pillLayoutId,
 }: {
   open: boolean;
+  stepId: string;
   artifactUrl?: string;
   resultLine?: string;
   label: string;
+  sublabel?: string;
   imgLayoutId: string;
   pillLayoutId: string;
 }) {
+  // Special-case the sizing step: instead of a single pill with all three
+  // numbers smushed together, lay them out as three big KPI cards. The
+  // numbers are the same — they just get to breathe.
+  const isSizeKpi = stepId === 'size';
+  const kpis = isSizeKpi ? parseSizeKpis(resultLine) : null;
+
   return (
     <AnimatePresence>
       {open && (
@@ -383,6 +404,9 @@ function ResultPopup({
             <span className="max-w-[440px] text-center text-[17px] font-semibold leading-tight text-zinc-900">
               {label}
             </span>
+            {sublabel && isSizeKpi && (
+              <span className="text-[11px] text-zinc-500">{sublabel}</span>
+            )}
             {artifactUrl && (
               <motion.img
                 layoutId={imgLayoutId}
@@ -391,7 +415,35 @@ function ResultPopup({
                 className="aspect-square w-full max-w-[360px] rounded-2xl bg-zinc-50 object-contain shadow-[0_20px_60px_-15px_rgba(15,23,42,0.45)] ring-1 ring-emerald-200/60"
               />
             )}
-            {!artifactUrl && resultLine && (
+            {!artifactUrl && isSizeKpi && kpis && (
+              <motion.div
+                layoutId={pillLayoutId}
+                className="grid w-full grid-cols-3 gap-3"
+              >
+                <KpiCard
+                  value={kpis.kwp}
+                  unit="kWp"
+                  label="System power"
+                  tone="blue"
+                  delay={0.05}
+                />
+                <KpiCard
+                  value={`€${kpis.price}`}
+                  label="Total investment"
+                  tone="emerald"
+                  big
+                  delay={0.18}
+                />
+                <KpiCard
+                  value={kpis.payback}
+                  unit="years"
+                  label="Break-even"
+                  tone="amber"
+                  delay={0.31}
+                />
+              </motion.div>
+            )}
+            {!artifactUrl && !isSizeKpi && resultLine && (
               <motion.div
                 layoutId={pillLayoutId}
                 className="rounded-2xl bg-gradient-to-br from-emerald-50 to-white px-7 py-4 font-mono text-[28px] font-bold text-emerald-700 shadow-[0_8px_24px_-8px_rgba(16,185,129,0.4)] ring-1 ring-emerald-200"
@@ -403,6 +455,67 @@ function ResultPopup({
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+/** Single KPI tile inside the size-step popup. Three of these line up
+ *  side-by-side, each with its own tone + a staggered entry animation
+ *  so the eye reads them left-to-right. */
+function KpiCard({
+  value,
+  unit,
+  label,
+  tone,
+  big,
+  delay,
+}: {
+  value: string;
+  unit?: string;
+  label: string;
+  tone: 'blue' | 'emerald' | 'amber';
+  big?: boolean;
+  delay: number;
+}) {
+  const tones: Record<typeof tone, { bg: string; ring: string; text: string; iconBg: string }> = {
+    blue: {
+      bg: 'from-blue-50 to-white',
+      ring: 'ring-blue-200',
+      text: 'text-blue-700',
+      iconBg: 'bg-blue-100 text-blue-600',
+    },
+    emerald: {
+      bg: 'from-emerald-50 to-white',
+      ring: 'ring-emerald-200',
+      text: 'text-emerald-700',
+      iconBg: 'bg-emerald-100 text-emerald-600',
+    },
+    amber: {
+      bg: 'from-amber-50 to-white',
+      ring: 'ring-amber-200',
+      text: 'text-amber-700',
+      iconBg: 'bg-amber-100 text-amber-600',
+    },
+  };
+  const t = tones[tone];
+  return (
+    <motion.div
+      initial={{ y: 14, opacity: 0, scale: 0.92 }}
+      animate={{ y: 0, opacity: 1, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 22, delay }}
+      className={`flex flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-to-br ${t.bg} px-3 py-4 shadow-[0_6px_20px_-8px_rgba(15,23,42,0.18)] ring-1 ${t.ring}`}
+    >
+      <div className={`font-mono ${big ? 'text-[26px]' : 'text-[24px]'} font-bold leading-none tabular-nums ${t.text}`}>
+        {value}
+      </div>
+      {unit && (
+        <div className={`mt-0.5 text-[10.5px] font-bold uppercase tracking-[0.14em] ${t.text} opacity-80`}>
+          {unit}
+        </div>
+      )}
+      <div className="mt-1 text-center text-[10.5px] font-medium text-zinc-500">
+        {label}
+      </div>
+    </motion.div>
   );
 }
 

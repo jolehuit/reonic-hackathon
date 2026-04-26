@@ -285,7 +285,11 @@ export function Orchestrator() {
         }
         setGlbUrl(j.glbUrl);
         setTrellisStatus('ready');
-        updateStepFields('model', { status: 'done', resultLine: 'GLB ready' });
+        // Don't set a resultLine — the GLB is visible in the 3D scene
+        // already, so a centre-screen "GLB ready" popup is just noise.
+        // AgentTrace's popup queue skips steps without artifactUrl /
+        // resultLine, so this single omission removes the popup.
+        updateStepFields('model', { status: 'done' });
       } catch {
         if (cancelled) return;
         updateStepFields('model', { status: 'error' });
