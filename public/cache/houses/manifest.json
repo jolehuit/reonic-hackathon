@@ -1,0 +1,17 @@
+{
+  "brandenburg": {
+    "aerialUrl": "/cache/houses/brandenburg/aerial.png",
+    "cleanUrl": "/cache/houses/brandenburg/clean.png",
+    "glbUrl": "/cache/houses/brandenburg/model.glb"
+  },
+  "hamburg": {
+    "aerialUrl": "/cache/houses/hamburg/aerial.png",
+    "cleanUrl": "/cache/houses/hamburg/clean.png",
+    "glbUrl": "/cache/houses/hamburg/model.glb"
+  },
+  "ruhr": {
+    "aerialUrl": "/cache/houses/ruhr/aerial.png",
+    "cleanUrl": "/cache/houses/ruhr/clean.png",
+    "glbUrl": "/cache/houses/ruhr/model.glb"
+  }
+}

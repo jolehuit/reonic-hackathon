@@ -1,0 +1,6 @@
+# Auto-grows as /api/aerial is hit on new lat/lng — keep local-only.
+aerial/
+
+# Pre-baked demo houses (3 of them, ~100 MB) — committed so other devs
+# don't need to re-run the paid pipeline. Regenerate with `pnpm bake:houses`.
+!houses/

@@ -73,6 +73,19 @@ function resolveCoords(
   return c ? { lat: c.lat, lng: c.lng } : null;
 }
 
+interface CachedHouse {
+  aerialUrl: string;
+  cleanUrl: string;
+  glbUrl: string;
+}
+
+async function loadCachedHouse(houseId: HouseId): Promise<CachedHouse | null> {
+  const r = await fetch('/cache/houses/manifest.json', { cache: 'no-store' });
+  if (!r.ok) return null;
+  const m = (await r.json()) as Record<string, CachedHouse | undefined>;
+  return m[houseId] ?? null;
+}
+
 export function Orchestrator() {
   const phase = useStore((s) => s.phase);
   const profile = useStore((s) => s.profile);
@@ -151,6 +164,33 @@ export function Orchestrator() {
     // ── Steps capture → clean → model — sequential dependency chain ────────
     const imageryPromise = (async () => {
       if (!coords) return;
+
+      // Demo-house cache short-circuit: if `pnpm bake:houses` has been run,
+      // public/cache/houses/manifest.json holds pre-baked aerial / clean / GLB
+      // URLs for each demo house. Skip the (slow + paid) live pipeline.
+      if (selectedHouse && selectedHouse !== 'custom') {
+        const cached = await loadCachedHouse(selectedHouse).catch(() => null);
+        if (cached && !cancelled) {
+          updateStepStatus('capture', 'running');
+          await new Promise((r) => setTimeout(r, 300));
+          if (cancelled) return;
+          updateStepFields('capture', { status: 'done', artifactUrl: cached.aerialUrl });
+
+          updateStepStatus('clean', 'running');
+          await new Promise((r) => setTimeout(r, 300));
+          if (cancelled) return;
+          updateStepFields('clean', { status: 'done', artifactUrl: cached.cleanUrl });
+
+          updateStepStatus('model', 'running');
+          setTrellisStatus('generating');
+          await new Promise((r) => setTimeout(r, 400));
+          if (cancelled) return;
+          setGlbUrl(cached.glbUrl);
+          setTrellisStatus('ready');
+          updateStepFields('model', { status: 'done', resultLine: 'GLB ready (cached)' });
+          return;
+        }
+      }
 
       // Step 1: capture (browser fetch of /api/aerial doubles as the
       // thumbnail load — we listen to <img> onLoad to know when it's done).
