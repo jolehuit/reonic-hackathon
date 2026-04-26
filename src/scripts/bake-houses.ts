@@ -13,7 +13,7 @@
 
 import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { HOUSE_COORDS } from '../components/Scene3D/vision/houseLatLng';
+import { HOUSE_COORDS } from '../lib/houses';
 import type { HouseId } from '../lib/types';
 
 const BASE = process.env.BAKE_BASE_URL ?? 'http://localhost:3000';

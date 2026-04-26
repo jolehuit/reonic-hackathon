@@ -42,6 +42,12 @@ export const HOUSE_PROFILES: Record<HouseId, CustomerProfile> = {
   },
 };
 
+export const HOUSE_COORDS: Record<HouseId, { lat: number; lng: number }> = {
+  brandenburg: { lat: 52.4530, lng: 13.2868 },
+  hamburg: { lat: 52.408257, lng: 12.964409 },
+  ruhr: { lat: 52.616457, lng: 13.485022 },
+};
+
 export const HOUSE_LOCATION: Record<HouseId, string> = {
   brandenburg: 'Thielallee 36, Berlin, Germany',
   hamburg: 'Potsdam-Golm, Germany',

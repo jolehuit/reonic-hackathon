@@ -161,9 +161,9 @@ interface Hunyuan3dOutput {
 /**
  * Submits a hosted image URL to fal-ai/hunyuan-3d/v3.1/pro/image-to-3d and
  * returns the resulting GLB URL. Function name is kept as
- * `generateTrellisGlb` for backwards compatibility with existing call sites
- * — both routes (/api/trellis + /aerial's house-generator) just need a GLB
- * out of an image, regardless of which model produces it.
+ * `generateTrellisGlb` for backwards compatibility with /api/trellis call
+ * sites — they just need a GLB out of an image, regardless of which model
+ * produces it.
  */
 export async function generateTrellisGlb(imageUrl: string): Promise<{ glbUrl: string; requestId: string }> {
   const { output, requestId } = await runFalModel<unknown, Hunyuan3dOutput>(

@@ -1,9 +1,9 @@
 // 3D Scene root — OWNED by Dev A
-// The building mesh is generated on-the-fly from the oblique aerial screenshot
-// via fal-ai/trellis-2 (see TrellisModel.tsx + /api/trellis). The legacy
-// procedural BuildingRenderer + SceneVisionProvider (OSM + Gemini Vision)
-// chain is gone — it was eating the Gemini quota and the new pipeline is the
-// /aerial flow.
+// The building mesh comes from the live photogrammetry pipeline (Google
+// 3D Tiles → GltfExporter, see analyze-roof.ts) for live addresses, or
+// from the pre-baked `*-photogrammetry.json` for demo houses. Trellis is
+// no longer used in the standard flow — it lives in TrellisModel.tsx for
+// experiments only.
 //
 // Accepts demo houses (brandenburg/hamburg/ruhr) AND `'custom'` for any
 // address typed by the user — geometry comes from the store in that case.

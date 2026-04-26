@@ -22,7 +22,7 @@
 import { useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import type { AgentStep } from '@/lib/types';
-import { HOUSE_COORDS } from './vision/houseLatLng';
+import { HOUSE_COORDS } from '@/lib/houses';
 import type { HouseId } from '@/lib/types';
 
 export interface SeqStep {
