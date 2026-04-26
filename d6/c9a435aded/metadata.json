@@ -3,21 +3,29 @@
   "checkpoint_id": "d6c9a435aded",
   "strategy": "manual-commit",
   "branch": "claude/review-merged-code-GE5jC",
-  "checkpoints_count": 1,
-  "files_touched": null,
+  "checkpoints_count": 2,
+  "files_touched": [
+    "src/components/ApprovalModal/ApprovalModal.tsx"
+  ],
   "sessions": [
     {
       "metadata": "/d6/c9a435aded/0/metadata.json",
       "transcript": "/d6/c9a435aded/0/full.jsonl",
       "content_hash": "/d6/c9a435aded/0/content_hash.txt",
       "prompt": "/d6/c9a435aded/0/prompt.txt"
+    },
+    {
+      "metadata": "/d6/c9a435aded/1/metadata.json",
+      "transcript": "/d6/c9a435aded/1/full.jsonl",
+      "content_hash": "/d6/c9a435aded/1/content_hash.txt",
+      "prompt": "/d6/c9a435aded/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 233,
-    "cache_creation_tokens": 443050,
-    "cache_read_tokens": 12026509,
-    "output_tokens": 53315,
-    "api_call_count": 123
+    "input_tokens": 261,
+    "cache_creation_tokens": 448988,
+    "cache_read_tokens": 13143061,
+    "output_tokens": 56172,
+    "api_call_count": 136
   }
 }
