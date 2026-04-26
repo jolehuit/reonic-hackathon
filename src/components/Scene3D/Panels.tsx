@@ -229,6 +229,9 @@ export function Panels() {
         point: Vector3;
         normal: Vector3;
         score: number;
+        // Position in the face's local frame (filled after clustering).
+        uLocal?: number;
+        vLocal?: number;
       }
       const candidates: Candidate[] = [];
       for (let x = xStart; x <= xEnd + 1e-6; x += stepX) {
@@ -245,7 +248,78 @@ export function Panels() {
           });
         }
       }
-      candidates.sort((a, b) => b.score - a.score);
+
+      // ── CLUSTER BY ROOF FACE ─────────────────────────────────────────
+      // Group candidates whose normals are close (cosine ≥ 0.92 ⇒ angle ≤
+      // ~23°). Each cluster is one roof pitch; we sort cluster INSIDE in
+      // row-major order (uphill bands, left-to-right within a band) so
+      // the greedy packer lays panels down like a real installer would —
+      // forming clean rows instead of a Tetris cluster.
+      const CLUSTER_DOT = 0.92;
+      interface Cluster {
+        normalSum: Vector3;
+        meanNormal: Vector3;
+        candidates: Candidate[];
+        avgScore: number;
+      }
+      const clusters: Cluster[] = [];
+      for (const c of candidates) {
+        let assigned: Cluster | null = null;
+        for (const cl of clusters) {
+          if (cl.meanNormal.dot(c.normal) >= CLUSTER_DOT) {
+            assigned = cl;
+            break;
+          }
+        }
+        if (assigned) {
+          assigned.candidates.push(c);
+          assigned.normalSum.add(c.normal);
+          assigned.meanNormal.copy(assigned.normalSum).normalize();
+        } else {
+          clusters.push({
+            normalSum: c.normal.clone(),
+            meanNormal: c.normal.clone(),
+            candidates: [c],
+            avgScore: 0,
+          });
+        }
+      }
+
+      // Compute each cluster's avg score, project candidates into the face
+      // frame, sort row-major (lower v first = eave to ridge, lower u first
+      // = ridge-direction left to right within a row). ROW_TIER = full panel
+      // depth so each tier accommodates exactly one row of panels — the
+      // greedy then naturally lays them out as horizontal bands.
+      const ROW_TIER = variant.size[2];
+      for (const cl of clusters) {
+        cl.avgScore =
+          cl.candidates.reduce((s, c) => s + c.score, 0) / cl.candidates.length;
+        const n = cl.meanNormal;
+        let uAxis = new Vector3(1, 0, 0).sub(n.clone().multiplyScalar(n.x));
+        if (uAxis.lengthSq() < 1e-6) uAxis = new Vector3(0, 0, 1);
+        uAxis.normalize();
+        const vAxis = new Vector3().crossVectors(n, uAxis).normalize();
+        for (const c of cl.candidates) {
+          c.uLocal = c.point.dot(uAxis);
+          c.vLocal = c.point.dot(vAxis);
+        }
+        cl.candidates.sort((a, b) => {
+          const aRow = Math.floor((a.vLocal ?? 0) / ROW_TIER);
+          const bRow = Math.floor((b.vLocal ?? 0) / ROW_TIER);
+          if (aRow !== bRow) return aRow - bRow;
+          return (a.uLocal ?? 0) - (b.uLocal ?? 0);
+        });
+      }
+
+      // Best-scoring cluster first — south-facing, optimal-tilt pitches
+      // get filled before less-good ones.
+      clusters.sort((a, b) => b.avgScore - a.avgScore);
+
+      // Flatten back to a single ordered list of candidates.
+      const orderedCandidates: Candidate[] = [];
+      for (const cl of clusters) {
+        for (const c of cl.candidates) orderedCandidates.push(c);
+      }
 
       const minDist =
         Math.min(variant.size[0], variant.size[2]) * PANEL_OVERLAP_FACTOR;
@@ -256,7 +330,7 @@ export function Panels() {
       );
 
       const placed: ProjectedPanel[] = [];
-      for (const cand of candidates) {
+      for (const cand of orderedCandidates) {
         if (placed.length >= targetCount) break;
 
         // (a) overlap with previously placed panels
