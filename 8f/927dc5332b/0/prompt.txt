@@ -1,0 +1,19 @@
+commit et push tout
+
+---
+
+Le ai pipeline devrait disparaitre une fois le process fini
+Ensuite le popup Capturing oblique aerial view devrait durer 3 secondes au total avec une barre au dessus qui montre le défilement du temps
+Pareil pour le GPT Image 2
+pour le Computing solar sizing & financial model
+k-NN over 1,620 Iconic deliveries
+Fais un truc plus beau plus wow
+
+
+Et met les assets 3d pour 
+electric car
+heat pump
+battery
+wallbox
+voici les éléments (différents formats choisis le plus évident pour toi à chaque fois) :
+/Users/max/Downloads/tesla_2018_model_3.glb /Users/max/Downloads/tesla_2018_model_3.zip /Users/max/Downloads/Tesla_2018_Model_3.usdz /Users/max/Downloads/tesla-2018-model-3.zip /Users/max/Downloads/thuisaccu-tesla-powerwall-2.zip /Users/max/Downloads/Thuisaccu_-_Tesla_Powerwall_2.usdz /Users/max/Downloads/thuisaccu_-_tesla_powerwall_2.zip /Users/max/Downloads/thuisaccu_-_tesla_powerwall_2.glb /Users/max/Downloads/warmtepomp-panasonic-wc05h3e5.zip /Users/max/Downloads/Warmtepomp__Panasonic_WC05H3E5.usdz /Users/max/Downloads/warmtepomp__panasonic_wc05h3e5.zip /Users/max/Downloads/warmtepomp__panasonic_wc05h3e5.glb /Users/max/Downloads/Generator_LP.usdz /Users/max/Downloads/generator_lp.zip '/Users/max/Downloads/generator_lp (1).glb' /Users/max/Downloads/generator_lp.glb /Users/max/Downloads/generator-lp.zip
