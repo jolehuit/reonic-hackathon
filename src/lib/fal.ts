@@ -168,7 +168,14 @@ interface Hunyuan3dOutput {
 export async function generateTrellisGlb(imageUrl: string): Promise<{ glbUrl: string; requestId: string }> {
   const { output, requestId } = await runFalModel<unknown, Hunyuan3dOutput>(
     'fal-ai/hunyuan-3d/v3.1/pro/image-to-3d',
-    { input_image_url: imageUrl },
+    {
+      input_image_url: imageUrl,
+      // Default is 500,000 faces — 30+ MB GLB that freezes the browser
+      // for ~20s parsing + raycasting in <Panels/>. 50k faces is plenty
+      // for a residential roof preview and brings parse + initial draw
+      // under 1s on a mid-range laptop. Hunyuan accepts 40k-1.5M.
+      face_count: 50_000,
+    },
   );
   // Prefer the top-level model_glb (always present), fall back to the
   // alternate model_urls.glb shape just in case.
