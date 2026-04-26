@@ -124,16 +124,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-6 text-[12px] text-zinc-400">
-          <div className="flex items-center gap-5">
-            <span className="cursor-pointer hover:text-zinc-600">Imprint</span>
-            <span className="cursor-pointer hover:text-zinc-600">Data protection</span>
-          </div>
-          <div className="font-medium text-zinc-500">
-            Built on <span className="text-blue-600">1 620</span> real Iconic deliveries
-          </div>
-        </footer>
       </div>
 
       <AnimatePresence>
@@ -143,7 +133,7 @@ export default function Home() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setAddressOpen(false)}
-            className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-zinc-900/50 p-4 backdrop-blur-sm sm:p-8"
+            className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-zinc-900/50 p-4 backdrop-blur-sm sm:p-8"
           >
             <motion.div
               initial={{ y: 30, opacity: 0 }}
@@ -177,7 +167,7 @@ export default function Home() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setDemoOpen(false)}
-            className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-zinc-900/50 p-4 backdrop-blur-sm sm:p-8"
+            className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-zinc-900/50 p-4 backdrop-blur-sm sm:p-8"
           >
             <motion.div
               initial={{ y: 30, opacity: 0 }}

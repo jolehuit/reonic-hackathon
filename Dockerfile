@@ -17,7 +17,10 @@ ARG NODE_VERSION=20-bookworm-slim
 FROM node:${NODE_VERSION} AS deps
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
-COPY package.json pnpm-lock.yaml ./
+# .npmrc carries `public-hoist-pattern[]=playwright-core` — required so the
+# runner stage's `COPY .../node_modules/playwright-core` resolves. Without it,
+# pnpm's strict layout keeps playwright-core under .pnpm/ only.
+COPY package.json pnpm-lock.yaml .npmrc ./
 RUN pnpm install --frozen-lockfile
 
 # ─── Stage 2: builder ───────────────────────────────────────────────────────
