@@ -5,9 +5,11 @@
 #   - --cache-from=:latest pulls our previous image so unchanged Docker
 #     layers are reused (`apt-get install`, `pnpm install` for unchanged
 #     deps, `npx playwright install` etc).
-#   - machineType: E2_HIGHCPU_32 → 4× more vCPUs vs the previous _8.
-#     Halves the time of CPU-bound steps (next build, apt-get) for ~10
-#     centimes extra per build. Worth it for hackathon iteration speed.
+#   - machineType: E2_HIGHCPU_8 → max we can get on this GCPLab project's
+#     quota. Tried E2_HIGHCPU_32, got back "due to quota restrictions,
+#     Cloud Build cannot run builds of this machine type in this region".
+#     The Playwright base image + cache mount already cut ~2.5 min, the
+#     machine bump was just a +30s bonus we can live without.
 #
 # Steps:
 #   1. Pull :latest as a cache seed (no-op on first build).
@@ -68,7 +70,7 @@ steps:
     waitFor: ['push']
 
 options:
-  machineType: E2_HIGHCPU_32
+  machineType: E2_HIGHCPU_8
   logging: CLOUD_LOGGING_ONLY
 
 images:
