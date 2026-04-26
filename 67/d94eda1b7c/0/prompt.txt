@@ -1,0 +1,768 @@
+la popup des kpi faut la rendre plus belle elle est moche
+et la popup glb faut l'enlever elle sert a rien
+
+et faut fix tout ça :
+Type
+
+Checks
+
+Description
+
+Compliance
+
+Issues
+
+Open source dependency monitoring
+
+View monitored lockfiles
+We monitor 3rd party dependencies you are using in your app for any known vulnerabilities.
+
+Compliant
+0
+
+Exposed secrets monitoring
+
+We are monitoring your application for any secrets which have been accidentally exposed in your source code, currently or at one point in the past.
+
+Non-compliant
+1
+
+License management
+
+Aikido checks the licenses of all your dependencies to make sure you are legally permitted to make use of them.
+
+Non-compliant
+4
+
+SAST
+
+Create custom rule
+View SAST rules
+Static application security testing.
+
+Non-compliant
+4
+
+IaC
+
+View IaC rules
+Infrastructure as Code testing. Check which files we can monitor in your application.
+
+Non-compliant
+1
+
+Supply-chain malware
+
+View malware monitor
+Aikido checks for dependencies which are actually containing malware.
+
+Compliant
+0
+
+Mobile issues
+
+View mobile rules
+Mobile manifest file monitoring.
+
+Compliant
+0
+
+GitHub Access Control issues
+
+View access control rules
+Aikido makes sure access to source code is secure and changes are monitored.
+
+Compliant
+0
+Last scan 4 minutes ago 
+
+Type
+
+Checks
+
+Description
+
+Compliance
+
+Issues
+
+Open source dependency monitoring
+
+View monitored lockfiles
+We monitor 3rd party dependencies you are using in your app for any known vulnerabilities.
+
+Compliant
+0
+
+Exposed secrets monitoring
+
+We are monitoring your application for any secrets which have been accidentally exposed in your source code, currently or at one point in the past.
+
+Non-compliant
+1
+
+License management
+
+Aikido checks the licenses of all your dependencies to make sure you are legally permitted to make use of them.
+
+Non-compliant
+4
+
+SAST
+
+Create custom rule
+View SAST rules
+Static application security testing.
+
+Non-compliant
+4
+
+IaC
+
+View IaC rules
+Infrastructure as Code testing. Check which files we can monitor in your application.
+
+Non-compliant
+1
+
+Supply-chain malware
+
+View malware monitor
+Aikido checks for dependencies which are actually containing malware.
+
+Compliant
+0
+
+Mobile issues
+
+View mobile rules
+Mobile manifest file monitoring.
+
+Compliant
+0
+
+GitHub Access Control issues
+
+View access control rules
+Aikido makes sure access to source code is secure and changes are monitored.
+
+Compliant
+0
+
+Pro trial
+
+•
+Upgrade
+
+Feed
+
+Snoozed
+
+Ignored
+
+3
+Solved
+
+AutoFix
+
+Assets
+
+Repositories
+1
+
+Containers
+0
+Add
+
+Clouds
+0
+Add
+
+Virtual Machines
+0
+Add
+
+Attack
+
+Domains & APIs
+1
+
+Pentests
+
+Protect
+
+Devices
+0
+
+Firewall
+0
+Add
+
+More
+
+Integrations
+
+Code Quality
+
+Reports
+
+Finish setup
+
+Issues
+
+Potential file inclusion attack via reading file
+
+Docs
+Potential file inclusion attack via reading file
+18 open subissues
+
+70
+
+High Risk
+
+Potential file inclusion attack via reading file
+
+We found 18 issues: last detected 4 minutes ago
+
+New
+SAST
+TL;DR
+
+If an attacker can control the input leading into the ReadFile function, they might be able to read sensitive files and launch further attacks with that information.
+
+How do I fix it?
+
+Ignore this issue only after you've verified or sanitized the input going into this function. This issue is only relevant in the backend, not in the frontend! 
+
+Education
+
+Watch video on Relative Path Traversal
+
+Subissues
+
+18
+Subissue
+backend
+reonic-hackathon
+scripts/capture-facades.mjs
+
+High
+Line 228 in capture-facades.mjs
+
+const outPath = join(OUT_DIR, file);
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/app/api/design/route.ts
+
+High
+Line 175 in route.ts
+
+const filePath = path.join(BAKED_DIR, `${houseId}-analysis.json`);
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/lib/lod2-buildings.ts
+
+High
+Line 719 in lod2-buildings.ts
+
+const cached = await fs.readFile(cachePath, 'utf-8');
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/scripts/analyze-multi.ts
+
+High
+Line 423 in analyze-multi.ts
+
+const photoPath = path.join(BAKED_DIR, `${houseId}-photogrammetry.json`);
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/scripts/analyze-roof.ts
+
+High
+Line 290 in analyze-roof.ts
+
+const raw = await fs.readFile(jsonPath, 'utf-8');
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/scripts/analyze-roof.ts
+
+High
+Line 711 in analyze-roof.ts
+
+raw = await fs.readFile(photogrammetryPath, 'utf-8');
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/scripts/analyze-roof.ts
+
+High
+Line 993 in analyze-roof.ts
+
+const photogrammetryGlb = path.join(BAKED_DIR, `${houseId}-photogrammetry.glb`);
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/scripts/analyze-roof.ts
+
+High
+Line 994 in analyze-roof.ts
+
+const fallback = path.join(FALLBACK_DIR, `${houseId}.glb`);
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/scripts/analyze-roof.ts
+
+High
+Line 1026 in analyze-roof.ts
+
+const cachePath = path.join(BAKED_DIR, `${houseId}-osm-polygon.json`);
+View code analysis
+Downgraded: App does not process any sensitive data
+
+scripts/capture-facades.mjs
+
+Medium
+Line 242 in capture-facades.mjs
+
+const fileToB64 = (p) => 'data:image/jpeg;base64,' + readFileSync(p).toString('base64');
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/app/api/design/route.ts
+
+Medium
+Line 176 in route.ts
+
+const raw = await fs.readFile(filePath, 'utf-8');
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/lib/lod2-buildings.ts
+
+Medium
+Line 747 in lod2-buildings.ts
+
+const cachePath = path.join(CACHE_DIR, `${houseId}-lod2.json`);
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/scripts/analyze-multi.ts
+
+Medium
+Line 413 in analyze-multi.ts
+
+const raw = await fs.readFile(path.join(BAKED_DIR, `${houseId}-analysis${suffix}.json`), 'utf-8');
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/scripts/analyze-multi.ts
+
+Medium
+Line 428 in analyze-multi.ts
+
+const fd = await fs.open(photoPath, 'r');
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/scripts/analyze-roof.ts
+
+Medium
+Line 299 in analyze-roof.ts
+
+await fs.access(p);
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/scripts/analyze-roof.ts
+
+Medium
+Line 992 in analyze-roof.ts
+
+const photogrammetryJson = path.join(BAKED_DIR, `${houseId}-photogrammetry.json`);
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/scripts/analyze-roof.ts
+
+Medium
+Line 1029 in analyze-roof.ts
+
+polygon = JSON.parse(await fs.readFile(cachePath, 'utf-8')) as { x: number; z: number }[];
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/scripts/test-solar-api.ts
+
+Medium
+Line 92 in test-solar-api.ts
+
+const raw = await fs.readFile(path.join(BAKED_DIR, `${houseId}-analysis.json`), 'utf-8');
+View code analysis
+Downgraded: App does not process any sensitive data
+
+11 ignored items
+
+
+Pro trial
+
+•
+Upgrade
+
+Feed
+
+Snoozed
+
+Ignored
+
+3
+Solved
+
+AutoFix
+
+Assets
+
+Repositories
+1
+
+Containers
+0
+Add
+
+Clouds
+0
+Add
+
+Virtual Machines
+0
+Add
+
+Attack
+
+Domains & APIs
+1
+
+Pentests
+
+Protect
+
+Devices
+0
+
+Firewall
+0
+Add
+
+More
+
+Integrations
+
+Code Quality
+
+Reports
+
+Finish setup
+
+Issues
+
+Docker container runs as default root user
+
+Docs
+Docker container runs as default root user
+1 open subissue
+
+65
+
+Medium Risk
+
+Docker container runs as default root user
+
+We found 1 issue: last detected 7 minutes ago
+
+New
+SAST
+TL;DR
+
+By default, containers are run with root privileges and also run as the root user inside the container. Running the app as root gives a hacker who was able to hack the application instant root access to the Docker host, which could help them to escalate a hack.
+
+How do I fix it?
+
+Add 'USER username' to the end of your file.
+
+Subissues
+
+1
+Subissue
+backend
+reonic-hackathon
+Dockerfile
+
+Medium
+Line 1 - 95 in Dockerfile
+
+# syntax=docker/dockerfile:1.7
+#
+# Multi-stage Dockerfile for Cloud Run, optimised for fast Cloud Build runs.
+#
+...
+COPY --from=builder /app/node_modules/playwright-core /app/node_modules/playwright-core
+
+EXPOSE 8080
+CMD ["node", "server.js"]
+View code analysis
+
+
+Pro trial
+
+•
+Upgrade
+
+Feed
+
+Snoozed
+
+Ignored
+
+3
+Solved
+
+AutoFix
+
+Assets
+
+Repositories
+1
+
+Containers
+0
+Add
+
+Clouds
+0
+Add
+
+Virtual Machines
+0
+Add
+
+Attack
+
+Domains & APIs
+1
+
+Pentests
+
+Protect
+
+Devices
+0
+
+Firewall
+0
+Add
+
+More
+
+Integrations
+
+Code Quality
+
+Reports
+
+Finish setup
+
+Issues
+
+Secret leaked in cloudbuild.yaml
+
+Docs
+Secret leaked in cloudbuild.yaml
+1 open subissue
+
+55
+
+Medium Risk
+
+Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.
+
+We found 1 issue: first detected 4 minutes ago
+
+New
+Secrets
+TL;DR
+
+We detected secret *****uZII in the git history of the reonic-hackathon repository. The secret was found in cloudbuild.yaml@ this commit ->
+
+How do I fix it?
+
+If this API key is harmless, you can ignore this issue. If not, we would advise to move the secret out of the git repository by either injecting it via the environment or even better, by using a tool such as AWS Secrets Manager to inject the secrets at run-time. After that, it should be possible to invalidate the current secret and regenerate a new one.
+
+Note: Exposed secrets need to be marked as resolved manually. This secret was not detected in the latest version of your app, but in the git history of your repository. That means it could still leak if someone has access to your source code.
+
+Subissues
+
+1
+Subissue
+Author
+backend
+reonic-hackathon
+***********************************uZII
+
+Medium
+Line 44 in cloudbuild.yaml
+
+View commit
+Downgraded: Secret not present in current application
+
+jolehuit
+
+
+
+Pro trial
+
+•
+Upgrade
+
+Feed
+
+Snoozed
+
+Ignored
+
+3
+Solved
+
+AutoFix
+
+Assets
+
+Repositories
+1
+
+Containers
+0
+Add
+
+Clouds
+0
+Add
+
+Virtual Machines
+0
+Add
+
+Attack
+
+Domains & APIs
+1
+
+Pentests
+
+Protect
+
+Devices
+0
+
+Firewall
+0
+Add
+
+More
+
+Integrations
+
+Code Quality
+
+Reports
+
+Finish setup
+
+Issues
+
+HTTP request might enable SSRF attack
+
+Docs
+HTTP request might enable SSRF attack
+5 open subissues
+
+30
+
+Low Risk
+
+HTTP request might enable SSRF attack
+
+We found 5 issues: last detected 4 minutes ago
+
+New
+SAST
+TL;DR
+
+If an attacker can control the URL input leading into this http request, the attack might be able to perform an SSRF attack. This kind of attack is even more dangerous is the application returns the result of the URL fetch to the user. It can serve as an initial access point for an attacker for stealing credentials in the cloud.
+
+How do I fix it?
+
+If possible, only allow requests to verified domains. If not, consult the article linked above to learn about other mitigating techniques such as disabling redirects, blocking private IPs and making sure private services have internal authentication. If you return data coming from the request to the user, validate the data before returning it to make sure you don't return random data.
+More information
+
+Show more
+Education
+
+Watch video on Server-Side Request Forgery (SSRF)
+
+Subissues
+
+5
+Subissue
+backend
+reonic-hackathon
+src/scripts/bake-houses.ts
+
+Low
+Line 55 in bake-houses.ts
+
+const cleanImgRes = await fetch(cleanJson.imageUrl);
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/app/api/clean-image/route.ts
+
+Low
+Line 39 in route.ts
+
+const aerialRes = await fetch(aerialUrl);
+View code analysis
+Downgraded: AI assessed finding as hard to exploit
+
+scripts/fetch-tiles-for-address.mjs
+
+Low
+Line 180 in fetch-tiles-for-address.mjs
+
+const res = await fetch(fullUrl);
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/lib/ms-building-footprints.ts
+
+Low
+Line 79 in ms-building-footprints.ts
+
+const resp = await fetch(url);
+View code analysis
+Downgraded: App does not process any sensitive data
+
+src/scripts/bake-houses.ts
+
+Low
+Line 71 in bake-houses.ts
+
+const glbRes = await fetch(trellisJson.glbUrl);
+View code analysis
+Downgraded: App does not process any sensitive data
+
+6 ignored items
