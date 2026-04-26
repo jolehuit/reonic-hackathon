@@ -321,9 +321,10 @@ export function Orchestrator() {
       await new Promise<void>((res) => setTimeout(res, 120));
       if (cancelled) return;
 
-      // The actual count comes from <Panels/> (variant cascade may have
-      // chosen compact panels → more of them than design.modulePositions).
-      // Wait briefly for it to be published if the layout is still computing.
+      // Wait for <Panels/> to publish its raycast-snapped count via
+      // panelTargetCount. The value equals design.moduleCount (after k-NN
+      // capping) — we just need to know the projection pass has finished
+      // before we start the drop animation.
       const TARGET_POLL_MS = 60;
       const TARGET_TIMEOUT_MS = 5000;
       const targetWaitStart = performance.now();

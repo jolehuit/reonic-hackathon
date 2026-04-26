@@ -1,17 +1,20 @@
 // Solar panels — OWNED by Dev A
-// Placement strategy (GLB-driven, baked positions are NOT used for layout):
-//   1. After the GLB is fully visible (glbStable), sample its XZ bbox with a
-//      grid of vertical raycasts at panel-pitch resolution. Each successful
-//      hit on a roof-like face (normal.y above threshold) becomes a candidate.
-//   2. Score each candidate by tilt + flatness so the algorithm prefers the
-//      part of the roof a real installer would target.
-//   3. Greedy placement walks candidates from best score down, accepting one
-//      only if (a) all four corners land on the same roof slope (no eave or
-//      ridge overhang, no straddling two pitches), (b) it doesn't overlap a
-//      panel already placed, (c) it isn't on a baked obstruction (chimney,
-//      dormer, vent).
-//   4. Stops once we hit the count requested by the k-NN sizer (design.
-//      modulePositions.length).
+// Placement strategy: consume the modulePositions Dev D's pipeline already
+// computed (faces clustered, panels packed with edge offsets and obstacle
+// avoidance, scored, sliced down to /api/design's k-NN module count). At
+// render time we just:
+//   1. read the recentred + Y-rescaled positions from <HouseGeometryProvider/>;
+//   2. for each (x, z), raycast straight down on the GLB to recover the
+//      ground-truth surface normal (the recentre Y is approximate — the
+//      raycast nails the panel onto the actual rendered mesh);
+//   3. animate them dropping in via the existing DroppingPanel choreography.
+//
+// This used to be a 400-line in-browser packer (variant cascade, dense-grid
+// validation, score sorting) that ignored Dev D's output and re-derived
+// everything from scratch. The two engines disagreed routinely — sidebar
+// said 7 modules, the 3D scene rendered 14, the PDF said 7 again. Now
+// there is exactly one source of truth: the analysis.json on disk, sliced
+// by k-NN, raycast-snapped per panel for visual accuracy.
 //
 // Reveal animation: the orchestrator ticks `placedCount` up from 0 to the
 // total module count over a few seconds. We slice the projected positions
@@ -35,14 +38,10 @@ import {
 import { useStore, type EditablePanel } from '@/lib/store';
 import { useHouseGeometry } from './HouseGeometry';
 
-// Real-world panel SKU catalogue. Each variant is a market-available form
-// factor; the placement algorithm tries the full-size variant first and
-// falls back to compact / mini if the roof can't fit the target count.
-//   • AIKO Comet / Trina Vertex S+ — full residential 470-475 W.
-//   • Half-cell 220 W — compact module for tight roof zones.
-//   • Mini 120 W — fills the leftover slivers between dormers / chimneys.
-// Wattage is what's used to convert the kWp target into a panel count,
-// so smaller panels naturally produce a denser layout.
+// Real-world panel SKU — full residential 475 W. The bake step
+// (analyze-multi.ts / place-panels.ts) packs at this exact size, so we
+// render at the same size for visual consistency. Trina Vertex S+ exists
+// as an alternate brand badge with marginally different dimensions.
 interface PanelVariant {
   name: string;
   size: [number, number, number];
@@ -57,16 +56,6 @@ const PANEL_VARIANT_FULL_TRINA: PanelVariant = {
   name: 'Trina 475 W',
   size: [1.762, 0.03, 1.134],
   wattPeak: 475,
-};
-const PANEL_VARIANT_COMPACT: PanelVariant = {
-  name: 'Half-cell 220 W',
-  size: [1.10, 0.03, 0.70],
-  wattPeak: 220,
-};
-const PANEL_VARIANT_MINI: PanelVariant = {
-  name: 'Mini 120 W',
-  size: [0.78, 0.03, 0.55],
-  wattPeak: 120,
 };
 // Distance from the raycast hit point (roof surface) to the panel mesh
 // CENTRE along the surface normal. Real photovoltaic panels sit on rail
@@ -111,23 +100,6 @@ const OBSTRUCTION_MARGIN_M = 0.45;
 /** Overlap factor — panels can be ALMOST flush (12 % gap of the short
  *  side) but never sit on top of each other. */
 const PANEL_OVERLAP_FACTOR = 0.88;
-/** Sampling grid step as a fraction of panel size — used ONLY for the
- *  initial face-discovery scan. Smaller = denser detection of the roof
- *  pitches. The actual placement grid is aligned per-face on the panel
- *  pitch. */
-const GRID_STEP_RATIO = 0.55;
-/** External padding applied to each detected face polygon BEFORE the grid
- *  is laid down — guarantees panels never overhang the eave or ridge.
- *  Real installations leave ~30 cm clearance for snow guards and rails. */
-const FACE_EXTERNAL_PADDING_M = 0.35;
-/** Visible gap between adjacent panel cells (real PV arrays have rail
- *  joiners + thermal expansion gap of ~2–4 cm). Bumping to 5 cm gives a
- *  clear silhouette for each module on screen. */
-const CELL_GAP_M = 0.05;
-/** A grid cell is considered "covered" by the discovery scan if it lies
- *  within this distance of at least one sample hit on its cluster. Acts
- *  as an implicit polygon test for L-shaped or irregular faces. */
-const CELL_COVERAGE_RADIUS_RATIO = 0.85;
 const UP = new Vector3(0, 1, 0);
 
 interface ProjectedPanel {
@@ -157,49 +129,28 @@ export function Panels() {
     useHouseGeometry();
   const sceneRoot = useThree((s) => s.scene);
 
-  const glbRoofAreaM2 = useStore((s) => s.glbRoofAreaM2);
-
-  // Variant cascade: try the brand-recommended full-size first, then fall
-  // back to smaller form factors for tighter roofs. The algorithm uses the
-  // first variant that hits ≥ the target kWp.
-  const variants: PanelVariant[] = useMemo(() => {
-    const full =
-      design?.moduleBrand === 'Trina'
-        ? PANEL_VARIANT_FULL_TRINA
-        : PANEL_VARIANT_FULL_AIKO;
-    return [full, PANEL_VARIANT_COMPACT, PANEL_VARIANT_MINI];
+  // Single-variant rendering — Dev D's bake step packs at full residential
+  // size (1.045 × 1.879 m), so we render at the same size for visual
+  // consistency with the placed positions. The variant cascade that used
+  // to live here was a parallel re-derivation from raycast scans; with
+  // Dev D's positions trusted as source of truth, it's no longer needed.
+  const variant: PanelVariant = useMemo(() => {
+    return design?.moduleBrand === 'Trina'
+      ? PANEL_VARIANT_FULL_TRINA
+      : PANEL_VARIANT_FULL_AIKO;
   }, [design?.moduleBrand]);
-
-  // Pre-pick the most appropriate variant given the actual roof area on the
-  // GLB. We compute, for each variant, the m² of roof needed to cover the
-  // k-NN target kWp; the first variant whose footprint fits within the
-  // packing-efficiency-adjusted roof area is the one we'll start with.
-  // Falls through to the smallest if none fit (rare on real homes).
-  // Packing efficiency 0.45 accounts for: only ~50% of the roof is south-
-  // facing, then 80-90% of THAT is reachable after edges & obstacles.
-  const PACKING_EFFICIENCY = 0.45;
-  const preferredVariant = useMemo<PanelVariant>(() => {
-    if (!design || !glbRoofAreaM2) return variants[0];
-    const targetKwp = design.totalKwp || 0;
-    const usableM2 = glbRoofAreaM2 * PACKING_EFFICIENCY;
-    for (const v of variants) {
-      const targetPanels = Math.max(1, Math.ceil((targetKwp * 1000) / v.wattPeak));
-      const areaNeeded = targetPanels * v.size[0] * v.size[2];
-      if (areaNeeded <= usableM2) return v;
-    }
-    return variants[variants.length - 1];
-  }, [design, glbRoofAreaM2, variants]);
 
   // Recompute projected positions whenever the GLB is (re)loaded or its
   // measured height changes. We re-find the GLB root each time because the
   // R3F scene tree mutates around the morph animation.
+  // Build a ProjectedPanel for each module Dev D placed, raycast-snapped
+  // onto the rendered GLB so it sits flush. We trust positions, lift the
+  // normal from the actual surface to absorb any morph / rescale slop.
   const layout = useMemo<PanelLayout | null>(() => {
     if (!glbStable) return null;
     if (!design) return null;
+    if (!recenteredPositions || recenteredPositions.length === 0) return null;
 
-    // Locate the GLB root in the R3F scene. Flagged with userData.isGlbRoof
-    // by <LoadedGlb/>. Forces world matrix update so raycasts use the post-
-    // morph (scale 1.0) transform.
     let glbRoot: Object3D | null = null;
     sceneRoot.traverse((o) => {
       if (!glbRoot && o.userData?.isGlbRoof) glbRoot = o;
@@ -211,8 +162,6 @@ export function Panels() {
     const raycaster = new Raycaster();
     const downRay = new Vector3(0, -1, 0);
 
-    // Cast a single downward ray onto the GLB. Returns null on miss or on
-    // non-roof hit (vertical wall, ground plane).
     const projectPoint = (x: number, z: number) => {
       raycaster.set(new Vector3(x, RAY_ORIGIN_Y, z), downRay);
       const hits = raycaster.intersectObject(glb, true);
@@ -227,374 +176,34 @@ export function Panels() {
       return { point: hit.point.clone(), normal: worldNormal };
     };
 
-    const glbBox = new Box3().setFromObject(glb);
-    const targetKwp = design.totalKwp || 0;
-    const obstructionRadii = obstructions.map((ob) => ({
-      x: ob.position[0],
-      z: ob.position[2],
-      r: ob.radius + OBSTRUCTION_MARGIN_M,
-    }));
-
-    // Greedy packer for ONE variant. Returns the panels it could fit.
-    const packForVariant = (variant: PanelVariant): ProjectedPanel[] => {
-      const stepX = variant.size[0] * GRID_STEP_RATIO;
-      const stepZ = variant.size[2] * GRID_STEP_RATIO;
-      const halfW = variant.size[0] / 2;
-      const halfH = variant.size[2] / 2;
-      const xStart = glbBox.min.x + halfW + 0.05;
-      const xEnd = glbBox.max.x - halfW - 0.05;
-      const zStart = glbBox.min.z + halfH + 0.05;
-      const zEnd = glbBox.max.z - halfH - 0.05;
-
-      // ── PHASE 1: ROOF DISCOVERY (sparse world-XZ scan) ───────────────
-      // We sweep the GLB footprint with downward raycasts to find roof
-      // surfaces. Each hit is a "sample" that contributes to a face cluster.
-      interface Sample {
-        point: Vector3;
-        normal: Vector3;
-        score: number;
-      }
-      const samples: Sample[] = [];
-      for (let x = xStart; x <= xEnd + 1e-6; x += stepX) {
-        for (let z = zStart; z <= zEnd + 1e-6; z += stepZ) {
-          const hit = projectPoint(x, z);
-          if (!hit) continue;
-          const tiltDeg =
-            (Math.acos(Math.max(0, Math.min(1, hit.normal.y))) * 180) / Math.PI;
-          const tiltScore = Math.max(0, 1 - Math.abs(tiltDeg - 32) / 50);
-          samples.push({
-            point: hit.point,
-            normal: hit.normal,
-            score: hit.normal.y * (0.5 + 0.5 * tiltScore),
-          });
-        }
-      }
-
-      // ── PHASE 2: CLUSTER SAMPLES BY FACE ─────────────────────────────
-      // Each cluster is one distinct pitch. cosine ≥ 0.92 ⇔ angle ≤ ~23°.
-      const CLUSTER_DOT = 0.92;
-      interface Face {
-        normalSum: Vector3;
-        meanNormal: Vector3;
-        samples: Sample[];
-        avgScore: number;
-      }
-      const faces: Face[] = [];
-      for (const s of samples) {
-        let assigned: Face | null = null;
-        for (const f of faces) {
-          if (f.meanNormal.dot(s.normal) >= CLUSTER_DOT) {
-            assigned = f;
-            break;
-          }
-        }
-        if (assigned) {
-          assigned.samples.push(s);
-          assigned.normalSum.add(s.normal);
-          assigned.meanNormal.copy(assigned.normalSum).normalize();
-        } else {
-          faces.push({
-            normalSum: s.normal.clone(),
-            meanNormal: s.normal.clone(),
-            samples: [s],
-            avgScore: 0,
-          });
-        }
-      }
-      for (const f of faces) {
-        f.avgScore =
-          f.samples.reduce((sum, s) => sum + s.score, 0) / f.samples.length;
-      }
-
-      // ── PHASE 3: BUILD A REGULAR GRID PER FACE ───────────────────────
-      // For each face, project samples into a face-local 2D frame, take the
-      // bbox, inset by FACE_EXTERNAL_PADDING_M, then tile with cells of the
-      // panel's footprint. Only cells that (a) lie close to actual sample
-      // hits (validity mask), (b) raycast onto the same pitch on all 8
-      // probes, and (c) avoid baked obstructions become valid placements.
-      interface GridCell {
-        worldPoint: Vector3;
-        normal: Vector3;
-        quaternion: Quaternion;
-        uLocal: number;
-        vLocal: number;
-        faceScore: number;
-      }
-      const allCells: GridCell[] = [];
-
-      const cellW = variant.size[0]; // panel width = grid cell width
-      const cellH = variant.size[2]; // panel depth = grid cell depth
-      const halfCellW = cellW / 2;
-      const halfCellH = cellH / 2;
-      const coverageRadius =
-        Math.max(cellW, cellH) * CELL_COVERAGE_RADIUS_RATIO;
-      const coverageRadiusSq = coverageRadius * coverageRadius;
-
-      for (const face of faces) {
-        // Face frame: uAxis = world-X projected onto the plane (typically
-        // along the ridge), vAxis = up-the-slope.
-        const n = face.meanNormal;
-        let uAxis = new Vector3(1, 0, 0).sub(n.clone().multiplyScalar(n.x));
-        if (uAxis.lengthSq() < 1e-6) uAxis = new Vector3(0, 0, 1);
-        uAxis.normalize();
-        const vAxis = new Vector3().crossVectors(n, uAxis).normalize();
-        const faceQuat = new Quaternion().setFromUnitVectors(UP, n);
-
-        // Project samples to (uLocal, vLocal). Use any sample's point as
-        // the frame origin so projection is stable.
-        const origin = face.samples[0].point.clone();
-        const projected = face.samples.map((s) => ({
-          u: s.point.clone().sub(origin).dot(uAxis),
-          v: s.point.clone().sub(origin).dot(vAxis),
-        }));
-
-        // Bbox in (u, v).
-        let uMin = Infinity, uMax = -Infinity, vMin = Infinity, vMax = -Infinity;
-        for (const p of projected) {
-          if (p.u < uMin) uMin = p.u;
-          if (p.u > uMax) uMax = p.u;
-          if (p.v < vMin) vMin = p.v;
-          if (p.v > vMax) vMax = p.v;
-        }
-        // External padding inset.
-        uMin += FACE_EXTERNAL_PADDING_M;
-        uMax -= FACE_EXTERNAL_PADDING_M;
-        vMin += FACE_EXTERNAL_PADDING_M;
-        vMax -= FACE_EXTERNAL_PADDING_M;
-        if (uMax - uMin < cellW || vMax - vMin < cellH) continue;
-
-        // Tile the inset bbox in row-major (low v → high v, then low u →
-        // high u within each row). First cell starts a half-cell from the
-        // bottom-left corner. Pitch = cell + visible gap so adjacent
-        // panels are clearly separated on screen, like a real array.
-        const pitchU = cellW + CELL_GAP_M;
-        const pitchV = cellH + CELL_GAP_M;
-        for (let v = vMin + halfCellH; v <= vMax - halfCellH + 1e-6; v += pitchV) {
-          for (let u = uMin + halfCellW; u <= uMax - halfCellW + 1e-6; u += pitchU) {
-            // Validity mask — discard cells that are too far from any
-            // observed roof sample (handles L-shaped or notched faces).
-            let covered = false;
-            for (const p of projected) {
-              const du = p.u - u;
-              const dv = p.v - v;
-              if (du * du + dv * dv < coverageRadiusSq) {
-                covered = true;
-                break;
-              }
-            }
-            if (!covered) continue;
-
-            // World-space cell centre.
-            const worldPoint = new Vector3()
-              .copy(origin)
-              .addScaledVector(uAxis, u)
-              .addScaledVector(vAxis, v);
-
-            allCells.push({
-              worldPoint,
-              normal: n.clone(),
-              quaternion: faceQuat.clone(),
-              uLocal: u,
-              vLocal: v,
-              faceScore: face.avgScore,
-            });
-          }
-        }
-      }
-
-      // ── PHASE 4: ORDER CELLS — SINGLE-FACE PRIORITY ──────────────────
-      // We strongly prefer placing every panel on the BEST face. Cells are
-      // sorted by face score first (so all of face A's cells come before
-      // any of face B's), then row-major within each face. Greedy placement
-      // will drain the top face entirely before touching another — only
-      // falling back if the top face couldn't yield enough panels.
-      allCells.sort((a, b) => {
-        if (b.faceScore !== a.faceScore) return b.faceScore - a.faceScore;
-        if (a.vLocal !== b.vLocal) return a.vLocal - b.vLocal;
-        return a.uLocal - b.uLocal;
+    // /api/design slices baked positions to design.moduleCount; for the
+    // local fetch path (HouseGeometryProvider also reads the file directly)
+    // we slice client-side to stay aligned with whatever the server said.
+    const target = Math.min(design.moduleCount, recenteredPositions.length);
+    const panels: ProjectedPanel[] = [];
+    for (let i = 0; i < target; i++) {
+      const pos = recenteredPositions[i];
+      const projected = projectPoint(pos.x, pos.z);
+      if (!projected) continue;
+      panels.push({
+        faceId: pos.faceId,
+        x: projected.point.x,
+        y: projected.point.y,
+        z: projected.point.z,
+        normal: [projected.normal.x, projected.normal.y, projected.normal.z],
+        quaternion: new Quaternion().setFromUnitVectors(UP, projected.normal),
       });
-
-      const minDist =
-        Math.min(variant.size[0], variant.size[2]) * PANEL_OVERLAP_FACTOR;
-      const minDistSq = minDist * minDist;
-      const targetCount = Math.max(
-        1,
-        Math.round((targetKwp * 1000) / variant.wattPeak),
-      );
-
-      // ── PHASE 5: VALIDATE EACH GRID CELL & GREEDY-PLACE ──────────────
-      // Cells are already row-major within their face; they're disjoint
-      // (one cell = one panel slot) so we never need an XZ-distance
-      // overlap check — the grid spacing is the panel pitch.
-      const placed: ProjectedPanel[] = [];
-      for (const cell of allCells) {
-        if (placed.length >= targetCount) break;
-
-        const extrapolated = cell.worldPoint;
-
-        // (0) GROUND-TRUTH the cell — extrapolated point comes from one
-        // arbitrary sample of the face cluster, so on a bumpy GLB it can
-        // sit a few cm above or below the true roof at this XZ. Raycast
-        // at (extrapolated.x, extrapolated.z) gives us the EXACT surface
-        // point and EXACT normal. Without this step, panels alternately
-        // appeared embedded or hovering depending on local mesh noise.
-        const centerHit = projectPoint(extrapolated.x, extrapolated.z);
-        if (!centerHit) continue;
-        const center = centerHit.point;
-        const n = centerHit.normal;
-
-        // (a) Reject cells whose centre lies on a baked obstruction
-        // (chimney / dormer / vent) — even if the cell passed the visual
-        // discovery scan, we trust analysis.json placements.
-        let onObstruction = false;
-        for (const ob of obstructionRadii) {
-          const dx = center.x - ob.x;
-          const dz = center.z - ob.z;
-          if (dx * dx + dz * dz < ob.r * ob.r) {
-            onObstruction = true;
-            break;
-          }
-        }
-        if (onObstruction) continue;
-
-        // (b) DENSE-GRID validation: 7×7 interior probes covering the cell
-        // footprint + 8-probe perimeter ring. THE RULE: if ANY probe inside
-        // the cell footprint hits a window/skylight (Y-discontinuity, normal
-        // mismatch, or miss), the WHOLE cell is blocked — even if only a
-        // small part of a window crosses the cell boundary. Probes are
-        // spaced 1/6 of the cell side ≈ 19 cm on a 1.13 m panel, so any
-        // obstacle ≥ ~25 cm wide is guaranteed to be hit.
-        let uAxis = new Vector3(1, 0, 0).sub(n.clone().multiplyScalar(n.x));
-        if (uAxis.lengthSq() < 1e-6) uAxis = new Vector3(0, 0, 1);
-        uAxis.normalize();
-        const vAxis = new Vector3().crossVectors(n, uAxis).normalize();
-
-        const pu = halfCellW + OBSTACLE_PROBE_MARGIN_M;
-        const pv = halfCellH + OBSTACLE_PROBE_MARGIN_M;
-        // 7×7 = 49 interior probes covering the panel footprint, plus
-        // 8 perimeter probes just outside it (catches adjacent obstacles
-        // touching the cell edge — even a sliver of a window counts).
-        const INTERIOR_DIVISIONS = 6;
-        const interiorProbes: [number, number][] = [];
-        for (let i = 0; i <= INTERIOR_DIVISIONS; i++) {
-          for (let j = 0; j <= INTERIOR_DIVISIONS; j++) {
-            const u = -halfCellW + (halfCellW * 2 * i) / INTERIOR_DIVISIONS;
-            const v = -halfCellH + (halfCellH * 2 * j) / INTERIOR_DIVISIONS;
-            interiorProbes.push([u, v]);
-          }
-        }
-        const perimeterProbes: [number, number][] = [
-          [pu, pv], [pu, -pv], [-pu, pv], [-pu, -pv],
-          [pu, 0], [-pu, 0], [0, pv], [0, -pv],
-        ];
-
-        let valid = true;
-        // Interior probes — strict, any failure blocks the cell.
-        for (const [du, dv] of interiorProbes) {
-          const pw = new Vector3()
-            .copy(center)
-            .addScaledVector(uAxis, du)
-            .addScaledVector(vAxis, dv);
-          const cp = projectPoint(pw.x, pw.z);
-          if (!cp) { valid = false; break; }
-          if (cp.normal.dot(n) < SAME_PITCH_DOT) { valid = false; break; }
-          const delta = cp.point.clone().sub(center).dot(n);
-          if (delta > OBSTACLE_Y_DELTA_M || delta < -OBSTACLE_Y_DELTA_NEG_M) {
-            valid = false;
-            break;
-          }
-        }
-        if (!valid) continue;
-        // Perimeter probes — same strict rules.
-        for (const [du, dv] of perimeterProbes) {
-          const pw = new Vector3()
-            .copy(center)
-            .addScaledVector(uAxis, du)
-            .addScaledVector(vAxis, dv);
-          const cp = projectPoint(pw.x, pw.z);
-          if (!cp) { valid = false; break; }
-          if (cp.normal.dot(n) < SAME_PITCH_DOT) { valid = false; break; }
-          const delta = cp.point.clone().sub(center).dot(n);
-          if (delta > OBSTACLE_Y_DELTA_M || delta < -OBSTACLE_Y_DELTA_NEG_M) {
-            valid = false;
-            break;
-          }
-        }
-        if (!valid) continue;
-
-        // (c) CROSS-CELL OVERLAP: ground-truth raycast can shift a cell's
-        // centre several cm from its grid position. Adjacent grid cells
-        // that were disjoint by pitch can become overlapping after their
-        // centres snap to the actual surface. Reject any candidate whose
-        // centre falls within minDist of a previously placed panel —
-        // distance measured in XZ to ignore slope-induced Y differences.
-        let overlap = false;
-        for (const p of placed) {
-          const dx = center.x - p.x;
-          const dz = center.z - p.z;
-          if (dx * dx + dz * dz < minDistSq) {
-            overlap = true;
-            break;
-          }
-        }
-        if (overlap) continue;
-
-        placed.push({
-          faceId: 0,
-          x: center.x,
-          y: center.y,
-          z: center.z,
-          // Use the ground-truth normal from the centre raycast so the
-          // panel's quaternion + lift align with the actual roof slope at
-          // this exact spot — not the face's mean normal.
-          normal: [n.x, n.y, n.z],
-          quaternion: new Quaternion().setFromUnitVectors(UP, n),
-        });
-      }
-      return placed;
-    };
-
-    // Try preferredVariant first (chosen above based on roof area), then
-    // fall back to the rest of the cascade if it under-delivers.
-    const orderedVariants = [
-      preferredVariant,
-      ...variants.filter((v) => v !== preferredVariant),
-    ];
-    let bestLayout: PanelLayout | null = null;
-    let bestKwpDelivered = -1;
-    for (const variant of orderedVariants) {
-      const panels = packForVariant(variant);
-      const deliveredKwp = (panels.length * variant.wattPeak) / 1000;
-      if (deliveredKwp > bestKwpDelivered) {
-        bestKwpDelivered = deliveredKwp;
-        bestLayout = { panels, variant };
-      }
-      // Acceptable: this variant covers ≥ 90 % of target — stop cascading.
-      if (deliveredKwp >= targetKwp * 0.9 || deliveredKwp >= targetKwp) {
-        bestLayout = { panels, variant };
-        bestKwpDelivered = deliveredKwp;
-        break;
-      }
     }
-
-    return bestLayout;
-  }, [
-    glbStable,
-    glbHeight,
-    design,
-    recenteredPositions,
-    obstructions,
-    sceneRoot,
-    variants,
-    preferredVariant,
-  ]);
+    return { panels, variant };
+  }, [glbStable, glbHeight, design, recenteredPositions, sceneRoot, variant]);
 
   const projectedPositions = layout?.panels ?? null;
   const panelSize = layout?.variant.size ?? PANEL_VARIANT_FULL_AIKO.size;
 
-  // Publish the actual placement count so the orchestrator's drop-animation
-  // loop can size itself correctly (the variant cascade may pick compact
-  // panels and produce more than design.modulePositions.length).
+  // Publish a "ready" signal — the orchestrator polls this to know that
+  // raycast snapping has finished and it's safe to start the drop
+  // animation. Value === final panel count (= design.moduleCount, modulo
+  // raycast misses on a degenerate GLB).
   const setPanelTargetCount = useStore((s) => s.setPanelTargetCount);
   useEffect(() => {
     setPanelTargetCount(projectedPositions?.length ?? 0);
