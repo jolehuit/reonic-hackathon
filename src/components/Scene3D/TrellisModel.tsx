@@ -268,8 +268,23 @@ function LoadedGlb({
 }) {
   const gltf = useLoader(GLTFLoader, url);
   const scene = useMemo(() => gltf.scene.clone(true), [gltf]);
+  const setGlbLoaded = useStore((s) => s.setGlbLoaded);
+  const setGlbHeight = useStore((s) => s.setGlbHeight);
 
-  const { scale, offset } = useMemo(() => {
+  // Tell the rest of the app (Orchestrator → panel drop animation) that the
+  // GLB is in the scene. Done here rather than on `trellisStatus === 'ready'`
+  // because Trellis URL availability ≠ GLTF mesh visibility (Suspense fallback).
+  useEffect(() => {
+    setGlbLoaded(true);
+    return () => {
+      // When the URL changes (new run), reset the flag so the next pipeline
+      // start doesn't see a stale `true`.
+      setGlbLoaded(false);
+      setGlbHeight(null);
+    };
+  }, [url, setGlbLoaded, setGlbHeight]);
+
+  const { scale, offset, scaledHeight } = useMemo(() => {
     const box = new Box3().setFromObject(scene);
     const size = new Box3().setFromObject(scene).getSize(new Vector3());
     const center = box.getCenter(new Vector3());
@@ -280,8 +295,16 @@ function LoadedGlb({
       scale: s,
       // Recenter to origin on XZ, drop Y so the model sits on y=0.
       offset: new Vector3(-center.x * s, -box.min.y * s, -center.z * s),
+      scaledHeight: size.y * s,
     };
   }, [scene, width, depth]);
+
+  // Publish the rendered roof height so HouseGeometryProvider can rescale
+  // the baked panel positions to fit this specific GLB (each Trellis run
+  // produces a slightly different roof pitch).
+  useEffect(() => {
+    setGlbHeight(scaledHeight);
+  }, [scaledHeight, setGlbHeight]);
 
   // Cast/receive shadows on every mesh + flip materials transparent so the
   // opacity fade-in works during the morph.
@@ -314,6 +337,12 @@ function LoadedGlb({
   // GLBs already encode their own roof height correctly relative to their
   // footprint, so we keep the uniform scale.
   void height;
+
+  // The userData tag lets <Panels/> find the GLB root via scene.traverse so
+  // it can raycast each panel's (X, Z) onto the actual roof surface.
+  useEffect(() => {
+    scene.userData.isGlbRoof = true;
+  }, [scene]);
 
   return <primitive object={scene} scale={scale} position={offset} />;
 }

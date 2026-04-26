@@ -84,6 +84,20 @@ interface AppState {
   glbUrl: string | null;
   setGlbUrl: (u: string | null) => void;
 
+  /** Set to `true` by <LoadedGlb/> after the GLTFLoader has finished
+   *  loading the mesh. The orchestrator gates the panel-drop animation on
+   *  this so panels only start descending once the roof is actually
+   *  visible. */
+  glbLoaded: boolean;
+  setGlbLoaded: (v: boolean) => void;
+
+  /** Rendered Y height of the GLB after the uniform XZ scale applied by
+   *  <LoadedGlb/>. Used by <HouseGeometryProvider/> to rescale baked panel
+   *  positions onto the actual roof — different houses have different roof
+   *  pitches, so the analysis.json baseline doesn't match the GLB by default. */
+  glbHeight: number | null;
+  setGlbHeight: (v: number | null) => void;
+
   // House selection — either a demo HouseId or 'custom' for an arbitrary address.
   selectedHouse: HouseId | 'custom' | null;
   selectHouse: (id: HouseId | 'custom') => void;
@@ -119,6 +133,15 @@ interface AppState {
   // Design result (from /api/design)
   design: DesignResult | null;
   setDesign: (d: DesignResult | null) => void;
+
+  /**
+   * Number of panels currently revealed in the placement animation. Starts
+   * at 0 once the imagery + sizing lanes have settled, then ticks up to
+   * `design.modulePositions.length` over a few seconds. <Panels/> slices the
+   * positions array by this count so only the first N panels render.
+   */
+  placedCount: number;
+  setPlacedCount: (n: number) => void;
 
   // Roof geometry — usually loaded from /baked/{houseId}-analysis.json by
   // HouseGeometryProvider. For custom addresses, /api/design synthesises one
@@ -177,7 +200,13 @@ export const useStore = create<AppState>((set) => ({
   setTrellisStatus: (trellisStatus) => set({ trellisStatus }),
 
   glbUrl: null,
-  setGlbUrl: (glbUrl) => set({ glbUrl }),
+  setGlbUrl: (glbUrl) => set({ glbUrl, glbLoaded: false, glbHeight: null }),
+
+  glbLoaded: false,
+  setGlbLoaded: (glbLoaded) => set({ glbLoaded }),
+
+  glbHeight: null,
+  setGlbHeight: (glbHeight) => set({ glbHeight }),
 
   selectedHouse: null,
   selectHouse: (id) =>
@@ -210,6 +239,9 @@ export const useStore = create<AppState>((set) => ({
   design: null,
   setDesign: (design) => set({ design }),
 
+  placedCount: 0,
+  setPlacedCount: (placedCount) => set({ placedCount }),
+
   customRoofGeometry: null,
   setCustomRoofGeometry: (customRoofGeometry) => set({ customRoofGeometry }),
 
@@ -241,5 +273,8 @@ export const useStore = create<AppState>((set) => ({
       design: null,
       customRoofGeometry: null,
       agentSteps: [],
+      placedCount: 0,
+      glbLoaded: false,
+      glbHeight: null,
     }),
 }));
