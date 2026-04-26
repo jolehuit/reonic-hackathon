@@ -136,16 +136,12 @@ export function CustomAddressForm({
           <button
             onClick={() => {
               if (!allSaved) return;
-              if (m.selectedPackage) {
-                setEnquiryOpen(true);
-              } else {
-                submitProfile();
-              }
+              submitProfile();
             }}
             disabled={!allSaved}
             className="group flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-[14px] font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-400 disabled:shadow-none"
           >
-            {m.selectedPackage ? 'Send enquiry' : 'Generate design'}
+            Generate design
             <svg className="h-4 w-4 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="5" y1="12" x2="19" y2="12" />
               <polyline points="12 5 19 12 12 19" />

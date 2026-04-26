@@ -89,9 +89,33 @@ export default function DesignPage({ params }: Props) {
     }
   }, [selectedHouse, phase, setPhase]);
 
-  // For custom addresses, kick off /api/design as soon as we have coords so
-  // the synthetic geometry lands in the store before the user clicks
-  // "Generate". This makes the agent run feel instantaneous.
+  // For custom addresses, seed a heuristic profile IMMEDIATELY so DemoAutoFill
+  // has something to render and the Generate button can enable. This used to
+  // be gated on /api/design succeeding — when /api/design returned an error
+  // (which happens for any address outside the small set of supported regions)
+  // the form would silently freeze and the user would be stuck staring at the
+  // blue wireframe with no agent trace ever appearing.
+  useEffect(() => {
+    if (selectedHouse !== 'custom' || !customAddress) return;
+    if (useStore.getState().profile) return;
+    let cancelled = false;
+    void (async () => {
+      const heuristic = await import('@/lib/customRoof').then((m) =>
+        m.inferProfileFromLocation(customAddress.lat, customAddress.lng),
+      );
+      if (cancelled) return;
+      if (!useStore.getState().profile) {
+        useStore.getState().setProfile(heuristic);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedHouse, customAddress]);
+
+  // Best-effort: pre-warm /api/design (geometry + sized result) in the
+  // background so the Orchestrator's later call hits a warm cache. Failure is
+  // non-fatal — the heuristic profile above already keeps the form moving.
   useEffect(() => {
     if (selectedHouse !== 'custom' || !customAddress) return;
     if (design) return;
@@ -111,23 +135,11 @@ export default function DesignPage({ params }: Props) {
         if (!res.ok || cancelled) return;
         const data = await res.json();
         if (cancelled) return;
-        // Hydrate roof geometry so Scene3D has something to render before
-        // the Orchestrator overwrites design.
         if (data?.geometry) {
           useStore.getState().setCustomRoofGeometry(data.geometry);
         }
-        if (data?.profile == null) {
-          // /api/design didn't echo a profile, so set a placeholder one so
-          // Orchestrator can fire (it gates on `profile != null`).
-          if (!useStore.getState().profile) {
-            const heuristic = await import('@/lib/customRoof').then((m) =>
-              m.inferProfileFromLocation(customAddress.lat, customAddress.lng),
-            );
-            useStore.getState().setProfile(heuristic);
-          }
-        }
       } catch {
-        // Swallow — UI will surface the error via VisionStatusBadge.
+        // Swallow — heuristic profile already seeded the form.
       }
     })();
     return () => {
@@ -178,8 +190,13 @@ export default function DesignPage({ params }: Props) {
           </div>
         </header>
 
-        {/* Form overlay during autofill / manual entry */}
-        {(phase === 'autofilling' || phase === 'ready-to-design') && (
+        {/* Form overlay during autofill / manual entry. For custom addresses
+            we stay in 'house-selected' until the user picks Auto or Manual,
+            so include that phase too — otherwise the user lands on a blank
+            wireframe with no form. */}
+        {(phase === 'autofilling' ||
+          phase === 'ready-to-design' ||
+          (phase === 'house-selected' && isCustom)) && (
           <div className="pointer-events-auto absolute inset-0">
             <ProfileForm />
           </div>
