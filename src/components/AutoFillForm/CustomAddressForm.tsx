@@ -12,6 +12,22 @@ import {
   type PvPackage,
 } from '@/lib/store';
 import type { CustomerProfile, HeatingType } from '@/lib/types';
+import { computeFinancials, ANNUAL_GENERATION_PER_KWP } from '@/lib/financials';
+
+// Package → kWp size. Mirrors the typical Reonic offering: starter ≈ 5.5 kWp,
+// comfort ≈ 6.6 kWp, premium ≈ 9.8 kWp. Used by ResultDashboard to feed the
+// real `computeFinancials` engine instead of inventing percentages locally.
+const PACKAGE_KWP: Record<PvPackage, number> = {
+  starter: 5.5,
+  comfort: 6.64,
+  premium: 9.8,
+};
+// Same idea for batteries.
+const BATTERY_KWH: Record<BatteryPackage, number> = {
+  starter: 5,
+  comfort: 8,
+  premium: 12,
+};
 
 const CURRENCY_LABEL: Record<Currency, string> = {
   EUR: '€',
@@ -2092,61 +2108,48 @@ function ResultDashboard() {
   const evCost = Math.round(evKwh * unitPrice);
   const totalCostBefore = residentialCost + evCost;
 
-  // Approximations driven by user choices.
   const hasBattery = !!m.selectedBattery;
   const hasCharger = !!m.selectedCharger;
 
-  // Self-sufficiency:
-  //  - Base solar coverage of residential ≈ 38 %
-  //  - +Battery shifts evening load to stored solar (~+25 pts)
-  //  - +EV without smart charger: EV charges off-peak from grid (~−8 pts)
-  //  - +EV with smart charger: charges during solar hours (~+7 pts)
-  const baseSelfSuff = hasBattery ? 63 : 38;
-  const chargerBoost = m.hasEv && hasCharger ? 7 : 0;
-  const evGridPenalty = m.hasEv && !hasCharger ? -8 : 0;
-  const selfSufficiency = Math.max(15, Math.min(85, baseSelfSuff + chargerBoost + evGridPenalty));
+  // Run the same financial engine /api/design uses, with the user-chosen
+  // package mapping to a kWp size + battery size. Replaces the previous
+  // hardcoded ratios (38/63 % self-sufficiency, 8/11/14 years payback,
+  // totalKwh×0.0004 CO₂) which had no relation to the rest of the app.
+  const totalKwp = m.selectedPackage ? PACKAGE_KWP[m.selectedPackage] : 0;
+  const batteryKwh = hasBattery && m.selectedBattery ? BATTERY_KWH[m.selectedBattery] : null;
+  const fin = computeFinancials({
+    totalKwp,
+    batteryKwh,
+    heatPumpKw: null,
+    hasWallbox: hasCharger,
+    annualConsumptionKwh: totalKwh,
+    hasEv: !!m.hasEv,
+    overrides: { retailPrice: unitPrice },
+  });
 
-  const costAfter = Math.round(totalCostBefore * (1 - selfSufficiency / 100));
-  const yieldOver20 = (totalCostBefore - costAfter) * 20;
-
-  // Break-even climbs with each upfront capex (battery, charger).
-  const baseYears = m.selectedPackage === 'starter' ? 8 : m.selectedPackage === 'comfort' ? 11 : 14;
-  const breakEvenYears = baseYears + (hasBattery ? 2 : 0) + (hasCharger ? 1 : 0);
-  const co2Tons = Math.round(totalKwh * 0.0004 * 10) / 10;
+  const selfSufficiency = Math.round(fin.selfConsumptionRatio * 100);
+  const costAfter = Math.round(totalCostBefore - fin.annualSavingsEur);
+  const yieldOver20 = fin.annualSavingsEur * 20;
+  const breakEvenYears = Math.round(fin.paybackYears);
+  const co2Tons = Math.round(fin.co2SavedTonsPer25y * 10) / 10;
   const trees = Math.round(co2Tons * 41);
   const flights = Math.round(co2Tons * 3.7);
+  const yieldKwh = Math.round(totalKwp * ANNUAL_GENERATION_PER_KWP);
 
-  // System sizing & flows — for "Results in detail" Sankey
-  const yieldKwh =
-    m.selectedPackage === 'starter' ? 5500 : m.selectedPackage === 'comfort' ? 6640 : 9800;
-  let _direct = Math.round(
-    m.consumptionKwh * (hasBattery ? 0.35 : selfSufficiency / 100),
-  );
-  let _bat = hasBattery
-    ? Math.max(0, Math.round(m.consumptionKwh * (selfSufficiency / 100) - _direct))
-    : 0;
-  let _ev = hasCharger && m.hasEv ? Math.round(evKwh * 0.6) : m.hasEv ? Math.round(evKwh * 0.1) : 0;
-  // Scale self-consumed solar down if it would exceed yield (prevents the
-  // Sankey solar node from outgrowing the "Electricity yield" headline).
-  const _solarUsed = _direct + _bat + _ev;
-  if (_solarUsed > yieldKwh && _solarUsed > 0) {
-    const scale = yieldKwh / _solarUsed;
-    _direct = Math.round(_direct * scale);
-    _bat = Math.round(_bat * scale);
-    _ev = Math.round(_ev * scale);
-  }
-  const solarDirectToHome = _direct;
-  const solarToBattery = _bat;
-  const solarToEV = _ev;
+  // Sankey breakdown — only display heuristics now; totals match `fin`.
+  // selfConsumedKwh from the engine is the ground truth for "solar that
+  // didn't go to the grid". We split it across direct / battery / EV in
+  // proportion to where each load actually lives.
+  const evShare = m.hasEv ? Math.min(0.35, evKwh / Math.max(1, totalKwh)) : 0;
+  const batShare = hasBattery ? 0.35 : 0;
+  const directShare = Math.max(0, 1 - evShare - batShare);
+  const solarDirectToHome = Math.round(fin.selfConsumedKwh * directShare);
+  const solarToBattery = Math.round(fin.selfConsumedKwh * batShare);
+  const solarToEV = Math.round(fin.selfConsumedKwh * evShare);
   const gridToHome = Math.max(0, m.consumptionKwh - solarDirectToHome - solarToBattery);
   const gridToEV = m.hasEv ? Math.max(0, evKwh - solarToEV) : 0;
-  const solarToGrid = Math.max(
-    0,
-    yieldKwh - solarDirectToHome - solarToBattery - solarToEV,
-  );
-  const ownConsumption = yieldKwh > 0
-    ? Math.round(((solarDirectToHome + solarToBattery + solarToEV) / yieldKwh) * 100)
-    : 0;
+  const solarToGrid = fin.exportedKwh;
+  const ownConsumption = selfSufficiency;
 
   const fmtMoney = (v: number) =>
     `${currency}${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;

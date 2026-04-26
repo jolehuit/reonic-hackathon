@@ -6,11 +6,16 @@ import { useStore } from '@/lib/store';
 import { useEffectiveDesign } from '@/lib/useEffectiveDesign';
 import { HOUSE_LOCATION } from '@/lib/houses';
 
+// Honest progress steps for the export. The previous version listed 4
+// customer-facing pre-flight items (roof access, install timeline,
+// electrical panel sufficiency, pricing accepted) and ticked them off via
+// setTimeout — pure theatre, none of that was verified. These labels now
+// describe what the export pipeline actually does.
 const CHECKLIST = [
-  'Roof access verified with customer',
-  'Customer informed of estimated install timeline',
-  'Existing electrical panel sufficient',
-  'Pricing accepted by customer',
+  'Compiling bill of materials',
+  'Rendering 3D snapshot',
+  'Formatting one-page offer',
+  'Generating PDF',
 ];
 
 export function ApprovalModal() {

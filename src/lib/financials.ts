@@ -1,6 +1,8 @@
 // Financial computations for solar designs — OWNED by Dev B.
 // All constants are 2026 Germany residential, sourced from current EEG / market data.
-// Some constants can be overridden at runtime by tavily.ts (e.g. live feed-in tariff).
+// Constants can be overridden at runtime via the `overrides` field on
+// FinancialsInput (used today by useEffectiveDesign to pass the manual-form
+// retail price; can be extended for live feed-in tariff lookup later).
 
 // --- Market constants (DE 2026 residential <10 kWp) ---
 export const FEED_IN_TARIFF = 0.0786;       // €/kWh, EEG Überschusseinspeisung <10 kWp (Aug 2025, dégressif -1% Feb 2026)
