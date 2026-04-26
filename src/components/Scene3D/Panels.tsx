@@ -100,6 +100,18 @@ const OBSTRUCTION_MARGIN_M = 0.45;
 /** Overlap factor — panels can be ALMOST flush (12 % gap of the short
  *  side) but never sit on top of each other. */
 const PANEL_OVERLAP_FACTOR = 0.88;
+/** Discovery sweep step ratio — fraction of panel min-dim used as XZ stride
+ *  when sampling the GLB for roof faces. 0.55 gives ~3 hits per panel slot. */
+const GRID_STEP_RATIO = 0.55;
+/** External padding inset on each face's 2D bbox before tiling — guarantees
+ *  panels never overhang eaves / ridges. Real installations leave ~30 cm. */
+const FACE_EXTERNAL_PADDING_M = 0.35;
+/** Visible gap between adjacent panel cells (rail joiners + thermal expansion). */
+const CELL_GAP_M = 0.05;
+/** A grid cell is considered "covered" by the discovery scan if it lies
+ *  within max(w,h) × this ratio of at least one sample hit. Acts as an
+ *  implicit polygon test for L-shaped or notched faces. */
+const CELL_COVERAGE_RADIUS_RATIO = 0.85;
 const UP = new Vector3(0, 1, 0);
 
 interface ProjectedPanel {
@@ -125,8 +137,7 @@ export function Panels() {
   // the parent group's scale 0.6 → 1.0).
   const glbStable = useStore((s) => s.glbStable);
   const glbHeight = useStore((s) => s.glbHeight);
-  const { modulePositions: recenteredPositions, obstructions } =
-    useHouseGeometry();
+  const { obstructions } = useHouseGeometry();
   const sceneRoot = useThree((s) => s.scene);
 
   // Single-variant rendering — Dev D's bake step packs at full residential
@@ -140,16 +151,21 @@ export function Panels() {
       : PANEL_VARIANT_FULL_AIKO;
   }, [design?.moduleBrand]);
 
-  // Recompute projected positions whenever the GLB is (re)loaded or its
-  // measured height changes. We re-find the GLB root each time because the
-  // R3F scene tree mutates around the morph animation.
-  // Build a ProjectedPanel for each module Dev D placed, raycast-snapped
-  // onto the rendered GLB so it sits flush. We trust positions, lift the
-  // normal from the actual surface to absorb any morph / rescale slop.
+  // Runtime panel placement. We do NOT trust analysis.json's modulePositions
+  // because they were computed against the photogrammetric mesh, while the
+  // rendered building is a fal-ai/trellis output that does not share its
+  // geometry. Instead, we discover the roof live by raycasting the rendered
+  // GLB, cluster hits into face pitches, tile each face with a grid sized
+  // for the panel, and validate every candidate cell against window /
+  // chimney / dormer obstacles via dense probes (49 interior + 8 perimeter).
+  //
+  // The customer-facing count remains `design.moduleCount` (k-NN sized,
+  // independent of geometry); we just stop the greedy placer once we have
+  // exactly that many valid cells. Sidebar / PDF / scene therefore agree
+  // by construction — no "three sources of truth" divergence.
   const layout = useMemo<PanelLayout | null>(() => {
     if (!glbStable) return null;
     if (!design) return null;
-    if (!recenteredPositions || recenteredPositions.length === 0) return null;
 
     let glbRoot: Object3D | null = null;
     sceneRoot.traverse((o) => {
@@ -162,6 +178,8 @@ export function Panels() {
     const raycaster = new Raycaster();
     const downRay = new Vector3(0, -1, 0);
 
+    // Cast a single downward ray onto the GLB. Returns null on miss or on
+    // non-roof hit (vertical wall, ground plane).
     const projectPoint = (x: number, z: number) => {
       raycaster.set(new Vector3(x, RAY_ORIGIN_Y, z), downRay);
       const hits = raycaster.intersectObject(glb, true);
@@ -176,26 +194,408 @@ export function Panels() {
       return { point: hit.point.clone(), normal: worldNormal };
     };
 
-    // /api/design slices baked positions to design.moduleCount; for the
-    // local fetch path (HouseGeometryProvider also reads the file directly)
-    // we slice client-side to stay aligned with whatever the server said.
-    const target = Math.min(design.moduleCount, recenteredPositions.length);
-    const panels: ProjectedPanel[] = [];
-    for (let i = 0; i < target; i++) {
-      const pos = recenteredPositions[i];
-      const projected = projectPoint(pos.x, pos.z);
-      if (!projected) continue;
-      panels.push({
-        faceId: pos.faceId,
-        x: projected.point.x,
-        y: projected.point.y,
-        z: projected.point.z,
-        normal: [projected.normal.x, projected.normal.y, projected.normal.z],
-        quaternion: new Quaternion().setFromUnitVectors(UP, projected.normal),
-      });
+    const glbBox = new Box3().setFromObject(glb);
+    const obstructionRadii = obstructions.map((ob) => ({
+      x: ob.position[0],
+      z: ob.position[2],
+      r: ob.radius + OBSTRUCTION_MARGIN_M,
+    }));
+
+    const stepX = variant.size[0] * GRID_STEP_RATIO;
+    const stepZ = variant.size[2] * GRID_STEP_RATIO;
+    const halfW = variant.size[0] / 2;
+    const halfH = variant.size[2] / 2;
+    const xStart = glbBox.min.x + halfW + 0.05;
+    const xEnd = glbBox.max.x - halfW - 0.05;
+    const zStart = glbBox.min.z + halfH + 0.05;
+    const zEnd = glbBox.max.z - halfH - 0.05;
+
+    // ── PHASE 1: ROOF DISCOVERY (sparse world-XZ scan) ─────────────────
+    interface Sample {
+      point: Vector3;
+      normal: Vector3;
+      score: number;
     }
-    return { panels, variant };
-  }, [glbStable, glbHeight, design, recenteredPositions, sceneRoot, variant]);
+    const samples: Sample[] = [];
+    for (let x = xStart; x <= xEnd + 1e-6; x += stepX) {
+      for (let z = zStart; z <= zEnd + 1e-6; z += stepZ) {
+        const hit = projectPoint(x, z);
+        if (!hit) continue;
+        const tiltDeg =
+          (Math.acos(Math.max(0, Math.min(1, hit.normal.y))) * 180) / Math.PI;
+        // Tilt sweet spot ~32° (mid-Europe roofs). Score rewards "roof-like"
+        // (high normal.y) AND ideal tilt. Single-number-per-cell so we can
+        // later swap this for a sun-azimuth dot product without touching
+        // anything else.
+        const tiltScore = Math.max(0, 1 - Math.abs(tiltDeg - 32) / 50);
+        samples.push({
+          point: hit.point,
+          normal: hit.normal,
+          score: hit.normal.y * (0.5 + 0.5 * tiltScore),
+        });
+      }
+    }
+
+    // ── PHASE 2: CLUSTER SAMPLES BY FACE ───────────────────────────────
+    // Each cluster is one distinct pitch. cosine ≥ 0.92 ⇔ angle ≤ ~23°.
+    const CLUSTER_DOT = 0.92;
+    interface Face {
+      normalSum: Vector3;
+      meanNormal: Vector3;
+      samples: Sample[];
+      avgScore: number;
+    }
+    const faces: Face[] = [];
+    for (const s of samples) {
+      let assigned: Face | null = null;
+      for (const f of faces) {
+        if (f.meanNormal.dot(s.normal) >= CLUSTER_DOT) {
+          assigned = f;
+          break;
+        }
+      }
+      if (assigned) {
+        assigned.samples.push(s);
+        assigned.normalSum.add(s.normal);
+        assigned.meanNormal.copy(assigned.normalSum).normalize();
+      } else {
+        faces.push({
+          normalSum: s.normal.clone(),
+          meanNormal: s.normal.clone(),
+          samples: [s],
+          avgScore: 0,
+        });
+      }
+    }
+    for (const f of faces) {
+      f.avgScore =
+        f.samples.reduce((sum, s) => sum + s.score, 0) / f.samples.length;
+    }
+
+    // ── PHASE 3: BUILD A REGULAR GRID PER FACE ─────────────────────────
+    interface GridCell {
+      worldPoint: Vector3;
+      normal: Vector3;
+      quaternion: Quaternion;
+      uLocal: number;
+      vLocal: number;
+      faceScore: number;
+      faceIdx: number;
+    }
+    const allCells: GridCell[] = [];
+    const cellW = variant.size[0];
+    const cellH = variant.size[2];
+    const halfCellW = cellW / 2;
+    const halfCellH = cellH / 2;
+    const coverageRadius =
+      Math.max(cellW, cellH) * CELL_COVERAGE_RADIUS_RATIO;
+    const coverageRadiusSq = coverageRadius * coverageRadius;
+
+    interface FaceFrame {
+      origin: Vector3;
+      uAxis: Vector3;
+      vAxis: Vector3;
+      meanNormal: Vector3;
+      avgScore: number;
+    }
+    const faceFrames: FaceFrame[] = [];
+
+    faces.forEach((face, faceIdx) => {
+      // Face frame: uAxis = world-X projected onto the plane (typically
+      // along the ridge), vAxis = up-the-slope.
+      const n = face.meanNormal;
+      let uAxis = new Vector3(1, 0, 0).sub(n.clone().multiplyScalar(n.x));
+      if (uAxis.lengthSq() < 1e-6) uAxis = new Vector3(0, 0, 1);
+      uAxis.normalize();
+      const vAxis = new Vector3().crossVectors(n, uAxis).normalize();
+      const faceQuat = new Quaternion().setFromUnitVectors(UP, n);
+      const origin = face.samples[0].point.clone();
+
+      faceFrames[faceIdx] = {
+        origin,
+        uAxis,
+        vAxis,
+        meanNormal: n.clone(),
+        avgScore: face.avgScore,
+      };
+
+      const projected = face.samples.map((s) => ({
+        u: s.point.clone().sub(origin).dot(uAxis),
+        v: s.point.clone().sub(origin).dot(vAxis),
+      }));
+
+      let uMin = Infinity;
+      let uMax = -Infinity;
+      let vMin = Infinity;
+      let vMax = -Infinity;
+      for (const p of projected) {
+        if (p.u < uMin) uMin = p.u;
+        if (p.u > uMax) uMax = p.u;
+        if (p.v < vMin) vMin = p.v;
+        if (p.v > vMax) vMax = p.v;
+      }
+      uMin += FACE_EXTERNAL_PADDING_M;
+      uMax -= FACE_EXTERNAL_PADDING_M;
+      vMin += FACE_EXTERNAL_PADDING_M;
+      vMax -= FACE_EXTERNAL_PADDING_M;
+      if (uMax - uMin < cellW || vMax - vMin < cellH) return;
+
+      const pitchU = cellW + CELL_GAP_M;
+      const pitchV = cellH + CELL_GAP_M;
+      for (let v = vMin + halfCellH; v <= vMax - halfCellH + 1e-6; v += pitchV) {
+        for (let u = uMin + halfCellW; u <= uMax - halfCellW + 1e-6; u += pitchU) {
+          // Validity mask — discard cells too far from any observed roof
+          // sample (handles L-shaped or notched faces without a polygon).
+          let covered = false;
+          for (const p of projected) {
+            const du = p.u - u;
+            const dv = p.v - v;
+            if (du * du + dv * dv < coverageRadiusSq) {
+              covered = true;
+              break;
+            }
+          }
+          if (!covered) continue;
+
+          const worldPoint = new Vector3()
+            .copy(origin)
+            .addScaledVector(uAxis, u)
+            .addScaledVector(vAxis, v);
+
+          allCells.push({
+            worldPoint,
+            normal: n.clone(),
+            quaternion: faceQuat.clone(),
+            uLocal: u,
+            vLocal: v,
+            faceScore: face.avgScore,
+            faceIdx,
+          });
+        }
+      }
+    });
+
+    // ── PHASE 4: PRE-VALIDATE EVERY CELL (no placement yet) ────────────
+    // We split validation from placement so we can group valid cells by
+    // face, pick the dominant face (most valid cells), and drain it
+    // exclusively before considering any other face. That guarantees
+    // "panels on a single side of the roof" whenever possible.
+    interface ValidCell {
+      faceIdx: number;
+      faceScore: number;
+      uLocalGT: number;       // ground-truth face-local U (after raycast snap)
+      vLocalGT: number;       // ground-truth face-local V
+      uLocalGrid: number;     // original grid coord (for row-major sort)
+      vLocalGrid: number;
+      center: Vector3;
+      normal: Vector3;
+    }
+    const validByFace = new Map<number, ValidCell[]>();
+
+    const INTERIOR_DIVISIONS = 6;
+    const interiorOffsets: [number, number][] = [];
+    for (let i = 0; i <= INTERIOR_DIVISIONS; i++) {
+      for (let j = 0; j <= INTERIOR_DIVISIONS; j++) {
+        const u = -halfCellW + (halfCellW * 2 * i) / INTERIOR_DIVISIONS;
+        const v = -halfCellH + (halfCellH * 2 * j) / INTERIOR_DIVISIONS;
+        interiorOffsets.push([u, v]);
+      }
+    }
+    const pu = halfCellW + OBSTACLE_PROBE_MARGIN_M;
+    const pv = halfCellH + OBSTACLE_PROBE_MARGIN_M;
+    const perimeterOffsets: [number, number][] = [
+      [pu, pv], [pu, -pv], [-pu, pv], [-pu, -pv],
+      [pu, 0], [-pu, 0], [0, pv], [0, -pv],
+    ];
+
+    for (const cell of allCells) {
+      // (0) Ground-truth raycast at the cell centre — corrects a few cm of
+      // sampling slop on the rendered mesh.
+      const centerHit = projectPoint(cell.worldPoint.x, cell.worldPoint.z);
+      if (!centerHit) continue;
+      const center = centerHit.point;
+      const n = centerHit.normal;
+
+      // (a) Reject if centre is on a baked obstruction.
+      let onObstruction = false;
+      for (const ob of obstructionRadii) {
+        const dx = center.x - ob.x;
+        const dz = center.z - ob.z;
+        if (dx * dx + dz * dz < ob.r * ob.r) {
+          onObstruction = true;
+          break;
+        }
+      }
+      if (onObstruction) continue;
+
+      // (b) Dense probing: 49 interior + 8 perimeter probes. Any failure
+      // (miss, normal mismatch, Y-delta > 3 cm) blocks the WHOLE cell.
+      let uAxisCell = new Vector3(1, 0, 0).sub(n.clone().multiplyScalar(n.x));
+      if (uAxisCell.lengthSq() < 1e-6) uAxisCell = new Vector3(0, 0, 1);
+      uAxisCell.normalize();
+      const vAxisCell = new Vector3().crossVectors(n, uAxisCell).normalize();
+
+      let valid = true;
+      for (const [du, dv] of interiorOffsets) {
+        const pw = new Vector3()
+          .copy(center)
+          .addScaledVector(uAxisCell, du)
+          .addScaledVector(vAxisCell, dv);
+        const cp = projectPoint(pw.x, pw.z);
+        if (!cp) { valid = false; break; }
+        if (cp.normal.dot(n) < SAME_PITCH_DOT) { valid = false; break; }
+        const delta = cp.point.clone().sub(center).dot(n);
+        if (delta > OBSTACLE_Y_DELTA_M || delta < -OBSTACLE_Y_DELTA_NEG_M) {
+          valid = false;
+          break;
+        }
+      }
+      if (!valid) continue;
+      for (const [du, dv] of perimeterOffsets) {
+        const pw = new Vector3()
+          .copy(center)
+          .addScaledVector(uAxisCell, du)
+          .addScaledVector(vAxisCell, dv);
+        const cp = projectPoint(pw.x, pw.z);
+        if (!cp) { valid = false; break; }
+        if (cp.normal.dot(n) < SAME_PITCH_DOT) { valid = false; break; }
+        const delta = cp.point.clone().sub(center).dot(n);
+        if (delta > OBSTACLE_Y_DELTA_M || delta < -OBSTACLE_Y_DELTA_NEG_M) {
+          valid = false;
+          break;
+        }
+      }
+      if (!valid) continue;
+
+      // Recompute the cell's face-local coordinates from the ground-truth
+      // centre — used for the strict same-face AABB overlap test below.
+      const frame = faceFrames[cell.faceIdx];
+      const localOffset = center.clone().sub(frame.origin);
+      const uLocalGT = localOffset.dot(frame.uAxis);
+      const vLocalGT = localOffset.dot(frame.vAxis);
+
+      const list = validByFace.get(cell.faceIdx) ?? [];
+      list.push({
+        faceIdx: cell.faceIdx,
+        faceScore: cell.faceScore,
+        uLocalGT,
+        vLocalGT,
+        uLocalGrid: cell.uLocal,
+        vLocalGrid: cell.vLocal,
+        center,
+        normal: n,
+      });
+      validByFace.set(cell.faceIdx, list);
+    }
+
+    // ── PHASE 5: SELECT DOMINANT FACE + GREEDY-PLACE ───────────────────
+    // Order faces by validCount desc (most "block-able" first), then by
+    // avgScore desc as tiebreaker. The greedy placer drains each face
+    // entirely (in row-major) before touching the next — so panels stay
+    // on a single pitch whenever the dominant face fits the target.
+    const facesRanked = Array.from(validByFace.entries())
+      .map(([faceIdx, cells]) => ({
+        faceIdx,
+        cells,
+        avgScore: faceFrames[faceIdx].avgScore,
+      }))
+      .sort((a, b) => {
+        if (b.cells.length !== a.cells.length) {
+          return b.cells.length - a.cells.length;
+        }
+        return b.avgScore - a.avgScore;
+      });
+
+    // Cross-face XZ guard — keeps panels on different pitches from
+    // visually overlapping near the ridge. Tight bound: panels touching
+    // at the ridge can be ~min(w,h) × cos(tilt) apart in XZ; we use
+    // PANEL_OVERLAP_FACTOR for that conservative cushion.
+    const crossFaceMinDist =
+      Math.min(variant.size[0], variant.size[2]) * PANEL_OVERLAP_FACTOR;
+    const crossFaceMinDistSq = crossFaceMinDist * crossFaceMinDist;
+
+    // For same-face overlap: strict axis-aligned bbox in face-local frame.
+    // Two panels overlap iff |Δu| < cellW AND |Δv| < cellH.
+    // Tiny floating-point cushion so adjacent grid cells (pitch =
+    // cell + CELL_GAP_M) never trigger.
+    const SAME_FACE_AABB_EPSILON = 1e-3;
+
+    const target = design.moduleCount;
+    const placed: ProjectedPanel[] = [];
+    interface PlacedRecord {
+      x: number;
+      y: number;
+      z: number;
+      faceIdx: number;
+      uLocalGT: number;
+      vLocalGT: number;
+    }
+    const placedRecords: PlacedRecord[] = [];
+
+    for (const faceEntry of facesRanked) {
+      if (placed.length >= target) break;
+      // Row-major within the face: low v (eave) → high v (ridge), then
+      // low u → high u within each row. Disjoint by grid construction;
+      // skipping invalid cells just leaves blocky gaps, never breaks the
+      // contiguous-band feel.
+      const rowMajor = [...faceEntry.cells].sort((a, b) => {
+        if (a.vLocalGrid !== b.vLocalGrid) return a.vLocalGrid - b.vLocalGrid;
+        return a.uLocalGrid - b.uLocalGrid;
+      });
+      for (const cell of rowMajor) {
+        if (placed.length >= target) break;
+
+        // (c1) Same-face strict AABB — never two panels in the same plane
+        // overlapping. After ground-truth shifts, two cells at grid pitch
+        // 1.18 m in v have |Δv| ≈ 1.18 ≥ cellH 1.13, so they pass; only
+        // shifted-into-each-other neighbours get rejected.
+        let overlap = false;
+        for (const p of placedRecords) {
+          if (p.faceIdx !== cell.faceIdx) continue;
+          const du = Math.abs(p.uLocalGT - cell.uLocalGT);
+          const dv = Math.abs(p.vLocalGT - cell.vLocalGT);
+          if (du < cellW - SAME_FACE_AABB_EPSILON && dv < cellH - SAME_FACE_AABB_EPSILON) {
+            overlap = true;
+            break;
+          }
+        }
+        if (overlap) continue;
+
+        // (c2) Cross-face XZ guard — panels on different pitches can
+        // converge near the ridge; this stops two of them landing on top
+        // of each other in 3D.
+        for (const p of placedRecords) {
+          if (p.faceIdx === cell.faceIdx) continue;
+          const dx = cell.center.x - p.x;
+          const dz = cell.center.z - p.z;
+          if (dx * dx + dz * dz < crossFaceMinDistSq) {
+            overlap = true;
+            break;
+          }
+        }
+        if (overlap) continue;
+
+        placed.push({
+          faceId: cell.faceIdx,
+          x: cell.center.x,
+          y: cell.center.y,
+          z: cell.center.z,
+          normal: [cell.normal.x, cell.normal.y, cell.normal.z],
+          quaternion: new Quaternion().setFromUnitVectors(UP, cell.normal),
+        });
+        placedRecords.push({
+          x: cell.center.x,
+          y: cell.center.y,
+          z: cell.center.z,
+          faceIdx: cell.faceIdx,
+          uLocalGT: cell.uLocalGT,
+          vLocalGT: cell.vLocalGT,
+        });
+      }
+    }
+
+    return { panels: placed, variant };
+  }, [glbStable, glbHeight, design, obstructions, sceneRoot, variant]);
 
   const projectedPositions = layout?.panels ?? null;
   const panelSize = layout?.variant.size ?? PANEL_VARIANT_FULL_AIKO.size;
