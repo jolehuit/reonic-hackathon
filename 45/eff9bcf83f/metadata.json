@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "45eff9bcf83f",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/components/Scene3D/Scene3D.tsx",
+    "src/components/Scene3D/TungSahur.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/45/eff9bcf83f/0/metadata.json",
+      "transcript": "/45/eff9bcf83f/0/full.jsonl",
+      "content_hash": "/45/eff9bcf83f/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 8,
+    "cache_creation_tokens": 8180,
+    "cache_read_tokens": 4011090,
+    "output_tokens": 6610,
+    "api_call_count": 8
+  }
+}
