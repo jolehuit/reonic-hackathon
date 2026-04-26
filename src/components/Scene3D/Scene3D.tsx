@@ -30,6 +30,7 @@ import { Wallbox } from './Wallbox';
 import { Inverter } from './Inverter';
 import { ElectricCar } from './ElectricCar';
 import { CanvasCaptureRegistrar } from './CanvasCaptureRegistrar';
+import { TungSahur } from './TungSahur';
 import type { HouseId } from '@/lib/types';
 
 interface Props {
@@ -87,6 +88,7 @@ function ProceduralCanvas({ houseId }: { houseId: HouseId | 'custom' }) {
 
         <TrellisModel />
         <Panels />
+        <TungSahur />
         {showComponents && design && (
           <>
             {refinements.includeBattery && design.batteryCapacityKwh && <Battery />}
