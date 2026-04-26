@@ -86,6 +86,37 @@ async function loadCachedHouse(houseId: HouseId): Promise<CachedHouse | null> {
   return m[houseId] ?? null;
 }
 
+/** Haversine distance in meters between two GPS pairs. */
+function distanceM(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+/** When the user types a custom address that lands within MATCH_RADIUS_M
+ *  of a demo house's GPS, reuse the demo's pre-baked cache instead of
+ *  hitting the live (slow + paid) pipeline. */
+const CUSTOM_CACHE_RADIUS_M = 50;
+function findCachedDemoForCoords(
+  lat: number,
+  lng: number,
+): HouseId | null {
+  const houseIds = Object.keys(HOUSE_COORDS) as HouseId[];
+  let best: { id: HouseId; d: number } | null = null;
+  for (const id of houseIds) {
+    const c = HOUSE_COORDS[id];
+    const d = distanceM(lat, lng, c.lat, c.lng);
+    if (!best || d < best.d) best = { id, d };
+  }
+  return best && best.d <= CUSTOM_CACHE_RADIUS_M ? best.id : null;
+}
+
 export function Orchestrator() {
   const phase = useStore((s) => s.phase);
   const profile = useStore((s) => s.profile);
@@ -128,6 +159,15 @@ export function Orchestrator() {
       customAddress?.lng,
     );
 
+    // Custom address GPS-to-cache lookup: if the typed address lands within
+    // 50 m of a demo house, transparently reuse that demo's full cache
+    // (baked analysis + aerial + clean + GLB). Saves ~3-5 min vs running
+    // the live pipeline for an address we already have on disk.
+    const cacheableDemoId =
+      selectedHouse === 'custom' && customAddress
+        ? findCachedDemoForCoords(customAddress.lat, customAddress.lng)
+        : null;
+
     // Block until AgentTrace's centre-screen popup for `stepId` has
     // finished its hold (POPUP_HOLD_MS). Ensures the next pipeline
     // stage's loader doesn't start spinning while the previous stage's
@@ -152,7 +192,12 @@ export function Orchestrator() {
     //    `size` to running/done from inside the imagery chain, between
     //    `clean` and `model`, so the trace progresses strictly top-down.
     const body: Record<string, unknown> = { profile, houseId: selectedHouse };
-    if (selectedHouse === 'custom' && customAddress) {
+    if (cacheableDemoId) {
+      // Custom address aliased to a known demo → load demo's baked file
+      // instead of triggering /api/design's live spawn. profile stays the
+      // user's typed input so sizing reflects their actual consumption.
+      body.houseId = cacheableDemoId;
+    } else if (selectedHouse === 'custom' && customAddress) {
       body.lat = customAddress.lat;
       body.lng = customAddress.lng;
       body.address = customAddress.formatted;
@@ -203,8 +248,13 @@ export function Orchestrator() {
       // URLs for each demo house. Skip the (slow + paid) live pipeline. We
       // add small randomized fake delays so the trace doesn't snap to "done"
       // instantly — the user still sees the steps animate in sequence.
-      if (selectedHouse && selectedHouse !== 'custom') {
-        const cached = await loadCachedHouse(selectedHouse).catch(() => null);
+      // Same cache also reused when a custom address GPS-matches a demo
+      // (cacheableDemoId resolved before this block).
+      const cacheLookupId: HouseId | null =
+        cacheableDemoId ??
+        (selectedHouse && selectedHouse !== 'custom' ? selectedHouse : null);
+      if (cacheLookupId) {
+        const cached = await loadCachedHouse(cacheLookupId).catch(() => null);
         if (cached && !cancelled) {
           const jitter = (lo: number, hi: number) =>
             new Promise((r) => setTimeout(r, lo + Math.random() * (hi - lo)));
